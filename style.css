@@ -86,13 +86,14 @@ body {
     to {
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
     }
 }
 
 .soccer-ball {
     width: 120px;
     height: 120px;
-    background-image: url('C:/Users/tiend/.gemini/antigravity/brain/63abb63b-40a1-4cae-9619-aecf22a40f49/soccer_ball_1769187410319.png');
+    background-image: url('images/soccer_ball.png');
     background-size: cover;
     background-position: center;
     border-radius: 50%;
@@ -848,11 +849,24 @@ body {
     color: var(--color-white);
 }
 
+.product-price-container {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.product-old-price {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: line-through;
+    font-weight: 500;
+}
+
 .product-price {
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--color-red);
-    margin-bottom: var(--spacing-md);
 }
 
 .product-btn {
@@ -875,6 +889,44 @@ body {
 .product-btn:hover {
     transform: scale(1.05);
     box-shadow: var(--shadow-red);
+}
+
+/* Variety Banner */
+.variety-banner {
+    grid-column: 1 / -1;
+    background: var(--gradient-glass);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    text-align: center;
+    border: 2px solid rgba(255, 51, 51, 0.2);
+    backdrop-filter: blur(20px);
+    margin-top: var(--spacing-md);
+    transition: var(--transition-normal);
+}
+
+.variety-banner:hover {
+    border-color: var(--color-red);
+    box-shadow: var(--shadow-red);
+}
+
+.variety-banner h3 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 900;
+    margin-bottom: var(--spacing-md);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: uppercase;
+}
+
+.variety-banner p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-xl);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* ==================== CONTACT & LOCATION SECTION ==================== */
@@ -1015,12 +1067,6 @@ body {
     }
 }
 
-@media (max-width: 768px) {
-    .contact-detail {
-        font-size: 1.2rem;
-    }
-}
-
 /* ==================== FOOTER ==================== */
 .footer {
     background: var(--color-gray);
@@ -1118,15 +1164,6 @@ body {
         justify-content: center;
     }
 
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .profile-stats {
-        justify-content: center;
-    }
-
     .products-grid {
         grid-template-columns: 1fr;
     }
@@ -1135,28 +1172,5 @@ body {
     .decoration-cross,
     .decoration-pixels {
         display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .highlights-scroll {
-        gap: var(--spacing-md);
-    }
-
-    .highlight-item {
-        min-width: 80px;
-    }
-
-    .highlight-ring {
-        width: 70px;
-        height: 70px;
-    }
-
-    .highlight-avatar {
-        font-size: 1.5rem;
-    }
-
-    .highlight-label {
-        font-size: 0.75rem;
     }
 }
