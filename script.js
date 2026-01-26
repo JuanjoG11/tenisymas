@@ -1,5 +1,5 @@
 // Product Data
-const products = [
+let products = [
     // Tenis-Guayos
     {
         id: 1,
@@ -145,6 +145,47 @@ const products = [
     }
 ];
 
+// Supabase Configuration
+const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_G9-piiwf5z82J6WGunpV_A_t3XQ1ZF3';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+        persistSession: false
+    }
+}) : null;
+
+// Initial Load
+document.addEventListener('DOMContentLoaded', async () => {
+    await syncProducts();
+    renderProducts('todos');
+    setupFilters();
+    setupMobileMenu();
+    setupSmoothScroll();
+});
+
+async function syncProducts() {
+    // If Supabase is blocked by browser or fails to load, use local data immediately
+    if (!supabaseClient) {
+        console.warn('Supabase not available. Using local products.');
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('products')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+            products = data;
+        }
+    } catch (err) {
+        console.error('Network error or Supabase blocked:', err);
+        // Silent fallback: the 'products' array already contains defaults
+    }
+}
+
 // WhatsApp Configuration
 const WHATSAPP_NUMBER = '573204961453';
 
@@ -153,14 +194,6 @@ const productsGrid = document.getElementById('productsGrid');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const menuToggle = document.getElementById('menuToggle');
 const navMenu = document.getElementById('navMenu');
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    renderProducts('todos');
-    setupFilters();
-    setupMobileMenu();
-    setupSmoothScroll();
-});
 
 // Render Products
 function renderProducts(category) {

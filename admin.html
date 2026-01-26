@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - TENNISYMAS.CO</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="admin-overlay">
+        <div class="admin-card login-card">
+            <h2>Acceso Administrativo</h2>
+            <p>Ingresa la clave para gestionar el catálogo</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="password" id="adminPassword" placeholder="Contraseña" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+            </form>
+            <p id="loginError" class="error-msg" style="display: none;">Clave incorrecta</p>
+        </div>
+    </div>
+
+    <!-- Main Admin Dashboard -->
+    <div id="adminDashboard" class="admin-container" style="display: none;">
+        <header class="admin-header">
+            <div class="admin-nav">
+                <h1>Panel de Control</h1>
+                <div class="admin-actions">
+                    <button id="logoutBtn" class="btn-logout">Cerrar Sesión</button>
+                    <a href="index.html" class="btn-back">Ver Sitio</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <div class="admin-grid">
+                <!-- Product Form -->
+                <section class="admin-section">
+                    <div class="admin-card">
+                        <h2 id="formTitle">Agregar Nuevo Producto</h2>
+                        <form id="productForm">
+                            <input type="hidden" id="productId">
+                            <div class="form-group">
+                                <label for="name">Nombre del Producto</label>
+                                <input type="text" id="name" placeholder="Ej: Tenis Adidas Neo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="category">Categoría</label>
+                                <select id="category" required>
+                                    <option value="tenis-guayos">TENIS-GUAYOS</option>
+                                    <option value="guayos">Guayos</option>
+                                    <option value="futsal">FUTSAL</option>
+                                    <option value="ninos">NIÑOS</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="price">Precio Actual</label>
+                                    <input type="text" id="price" placeholder="$250.000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="oldPrice">Precio Anterior (Tachado)</label>
+                                    <input type="text" id="oldPrice" placeholder="$320.000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Imagen del Producto</label>
+                                <div class="image-upload-wrapper">
+                                    <input type="file" id="imageFile" accept="image/*" class="file-input">
+                                    <button type="button" class="btn btn-secondary btn-full"
+                                        onclick="document.getElementById('imageFile').click()">
+                                        📸 Cargar desde Galería
+                                    </button>
+                                </div>
+                                <div class="manual-path-toggle">
+                                    <button type="button" class="btn-text" onclick="toggleManualPath()">O usar ruta
+                                        manual (avanzado)</button>
+                                </div>
+                                <div id="manualPathContainer" style="display: none; margin-top: 10px;">
+                                    <input type="text" id="image" placeholder="images/nombre-imagen.png">
+                                    <p class="help-text">Ej: images/tenis1.png</p>
+                                </div>
+                            </div>
+                            <div id="imagePreview" class="image-preview">
+                                <p>Previsualización de imagen</p>
+                                <img src="" alt="" style="display: none;">
+                            </div>
+                            <div class="form-buttons">
+                                <button type="submit" id="submitBtn" class="btn btn-primary">Guardar Producto</button>
+                                <button type="button" id="cancelBtn" class="btn btn-secondary"
+                                    style="display: none;">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- The Export section was removed to maintain a cleaner, more professional interface. -->
+                </section>
+
+                <!-- Product List -->
+                <section class="admin-section">
+                    <div class="admin-card">
+                        <div class="card-header">
+                            <h2>Lista de Productos</h2>
+                            <span id="productCount" class="badge">0 productos</span>
+                        </div>
+                        <div class="admin-search">
+                            <input type="text" id="searchProducts" placeholder="Buscar producto...">
+                        </div>
+                        <div id="adminProductsGrid" class="admin-products-list">
+                            <!-- Products will be listed here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Producto guardado correctamente</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

@@ -509,7 +509,6 @@ body {
 
 .service-icon {
     font-size: 3rem;
-    margin-bottom: var(--spacing-md);
     filter: drop-shadow(0 4px 12px rgba(255, 51, 51, 0.3));
 }
 
@@ -523,6 +522,10 @@ body {
 .service-card p {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.95rem;
+}
+
+.admin-hidden-link:hover {
+    opacity: 1;
 }
 
 /* ==================== FINANCE SECTION (UNIFIED) ==================== */
