@@ -162,8 +162,9 @@ body {
     width: 300px;
     height: auto;
     object-fit: contain;
-    /* Added white outline to make black text visible on dark background */
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
+    /* Video background fix: darken white background */
+    filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
+    mix-blend-mode: screen;
     animation: pulseLogo 3s ease-in-out infinite, sparkleEffect 4s linear infinite;
     position: relative;
 }
@@ -173,12 +174,12 @@ body {
     0%,
     100% {
         transform: scale(1);
-        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
+        filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
     }
 
     50% {
         transform: scale(1.05);
-        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 50px rgba(255, 51, 51, 0.9));
+        filter: invert(1) drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 50px rgba(255, 51, 51, 0.9));
     }
 }
 
@@ -186,19 +187,19 @@ body {
 
     0%,
     100% {
-        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6)) brightness(1);
+        filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6)) brightness(1);
     }
 
     25% {
-        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.8)) brightness(1.2) contrast(1.1);
+        filter: invert(1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.8)) brightness(1.2) contrast(1.1);
     }
 
     50% {
-        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 51, 1)) brightness(1.4) contrast(1.2);
+        filter: invert(1) drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 51, 1)) brightness(1.4) contrast(1.2);
     }
 
     75% {
-        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.8)) brightness(1.2) contrast(1.1);
+        filter: invert(1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.8)) brightness(1.2) contrast(1.1);
     }
 }
 
@@ -367,19 +368,18 @@ body {
     width: 100%;
     perspective: 1000px;
     position: relative;
-    overflow: hidden;
-    /* Added backlight glow */
-    background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, transparent 60%);
+    overflow: visible;
+    /* Removed circular border, now square/rectangular like intro */
     padding: 10px;
-    border-radius: 50%;
 }
 
 .hero-logo {
     max-width: 100%;
     width: 500px;
     height: auto;
-    /* Composite filter: white outline + red glow */
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5));
+    /* Video background fix: darken white background */
+    filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5));
+    mix-blend-mode: screen;
     animation: floatHeroLogo 6s ease-in-out infinite, heroSparkle 3s infinite;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
@@ -390,11 +390,11 @@ body {
 
     0%,
     100% {
-        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5)) brightness(1);
+        filter: invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5)) brightness(1);
     }
 
     50% {
-        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 51, 0.8)) brightness(1.3) contrast(1.1);
+        filter: invert(1) drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 51, 0.8)) brightness(1.3) contrast(1.1);
     }
 }
 
