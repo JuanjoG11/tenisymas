@@ -353,14 +353,22 @@ const observer = new IntersectionObserver((entries) => {
 
 // Observe sections for scroll animations
 document.addEventListener('DOMContentLoaded', () => {
-    // Corrected selectors to match current HTML structure
     const sections = document.querySelectorAll('.catalog, .services-overview, .finance-section, .uniforms-section, .shipping-section, .contact-location');
-    sections.forEach(section => {
-        section.style.opacity = '0';
-        section.style.transform = 'translateY(30px)';
-        section.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-        observer.observe(section);
-    });
+
+    // Quick check for mobile: show everything immediately if small screen
+    if (window.innerWidth <= 768) {
+        sections.forEach(s => {
+            s.style.opacity = '1';
+            s.style.transform = 'none';
+        });
+    } else {
+        sections.forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            observer.observe(section);
+        });
+    }
 
     // Cleanup intro from DOM after animation finishes
     const intro = document.getElementById('intro');
