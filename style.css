@@ -51,14 +51,17 @@
 
 html {
     scroll-behavior: smooth;
+    background-color: #0a0a0a;
 }
 
 body {
     font-family: var(--font-family);
-    background: var(--color-black);
+    background: #0a0a0a !important;
+    background-color: #0a0a0a !important;
     color: var(--color-white);
     line-height: 1.6;
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
 .container {
@@ -158,13 +161,15 @@ body {
 }
 
 .intro-logo {
-    max-width: 80vw;
-    width: 300px;
+    max-width: 85vw;
+    width: 280px;
     height: auto;
     object-fit: contain;
-    /* Invert background (white->black) and hue-rotate (cyan->red) to keep original colors */
+    /* Webkit prefixes for better mobile support */
+    -webkit-filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
     filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6));
     mix-blend-mode: screen;
+    background-color: transparent;
     animation: pulseLogo 3s ease-in-out infinite, sparkleEffect 4s linear infinite;
     position: relative;
 }
@@ -374,12 +379,14 @@ body {
 }
 
 .hero-logo {
-    max-width: 100%;
-    width: 500px;
+    max-width: 90vw;
+    width: 450px;
     height: auto;
-    /* Invert background (white->black) and hue-rotate (cyan->red) to keep original colors */
+    /* Webkit prefixes and background for mobile */
+    -webkit-filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5));
     filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 51, 51, 0.5));
     mix-blend-mode: screen;
+    background-color: transparent;
     animation: floatHeroLogo 6s ease-in-out infinite, heroSparkle 3s infinite;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
@@ -1276,8 +1283,22 @@ body {
         justify-content: center;
     }
 
+    .hero-logo {
+        width: 300px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-md);
+    }
+
+    .product-card {
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
     .decoration-circle,
