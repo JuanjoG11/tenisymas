@@ -155,16 +155,19 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 }) : null;
 
 // Initial Load
-document.addEventListener('DOMContentLoaded', async () => {
-    await syncProducts();
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initial render with local data immediately
     renderProducts('todos');
     setupFilters();
     setupMobileMenu();
     setupSmoothScroll();
+
+    // 2. Sync with Supabase in background (no await)
+    syncProducts();
 });
 
 async function syncProducts() {
-    // If Supabase is blocked by browser or fails to load, use local data immediately
+    // If Supabase is blocked by browser or fails to load, use local data
     if (!supabaseClient) {
         console.warn('Supabase not available. Using local products.');
         return;
@@ -177,12 +180,15 @@ async function syncProducts() {
             .order('id', { ascending: true });
 
         if (error) throw error;
+
         if (data && data.length > 0) {
             products = data;
+            // 3. Re-render only if we have new data
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.category || 'todos';
+            renderProducts(activeFilter);
         }
     } catch (err) {
-        console.error('Network error or Supabase blocked:', err);
-        // Silent fallback: the 'products' array already contains defaults
+        console.error('Network error or Supabase sync failed:', err);
     }
 }
 
