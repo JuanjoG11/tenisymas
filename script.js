@@ -157,7 +157,7 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 // Initial Load
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initial render with local data immediately
-    renderProducts('todos');
+    renderProducts('tenis-guayos');
     setupFilters();
     setupMobileMenu();
     setupSmoothScroll();
@@ -184,7 +184,7 @@ async function syncProducts() {
         if (data && data.length > 0) {
             products = data;
             // 3. Re-render only if we have new data
-            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.category || 'todos';
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.category || 'tenis-guayos';
             renderProducts(activeFilter);
         }
     } catch (err) {
@@ -217,9 +217,7 @@ function renderProducts(category) {
             </div>
         `;
     } else {
-        const filteredProducts = category === 'todos'
-            ? products
-            : products.filter(product => product.category === category);
+        const filteredProducts = products.filter(product => product.category === category);
 
         productsGrid.innerHTML = filteredProducts.map(product => `
             <div class="product-card" data-category="${product.category}">
@@ -353,7 +351,7 @@ const observer = new IntersectionObserver((entries) => {
 
 // Observe sections for scroll animations
 document.addEventListener('DOMContentLoaded', () => {
-    const sections = document.querySelectorAll('.catalog, .services-overview, .finance-section, .uniforms-section, .shipping-section, .contact-location');
+    const sections = document.querySelectorAll('.catalog, .finance-section, .uniforms-section, .shipping-section, .contact-location');
 
     // Quick check for mobile: show everything immediately if small screen
     if (window.innerWidth <= 768) {

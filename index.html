@@ -9,7 +9,7 @@
     <title>TENNISYMAS.CO - Calidad y Comodidad | Tenis, Guayos y Fútbol Sala</title>
     <meta name="description"
         content="TENNISYMAS.CO - Tu tienda de confianza para tenis, guayos y calzado de fútbol sala. Calidad, comodidad y los mejores precios. ¡Una Chimba!">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -47,7 +47,8 @@
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#catalogo">Catálogo</a></li>
                     <li><a href="#finanzas">Pagos y Crédito</a></li>
-                    <li><a href="#servicios">Servicios</a></li>
+                    <li><a href="#uniformes">Uniformes</a></li>
+                    <li><a href="#envios">Envíos</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
             </div>
@@ -86,8 +87,7 @@
             <div class="container">
                 <h2 class="section-title">Nuestro Catálogo</h2>
                 <div class="category-filter">
-                    <button class="filter-btn active" data-category="todos">Todos</button>
-                    <button class="filter-btn" data-category="tenis-guayos">TENIS-GUAYOS</button>
+                    <button class="filter-btn active" data-category="tenis-guayos">TENIS-GUAYOS</button>
                     <button class="filter-btn" data-category="guayos">Guayos</button>
                     <button class="filter-btn" data-category="futsal">FUTSAL</button>
                     <button class="filter-btn" data-category="tennis">TENNIS</button>
@@ -95,35 +95,6 @@
                 </div>
                 <div class="products-grid" id="productsGrid">
                     <!-- Products will be dynamically inserted here -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Services Overview -->
-        <section id="servicios" class="services-overview">
-            <div class="container">
-                <h2 class="section-title">Nuestros Servicios</h2>
-                <div class="services-grid">
-                    <a href="#contacto" class="service-card">
-                        <div class="service-icon">📍</div>
-                        <h3>Ubicación</h3>
-                        <p>Encuéntranos en Pereira</p>
-                    </a>
-                    <a href="#finanzas" class="service-card">
-                        <div class="service-icon">💳</div>
-                        <h3>Pagos y Crédito</h3>
-                        <p>Múltiples opciones y Crédito Directo</p>
-                    </a>
-                    <a href="#uniformes" class="service-card">
-                        <div class="service-icon">👕</div>
-                        <h3>Uniformes</h3>
-                        <p>Personalizados para equipos</p>
-                    </a>
-                    <a href="#envios" class="service-card">
-                        <div class="service-icon">🚀</div>
-                        <h3>Envíos</h3>
-                        <p>A todo el país</p>
-                    </a>
                 </div>
             </div>
         </section>
@@ -235,15 +206,23 @@
                             <p>Seguimiento en tiempo real de tu pedido</p>
                         </div>
                     </div>
-                    <div class="shipping-companies">
-                        <h4>Trabajamos con las mejores transportadoras</h4>
-                        <div class="companies-list">
-                            <span class="company-badge">Servientrega</span>
-                            <span class="company-badge">Coordinadora</span>
-                            <span class="company-badge">Interrapidísimo</span>
-                            <span class="company-badge">Deprisa</span>
+
+                    <!-- New Shipping Gallery for Trust -->
+                    <div class="shipping-gallery-container">
+                        <h4 class="gallery-title">✅ Prueba de Nuestras Entregas</h4>
+                        <div class="shipping-gallery">
+                            <div class="gallery-item">
+                                <img src="images/envio1.jpg" alt="Entrega Tennis y Mas 1" loading="lazy">
+                                <div class="gallery-overlay"><span>¡Entrega Exitosa!</span></div>
+                            </div>
+                            <div class="gallery-item">
+                                <img src="images/envio2.jpg" alt="Entrega Tennis y Mas 2" loading="lazy">
+                                <div class="gallery-overlay"><span>Paquete Asegurado</span></div>
+                            </div>
                         </div>
+                        <p class="gallery-caption">Cientos de clientes ya confían en nuestra calidad y rapidez.</p>
                     </div>
+
                     <div class="shipping-note">
                         <p>💡 <strong>Envío gratis</strong> en compras superiores a $200.000 en ciudades principales</p>
                     </div>
@@ -286,65 +265,77 @@
                         </div>
                     </div>
 
-                    <!-- Location Info with Map -->
-                    <div class="location-info-card">
-                        <div class="location-header">
-                            <h3>🏪 Visítanos en Nuestra Tienda</h3>
-                            <div class="location-details-wrapper">
-                                <p class="location-address">
-                                    <strong>Pasaje comercial BULEVAR DEL CENTRO</strong><br>
-                                    Carrera 7 # 15-44 Local 07<br>
-                                    Pereira, Risaralda<br>
-                                    <span class="location-handle">@TENNISYMAS.CO</span>
-                                </p>
-                                <div class="location-hours">
-                                    <h4>⏰ Horarios de Atención</h4>
-                                    <p>Lunes a Sábado: 9:00 AM - 7:00 PM</p>
-                                    <p>Domingos: 10:00 AM - 5:00 PM</p>
+                    <!-- Locations Info -->
+                    <div class="locations-container">
+                        <div class="location-info-card">
+                            <div class="location-header">
+                                <h3>🏪 Sede 1: Bulevar del Centro</h3>
+                                <div class="location-details">
+                                    <p class="location-address">
+                                        <strong>Pasaje comercial BULEVAR DEL CENTRO</strong><br>
+                                        Carrera 7 # 15-44 Local 07<br>
+                                        Pereira, Risaralda
+                                    </p>
+                                    <div class="location-hours">
+                                        <p><strong>Lunes a Sábado:</strong> 9:00 AM - 7:00 PM</p>
+                                        <p><strong>Domingos:</strong> 10:00 AM - 5:00 PM</p>
+                                    </div>
+                                    <a href="https://maps.google.com/?q=Carrera+7+15-44+Pereira+Risaralda"
+                                        target="_blank" class="btn btn-primary btn-sm btn-full">Cómo llegar</a>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="map-container">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.740676680232!2d-75.69385772469793!3d4.814529295160946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e38874824a3f86d%3A0xeb6f16f7c2122d73!2sCra.%207%20%2315-44%2C%20Pereira%2C%20Risaralda!5e0!3m2!1ses!2sco!4v1769200548536!5m2!1ses!2sco"
-                                width="100%" height="400" style="border:0; border-radius: 16px;" allowfullscreen=""
-                                loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-                            </iframe>
+                        <div class="location-info-card highlighted-location">
+                            <div class="location-header">
+                                <h3>🏪 Sede 2: Fantasías New York</h3>
+                                <div class="location-details">
+                                    <p class="location-address">
+                                        <strong>Cc Fantasías New York</strong><br>
+                                        Octava entre 16 y 17<br>
+                                        Nivel intermedio. Local 3 y 4<br>
+                                        Pereira, Risaralda<br>
+                                        <em>(Al frente de los paisas)</em>
+                                    </p>
+                                    <div class="location-hours">
+                                        <p><strong>Lunes a Sábado:</strong> 9:00 AM - 7:00 PM</p>
+                                        <p><strong>Domingos:</strong> 10:00 AM - 5:00 PM</p>
+                                    </div>
+                                    <a href="https://maps.google.com/?q=Cc+Fantasias+New+York+Pereira" target="_blank"
+                                        class="btn btn-primary btn-sm btn-full">Cómo llegar</a>
+                                </div>
+                            </div>
                         </div>
-
-                        <a href="https://maps.google.com/?q=Carrera+7+15-44+Pereira+Risaralda" target="_blank"
-                            class="btn btn-primary btn-full">
-                            Ver en Google Maps
-                        </a>
                     </div>
+
                 </div>
             </div>
-        </section>
+    </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container">
-                <div class="footer-content">
-                    <div class="footer-brand">
-                        <h3>TENNISYMAS.CO</h3>
-                        <p>Calidad y Comodidad</p>
-                    </div>
-                    <div class="footer-links">
-                        <a href="https://wa.me/573204961453" target="_blank">WhatsApp</a>
-                        <a href="https://instagram.com/tennisymas.col" target="_blank">Instagram</a>
-                        <a href="https://instagram.com/tennisymas.store" target="_blank">Catálogo</a>
-                    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>TENNISYMAS.CO</h3>
+                    <p>Calidad y Comodidad</p>
                 </div>
-                <div class="footer-bottom">
-                    <p>&copy; 2026 TENNISYMAS.CO - Todos los derechos reservados</p>
+                <div class="footer-links">
+                    <a href="https://wa.me/573204961453" target="_blank">WhatsApp</a>
+                    <a href="https://instagram.com/tennisymas.col" target="_blank">Instagram</a>
+                    <a href="https://instagram.com/tennisymas.store" target="_blank">Catálogo</a>
                 </div>
             </div>
-        </footer>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TENNISYMAS.CO - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=2.0"></script>
 </body>
 
 </html>
