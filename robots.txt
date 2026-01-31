@@ -4,4 +4,4 @@ Disallow: /admin.html
 Disallow: /admin.js
 Disallow: /admin.css
 
-Sitemap: https://tennisymas.co/sitemap.xml
+Sitemap: https://tennisymas.com/sitemap.xml
