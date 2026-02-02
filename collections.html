@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo - TENNISYMAS.COM</title>
+    <meta name="description"
+        content="Explora nuestro catálogo completo de guayos, tenis de fútbol sala y calzado deportivo.">
+    <link rel="shortcut icon" href="images/logo-tm.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="collections-style.css?v=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Announcement Ticker Banner -->
+    <div class="announcement-bar">
+        <div class="announcement-ticker">
+            <div class="ticker-content">
+                <span class="ticker-item">
+                    ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
+                </span>
+                <span class="ticker-item">
+                    🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
+                </span>
+                <span class="ticker-item">
+                    💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
+                </span>
+                <span class="ticker-item">
+                    ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
+                </span>
+                <span class="ticker-item">
+                    ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
+                </span>
+                <span class="ticker-item">
+                    💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
+                </span>
+                <!-- Duplicate for seamless loop -->
+                <span class="ticker-item">
+                    ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
+                </span>
+                <span class="ticker-item">
+                    🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
+                </span>
+                <span class="ticker-item">
+                    💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
+                </span>
+                <span class="ticker-item">
+                    ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
+                </span>
+                <span class="ticker-item">
+                    ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
+                </span>
+                <span class="ticker-item">
+                    💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="header-main">
+            <div class="container header-grid">
+                <!-- Left: Back Button -->
+                <div class="header-socials">
+                    <a href="index.html" class="back-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        Volver
+                    </a>
+                </div>
+
+                <!-- Center: Logo -->
+                <div class="header-logo">
+                    <a href="index.html">
+                        <img src="images/logo-tm.png" alt="TennisYMas Logo" class="main-logo">
+                    </a>
+                </div>
+
+                <!-- Right: Spacer for layout balance -->
+                <div class="header-actions">
+                    <!-- Cart button removed - using floating button instead -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="collections-main">
+        <div class="container-fluid">
+            <!-- Category Title -->
+            <div class="category-header">
+                <h1 id="categoryTitle">Catálogo</h1>
+                <p id="categorySubtitle">Explora nuestra colección completa</p>
+                <div class="results-count">
+                    <span id="resultsCount">0 productos</span>
+                </div>
+            </div>
+
+            <div class="collections-layout">
+                <!-- SIDEBAR FILTERS -->
+                <aside class="filters-sidebar" id="filtersSidebar">
+                    <div class="filters-header">
+                        <h3>Filtros</h3>
+                        <button class="clear-filters" id="clearFilters">Limpiar todo</button>
+                    </div>
+
+                    <!-- Brand Filter -->
+                    <div class="filter-group">
+                        <h4 class="filter-title">Marca</h4>
+                        <div class="filter-options" id="brandFilters">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div class="filter-group">
+                        <h4 class="filter-title">Precio</h4>
+                        <div class="filter-options" id="priceFilters">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="0-100000" data-filter="price">
+                                <span>Menos de $100.000</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="100000-200000" data-filter="price">
+                                <span>$100.000 - $200.000</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="200000-300000" data-filter="price">
+                                <span>$200.000 - $300.000</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="300000-999999" data-filter="price">
+                                <span>Más de $300.000</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Size Filter -->
+                    <div class="filter-group">
+                        <h4 class="filter-title">Talla</h4>
+                        <div class="filter-options size-grid" id="sizeFilters">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Discount Filter -->
+                    <div class="filter-group">
+                        <h4 class="filter-title">Ofertas</h4>
+                        <div class="filter-options">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" id="discountFilter" data-filter="discount">
+                                <span>Solo productos en oferta</span>
+                            </label>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- PRODUCTS GRID -->
+                <div class="products-area">
+                    <!-- Mobile Filter Button -->
+                    <button class="mobile-filters-btn" id="mobileFiltersBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="4" y1="6" x2="20" y2="6" />
+                            <line x1="4" y1="12" x2="20" y2="12" />
+                            <line x1="4" y1="18" x2="20" y2="18" />
+                        </svg>
+                        Filtros
+                    </button>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid-collections" id="productsGrid">
+                        <!-- Products dynamically inserted here -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <div class="empty-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </div>
+                        <h3>No encontramos productos</h3>
+                        <p>Intenta ajustar los filtros o explorar otras categorías</p>
+                        <button class="btn btn-primary" onclick="clearAllFilters()">Limpiar filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>TENNISYMAS.COM</h3>
+                    <p>Calidad y Comodidad</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://wa.me/573204961453" target="_blank">WhatsApp</a>
+                    <a href="https://instagram.com/tennisymas.col" target="_blank">Instagram</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TENNISYMAS.COM - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Cart Button -->
+    <div class="cart-float-btn" id="cartBtn">
+        <div class="cart-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M4.17 3.51a.75.75 0 0 1 .75-.75h1.76a.75.75 0 0 1 .74.66l.32 2.37h12.52a.75.75 0 0 1 .74.66l1.24 9.04a.75.75 0 0 1-.74.85H7.7a.75.75 0 0 1-.74-.66l-1.05-7.73H4.92l-.32-2.37A2.25 2.25 0 0 0 2.37 3.51H2.25a.75.75 0 0 1 0-1.5h.12a.75.75 0 0 1 .75.75ZM6.5 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM19.5 21a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+            </svg>
+            <span class="cart-count" id="cartCount">0</span>
+        </div>
+    </div>
+
+    <!-- CART CHEKOUT SYSTEM (Standardized) -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h3>Tu Carrito <span id="cartTotalItems">(0)</span></h3>
+            <button class="close-cart" id="closeCart">&times;</button>
+        </div>
+
+        <!-- Cart Items View -->
+        <div id="cartView">
+            <div class="cart-items" id="cartItems">
+                <!-- Items inserted via JS -->
+                <div class="empty-cart-msg">Tu carrito está vacío</div>
+            </div>
+            <div class="cart-footer" id="cartFooter">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotalPrice">$0</span>
+                </div>
+                <button class="btn btn-primary btn-full" id="btnGoToCheckout">Finalizar Compra</button>
+            </div>
+        </div>
+
+        <!-- Checkout Form View (Hidden by default) -->
+        <div id="checkoutView" style="display: none;">
+            <div class="checkout-header">
+                <button class="btn-back-cart" id="btnBackToCart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Volver
+                </button>
+                <h4>Datos de Envío</h4>
+            </div>
+            <form id="integratedCheckoutForm" class="checkout-form">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="custName" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono / WhatsApp</label>
+                    <input type="tel" id="custPhone" placeholder="Ej: 300 123 4567" required>
+                </div>
+                <div class="form-group">
+                    <label>Ciudad y Departamento</label>
+                    <input type="text" id="custCity" placeholder="Ej: Bogotá, Cundinamarca" required>
+                </div>
+                <div class="form-group">
+                    <label>Dirección Exacta</label>
+                    <textarea id="custAddress" rows="2" placeholder="Ej: Cra 45 # 123-45, Apto 201" required></textarea>
+                </div>
+                <div class="checkout-summary">
+                    <p>Total a Pagar: <strong id="checkoutTotalDisplay">$0</strong></p>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Confirmar Pedido (WhatsApp)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="script.js?v=4.0"></script>
+    <script src="collections-script.js?v=2.0"></script>
+</body>
+
+</html>

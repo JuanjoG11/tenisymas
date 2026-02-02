@@ -1,149 +1,6 @@
 // Product Data
-let products = [
-    // Tenis-Guayos
-    {
-        id: 1,
-        name: 'Tenis Adidas Rosados',
-        category: 'tenis-guayos',
-        price: '$250.000',
-        oldPrice: '$320.000',
-        image: 'images/tenis1.png'
-    },
-    {
-        id: 2,
-        name: 'Tenis Nike Morados',
-        category: 'tenis-guayos',
-        price: '$220.000',
-        oldPrice: '$280.000',
-        image: 'images/tenis2.png'
-    },
-    {
-        id: 3,
-        name: 'Tenis Blancos/Azules',
-        category: 'tenis-guayos',
-        price: '$200.000',
-        oldPrice: '$260.000',
-        image: 'images/tenis3.png'
-    },
-    {
-        id: 4,
-        name: 'Tenis Amarillos Neón',
-        category: 'tenis-guayos',
-        price: '$180.000',
-        oldPrice: '$240.000',
-        image: 'images/tenis4.png'
-    },
-
-    // Guayos
-    {
-        id: 5,
-        name: 'Guayos Adidas Rosados',
-        category: 'guayos',
-        price: '$320.000',
-        oldPrice: '$400.000',
-        image: 'images/guayo1.png'
-    },
-    {
-        id: 6,
-        name: 'Guayos Adidas Blancos',
-        category: 'guayos',
-        price: '$350.000',
-        oldPrice: '$450.000',
-        image: 'images/guayo2.png'
-    },
-    {
-        id: 7,
-        name: 'Guayos Nike Negros/Dorados',
-        category: 'guayos',
-        price: '$300.000',
-        oldPrice: '$380.000',
-        image: 'images/guayo3.png'
-    },
-    {
-        id: 8,
-        name: 'Guayos Nike Aqua',
-        category: 'guayos',
-        price: '$340.000',
-        oldPrice: '$420.000',
-        image: 'images/guayo4.png'
-    },
-
-    // Fútbol Sala
-    {
-        id: 9,
-        name: 'Futsal Nike Blancos Multicolor',
-        category: 'futsal',
-        price: '$280.000',
-        oldPrice: '$350.000',
-        image: 'images/futsal1.png'
-    },
-    {
-        id: 10,
-        name: 'Futsal Morados Arcoíris',
-        category: 'futsal',
-        price: '$260.000',
-        oldPrice: '$320.000',
-        image: 'images/futsal2.png'
-    },
-    {
-        id: 11,
-        name: 'Futsal Nike Fucsia',
-        category: 'futsal',
-        price: '$270.000',
-        oldPrice: '$340.000',
-        image: 'images/futsal3.png'
-    },
-    {
-        id: 12,
-        name: 'Futsal Nike Total 90',
-        category: 'futsal',
-        price: '$290.000',
-        oldPrice: '$380.000',
-        image: 'images/futsal4.png'
-    },
-
-    // Niños
-    {
-        id: 13,
-        name: 'Zapato Niños 1',
-        category: 'ninos',
-        price: '$120.000',
-        oldPrice: '$180.000',
-        image: 'images/ninos1.jpg'
-    },
-    {
-        id: 14,
-        name: 'Zapato Niños 2',
-        category: 'ninos',
-        price: '$130.000',
-        oldPrice: '$190.000',
-        image: 'images/ninos2.jpg'
-    },
-    {
-        id: 15,
-        name: 'Zapato Niños 3',
-        category: 'ninos',
-        price: '$125.000',
-        oldPrice: '$185.000',
-        image: 'images/ninos3.jpg'
-    },
-    {
-        id: 16,
-        name: 'Zapato Niños 4',
-        category: 'ninos',
-        price: '$115.000',
-        oldPrice: '$175.000',
-        image: 'images/ninos4.jpg'
-    },
-    {
-        id: 17,
-        name: 'Zapato Niños 5',
-        category: 'ninos',
-        price: '$120.000',
-        oldPrice: '$180.000',
-        image: 'images/ninos5.jpg'
-    }
-];
+// Product Data
+let products = [];
 
 // Supabase Configuration
 const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
@@ -156,153 +13,396 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 
 // Initial Load
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initial render with local data immediately
-    renderProducts('tenis-guayos');
-    setupFilters();
+    // 1. Initialize State
+    loadCart();
+
+    // 2. Render Sections
+    // 2. Render Sections (Removed: Homepage is navigational only)
+
+    // 3. Setup UI Interactions
+    setupCartInteractions();
+    setupSlider();
     setupMobileMenu();
     setupSmoothScroll();
+    setupHeroBackgroundSlider();
 
-    // 2. Sync with Supabase in background (no await)
+    // 4. Sync with Supabase (if available)
     syncProducts();
 });
 
-async function syncProducts() {
-    // If Supabase is blocked by browser or fails to load, use local data
-    if (!supabaseClient) {
-        console.warn('Supabase not available. Using local products.');
+// ==================== HERO BACKGROUND SLIDER ====================
+function setupHeroBackgroundSlider() {
+    const slides = document.querySelectorAll('.hero-slide');
+    if (slides.length === 0) return;
+
+    let currentSlide = 0;
+    const intervalTime = 3000; // 3 seconds
+
+    setInterval(() => {
+        // Remove active from current
+        slides[currentSlide].classList.remove('active');
+
+        // Move to next
+        currentSlide = (currentSlide + 1) % slides.length;
+
+        // Add active to next
+        slides[currentSlide].classList.add('active');
+    }, intervalTime);
+}
+
+
+// ==================== STATE MANAGEMENT ====================
+let cart = [];
+
+function loadCart() {
+    const savedCart = localStorage.getItem('tm_cart');
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+        updateCartUI();
+    }
+}
+
+function saveCart() {
+    localStorage.setItem('tm_cart', JSON.stringify(cart));
+    updateCartUI();
+}
+
+// ==================== RENDERING ====================
+function renderHomepageSections() {
+    // Content removed - homepage is navigational only
+}
+
+function renderProductGrid(containerId, category) {
+    const container = document.getElementById(containerId);
+    if (!container) return; // Container might not exist if we changed HTML structure, fail gracefully
+
+    const filteredProducts = products.filter(p => p.category === category);
+
+    if (filteredProducts.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:white; opacity:0.7;">Próximamente más productos.</p>';
         return;
     }
 
-    try {
-        const { data, error } = await supabaseClient
-            .from('products')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-            products = data;
-            // 3. Re-render only if we have new data
-            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.category || 'tenis-guayos';
-            renderProducts(activeFilter);
-        }
-    } catch (err) {
-        console.error('Network error or Supabase sync failed:', err);
-    }
-}
-
-// WhatsApp Configuration
-const WHATSAPP_NUMBER = '573204961453';
-
-// DOM Elements
-const productsGrid = document.getElementById('productsGrid');
-const filterButtons = document.querySelectorAll('.filter-btn');
-const menuToggle = document.getElementById('menuToggle');
-const navMenu = document.getElementById('navMenu');
-
-// Render Products
-function renderProducts(category) {
-    if (category === 'tennis') {
-        productsGrid.innerHTML = `
-            <div class="variety-banner">
-                <div style="font-size: 3rem; margin-bottom: 20px;">👟✨</div>
-                <h3>¡MUCHA VARIEDAD PARA MOSTRAR!</h3>
-                <p>
-                    La línea de <strong>Tennis</strong> se renueva de forma continua para ofrecer siempre lo último del mercado.
-                </p>
-                <button class="btn btn-primary" onclick="window.open('https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('¡Hola! Me gustaría ver la variedad de modelos en la línea de Tennis. ¿Podrían enviarme el catálogo actual?')}', '_blank')">
-                    Ver Catálogo Completo en WhatsApp
+    container.innerHTML = filteredProducts.map(product => `
+        <div class="product-card">
+            <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+            <div class="product-info">
+                <h3 class="product-name">${product.name}</h3>
+                <div class="product-price-container">
+                    ${product.oldPrice ? `<span class="product-old-price">${product.oldPrice}</span>` : ''}
+                    <span class="product-price">${product.price}</span>
+                </div>
+                <button class="product-btn" onclick="addToCart(${product.id})">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <span>Agregar al Carrito</span>
                 </button>
             </div>
-        `;
-    } else {
-        const filteredProducts = products.filter(product => product.category === category);
+        </div>
+    `).join('');
+}
 
-        productsGrid.innerHTML = filteredProducts.map(product => `
-            <div class="product-card" data-category="${product.category}">
-                <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
-                <div class="product-info">
-                    <h3 class="product-name">${product.name}</h3>
-                    <div class="product-price-container">
-                        ${product.oldPrice ? `<span class="product-old-price">${product.oldPrice}</span>` : ''}
-                        <span class="product-price">${product.price}</span>
-                    </div>
-                    <button class="product-btn" onclick="buyProduct('${product.name}', '${product.price}')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                        </svg>
-                        Comprar por WhatsApp
-                    </button>
-                </div>
-            </div>
-        `).join('');
+// ==================== CART LOGIC ====================
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const existingItem = cart.find(item => item.id === productId);
+
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1
+        });
     }
 
-    // Add animation to cards
-    const cards = document.querySelectorAll('.product-card, .variety-banner');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
+    saveCart();
+    openCart(); // Auto open cart to show feedback
 }
 
-// Setup Category Filters
-function setupFilters() {
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Update active state
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    saveCart();
+}
 
-            // Filter products
-            const category = button.dataset.category;
-            renderProducts(category);
+function updateQuantity(productId, change) {
+    const item = cart.find(i => i.id === productId);
+    if (!item) return;
+
+    item.quantity += change;
+    if (item.quantity <= 0) {
+        removeFromCart(productId);
+    } else {
+        saveCart();
+    }
+}
+
+function updateCartUI() {
+    const cartCount = document.getElementById('cartCount');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotalItems = document.getElementById('cartTotalItems');
+    const cartTotalPrice = document.getElementById('cartTotalPrice');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    if (!cartCount || !cartItems) return; // Safety check
+
+    // Update Counts
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (cartCount) cartCount.textContent = totalQty;
+    if (cartTotalItems) cartTotalItems.textContent = `(${totalQty})`;
+
+    // Update Items List
+    if (cart.length === 0) {
+        if (cartItems) cartItems.innerHTML = '<div class="empty-cart-msg">Tu carrito está vacío 🛒</div>';
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.5';
+        }
+    } else {
+        if (cartItems) {
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="item-details">
+                        <h4>${item.name}</h4>
+                        <p>${item.price}</p>
+                        <div class="item-controls">
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">&times;</button>
+                </div>
+            `).join('');
+        }
+        if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.style.opacity = '1';
+        }
+    }
+
+    // Update Total Price (Parsing currency string like "$250.000")
+    const total = cart.reduce((sum, item) => {
+        // Remove symbols and dots, but handle carefully
+        const priceClean = parseInt(item.price.replace(/[^0-9]/g, ''));
+        return sum + (priceClean * item.quantity);
+    }, 0);
+
+    if (cartTotalPrice) cartTotalPrice.textContent = `$${total.toLocaleString('es-CO')}`;
+}
+
+function setupCartInteractions() {
+    const cartBtn = document.getElementById('cartBtn');
+    const closeCart = document.getElementById('closeCart');
+    const cartOverlay = document.getElementById('cartOverlay');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    if (cartBtn) cartBtn.addEventListener('click', openCart);
+    if (closeCart) closeCart.addEventListener('click', closeCartDrawer);
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCartDrawer);
+    if (checkoutBtn) {
+        // Legacy button handler removed/updated
+    }
+
+    // New Integrated Checkout Elements
+    const btnGoToCheckout = document.getElementById('btnGoToCheckout');
+    const btnBackToCart = document.getElementById('btnBackToCart');
+    const checkoutForm = document.getElementById('integratedCheckoutForm');
+
+    if (btnGoToCheckout) {
+        btnGoToCheckout.addEventListener('click', () => {
+            document.getElementById('cartView').style.display = 'none';
+            document.getElementById('checkoutView').style.display = 'block';
+
+            // Update total in checkout view
+            const total = document.getElementById('cartTotalPrice');
+            const checkoutTotal = document.getElementById('checkoutTotalDisplay');
+            if (total && checkoutTotal) checkoutTotal.textContent = total.textContent;
         });
+    }
+
+    if (btnBackToCart) {
+        btnBackToCart.addEventListener('click', () => {
+            document.getElementById('checkoutView').style.display = 'none';
+            document.getElementById('cartView').style.display = 'block';
+        });
+    }
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleIntegratedCheckout();
+        });
+    }
+}
+
+function handleIntegratedCheckout() {
+    if (cart.length === 0) return;
+
+    const name = document.getElementById('custName').value;
+    const phone = document.getElementById('custPhone').value;
+    const city = document.getElementById('custCity').value;
+    const address = document.getElementById('custAddress').value;
+
+    const WHATSAPP_NUMBER = '573204961453';
+    let message = `Hola! Quiero realizar el siguiente pedido:\n\n`;
+    message += `👤 *Cliente:* ${name}\n`;
+    message += `📞 *Tel:* ${phone}\n`;
+    message += `📍 *Ciudad:* ${city}\n`;
+    message += `🏠 *Dirección:* ${address}\n\n`;
+    message += `🛒 *PEDIDO:*\n`;
+
+    let total = 0;
+    cart.forEach(item => {
+        const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
+        total += itemTotal;
+        message += `📦 *${item.quantity}x ${item.name}* - ${item.price}\n`;
     });
+
+    message += `\n💰 *TOTAL GLOBAL: $${total.toLocaleString('es-CO')}*\n\n¿Quedo atento a la confirmación!`;
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
 }
 
-// Buy Product via WhatsApp
-function buyProduct(productName, productPrice) {
-    const message = `¡Hola! Me interesa comprar:\n\n📦 Producto: ${productName}\n💰 Precio: ${productPrice}\n\n¿Está disponible?`;
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-
-    window.open(whatsappUrl, '_blank');
+function openCart() {
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    if (drawer) drawer.classList.add('active');
+    if (overlay) overlay.classList.add('active');
 }
 
-// Mobile Menu Toggle
+function closeCartDrawer() {
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    if (drawer) drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function checkout() {
+    if (cart.length === 0) return;
+
+    const WHATSAPP_NUMBER = '573204961453';
+    let message = "Hola! Quiero realizar el siguiente pedido:\n\n";
+
+    let total = 0;
+    cart.forEach(item => {
+        const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
+        total += itemTotal;
+        message += `📦 *${item.quantity}x ${item.name}*\n   Precio: ${item.price}\n`;
+    });
+
+    message += `\n💰 *TOTAL GLOBAL: $${total.toLocaleString('es-CO')}*\n\n¿Me confirman disponibilidad?`;
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// ==================== 3D CAROUSEL ====================
+function setupSlider() {
+    const cards = document.querySelectorAll('.carousel-card');
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+
+    if (cards.length === 0) return;
+
+    let currentIndex = 0;
+    // Set initial card index (0 = Guayos, etc)
+
+    function updateCarousel() {
+        cards.forEach((card, index) => {
+            // Reset classes
+            card.className = 'carousel-card';
+
+            // Calculate distance from current index with wrapping
+            let diff = (index - currentIndex) % cards.length;
+            if (diff < 0) diff += cards.length;
+
+            // Determine active, next, prev
+            if (diff === 0) {
+                card.classList.add('active');
+            } else if (diff === 1) {
+                card.classList.add('next');
+            } else if (diff === cards.length - 1) {
+                card.classList.add('prev');
+            }
+            // Others remain hidden via CSS
+        });
+    }
+
+    function rotateNext() {
+        currentIndex = (currentIndex + 1) % cards.length;
+        updateCarousel();
+    }
+
+    function rotatePrev() {
+        currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+        updateCarousel();
+    }
+
+    if (nextBtn) nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent card click
+        rotateNext();
+        resetTimer();
+    });
+
+    if (prevBtn) prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        rotatePrev();
+        resetTimer();
+    });
+
+    // Make cards clickable for navigation if they are effectively next/prev (optional UX)
+    // But our cards have onclick links now.
+
+    // Initial State
+    updateCarousel();
+
+    // Auto Play
+    let timer = setInterval(rotateNext, 5000);
+
+    function resetTimer() {
+        clearInterval(timer);
+        timer = setInterval(rotateNext, 5000);
+    }
+}
+
+// ==================== UTILS ====================
+
+// Mobile Menu
 function setupMobileMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+
+    if (!menuToggle || !navMenu) return;
+
     menuToggle.addEventListener('click', () => {
         navMenu.classList.toggle('active');
-
-        // Animate hamburger menu
+        // Toggle Animation here if needed, or rely on CSS
         const spans = menuToggle.querySelectorAll('span');
         if (navMenu.classList.contains('active')) {
-            spans[0].style.transform = 'rotate(45deg) translateY(8px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translateY(-8px)';
+            if (spans[0]) spans[0].style.transform = 'rotate(45deg) translateY(8px)';
+            if (spans[1]) spans[1].style.opacity = '0';
+            if (spans[2]) spans[2].style.transform = 'rotate(-45deg) translateY(-8px)';
         } else {
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
+            if (spans[0]) spans[0].style.transform = 'none';
+            if (spans[1]) spans[1].style.opacity = '1';
+            if (spans[2]) spans[2].style.transform = 'none';
         }
     });
 
-    // Close menu when clicking on a link
-    const navLinks = document.querySelectorAll('.nav-menu a');
-    navLinks.forEach(link => {
+    document.querySelectorAll('.nav-menu a').forEach(link => {
         link.addEventListener('click', () => {
             navMenu.classList.remove('active');
             const spans = menuToggle.querySelectorAll('span');
-            spans[0].style.transform = 'none';
-            spans[1].style.opacity = '1';
-            spans[2].style.transform = 'none';
+            if (spans[0]) spans[0].style.transform = 'none';
+            if (spans[1]) spans[1].style.opacity = '1';
+            if (spans[2]) spans[2].style.transform = 'none';
         });
     });
 }
@@ -314,65 +414,42 @@ function setupSmoothScroll() {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                const offsetTop = target.offsetTop - 80; // Account for fixed navbar
+                const headerOffset = 85;
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
                 window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
+                    top: offsetPosition,
+                    behavior: "smooth"
                 });
             }
         });
     });
 }
 
-// Parallax Effect on Hero
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero-decoration');
-    if (hero) {
-        hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-    }
-});
+// Supabase Sync (Kept from original)
+async function syncProducts() {
+    if (!supabaseClient) return;
 
-// Add intersection observer for scroll animations
-const observerOptions = {
-    threshold: 0.05, // Lower threshold for faster reveal
-    rootMargin: '0px 0px -50px 0px'
-};
+    try {
+        const { data, error } = await supabaseClient
+            .from('products')
+            .select('*')
+            .order('id', { ascending: true });
 
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-            observer.unobserve(entry.target); // Stop observing once revealed
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            products = data;
+            renderHomepageSections(); // Re-render with new data
         }
-    });
-}, observerOptions);
-
-// Observe sections for scroll animations
-document.addEventListener('DOMContentLoaded', () => {
-    const sections = document.querySelectorAll('.catalog, .finance-section, .uniforms-section, .shipping-section, .contact-location');
-
-    // Quick check for mobile: show everything immediately if small screen
-    if (window.innerWidth <= 768) {
-        sections.forEach(s => {
-            s.style.opacity = '1';
-            s.style.transform = 'none';
-        });
-    } else {
-        sections.forEach(section => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(30px)';
-            section.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            observer.observe(section);
-        });
+    } catch (err) {
+        console.error('Supabase sync failed:', err);
     }
 
-    // Cleanup intro from DOM after animation finishes
-    const intro = document.getElementById('intro');
-    if (intro) {
-        setTimeout(() => {
-            intro.style.display = 'none';
-        }, 5000); // After the 4s animation + fade
-    }
-});
+}
+
+// Initialize
+syncProducts();
+
+// End Script

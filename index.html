@@ -82,6 +82,7 @@
     </script>
 
     <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="carousel.css?v=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -89,7 +90,15 @@
 </head>
 
 <body>
-    <!-- Animated Intro -->
+    <!-- Intro Animation -->
+    <script>
+        // Check if intro should be skipped
+        if (sessionStorage.getItem('introShown')) {
+            document.write('<style>.intro { display: none !important; } .main-content { opacity: 1 !important; animation: none !important; }</style>');
+        }
+        // Set flag for next time
+        sessionStorage.setItem('introShown', 'true');
+    </script>
     <div id="intro" class="intro">
         <div class="soccer-ball"></div>
         <div class="logo-reveal">
@@ -105,76 +114,264 @@
 
     <!-- Main Website -->
     <div id="main-content" class="main-content">
+        <!-- Announcement Ticker Banner -->
+        <div class="announcement-bar">
+            <div class="announcement-ticker">
+                <div class="ticker-content">
+                    <span class="ticker-item">
+                        ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
+                    </span>
+                    <span class="ticker-item">
+                        🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
+                    </span>
+                    <span class="ticker-item">
+                        💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
+                    </span>
+                    <span class="ticker-item">
+                        ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
+                    </span>
+                    <span class="ticker-item">
+                        ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
+                    </span>
+                    <span class="ticker-item">
+                        💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
+                    </span>
+                    <!-- Duplicate for seamless loop -->
+                    <span class="ticker-item">
+                        ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
+                    </span>
+                    <span class="ticker-item">
+                        🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
+                    </span>
+                    <span class="ticker-item">
+                        💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
+                    </span>
+                    <span class="ticker-item">
+                        ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
+                    </span>
+                    <span class="ticker-item">
+                        ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
+                    </span>
+                    <span class="ticker-item">
+                        💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <!-- Navigation -->
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-logo">
                     <img src="images/logo-tm.png" alt="Tennis y Mas - Guayos y Tenis Originales" class="nav-logo-img">
                 </div>
-                <button class="menu-toggle" id="menuToggle">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+
+                <div class="nav-actions">
+                    <button class="cart-btn" id="cartBtn" aria-label="Ver Carrito">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </button>
+                    <button class="menu-toggle" id="menuToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+
                 <ul class="nav-menu" id="navMenu">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#catalogo">Catálogo</a></li>
-                    <li><a href="#finanzas">Pagos y Crédito</a></li>
-                    <li><a href="#uniformes">Uniformes</a></li>
-                    <li><a href="#envios">Envíos</a></li>
+                    <li><a href="#tenis-section">Tenis-Guayos</a></li>
+                    <li><a href="#guayos-section">Guayos</a></li>
+                    <li><a href="#futsal-section">Futsal</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
             </div>
         </nav>
 
-        <!-- Hero Section -->
-        <section id="inicio" class="hero">
-            <div class="hero-content">
-                <div class="hero-badge">¡UNA CHIMBA!</div>
-                <div class="hero-logo-container">
-                    <div class="video-wrapper hero-video-wrapper">
-                        <h1>
-                            <span class="sr-only">TENNISYMAS.CO - Guayos, Tenis Futsal y Calzado Deportivo</span>
-                            <video src="images/logo-video.mov" poster="images/logo-tm.png"
-                                alt="Tennis y Mas - Guayos y Futsal" class="hero-logo" autoplay muted playsinline
-                                loop></video>
-                        </h1>
-                    </div>
-                </div>
-                <p class="hero-subtitle">Calidad y Comodidad</p>
-                <div class="hero-cta">
-                    <a href="#catalogo" class="btn btn-primary">Ver Catálogo</a>
-                    <a href="https://wa.me/573204961453" target="_blank" class="btn btn-secondary">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                        </svg>
-                        WhatsApp
-                    </a>
+        <!-- Cart Drawer -->
+        <div class="cart-overlay" id="cartOverlay"></div>
+        <div class="cart-drawer" id="cartDrawer">
+            <div class="cart-header">
+                <h3>Tu Carrito <span id="cartTotalItems">(0)</span></h3>
+                <button class="close-cart" id="closeCart">&times;</button>
+            </div>
+
+            <!-- Conversion: Free Shipping Bar -->
+            <div class="cart-shipping-bar">
+                <p id="shippingMsg">¡Estás a <span id="shippingGap">$200.000</span> del <strong>ENVÍO GRATIS</strong>!
+                </p>
+                <div class="progress-track">
+                    <div class="progress-fill" id="shippingProgress" style="width: 0%"></div>
                 </div>
             </div>
+
+            <!-- Cart Items View -->
+            <div id="cartView">
+                <div class="cart-items" id="cartItems">
+                    <!-- Items inserted via JS -->
+                    <div class="empty-cart-msg">Tu carrito está vacío</div>
+                </div>
+                <div class="cart-footer" id="cartFooter">
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <span id="cartTotalPrice">$0</span>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="btnGoToCheckout">Finalizar Compra</button>
+
+                    <!-- Conversion: Trust Badges -->
+                    <div class="cart-trust">
+                        <p>🔒 Pago 100% Seguro contraentrega</p>
+                        <div class="trust-icons">
+                            <span>🛡️ Garantía</span>
+                            <span>🚚 Envíos Rápidos</span>
+                            <span>📞 Soporte 24/7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout Form View (Hidden by default) -->
+            <div id="checkoutView" style="display: none;">
+                <div class="checkout-header">
+                    <button class="btn-back-cart" id="btnBackToCart">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        Volver
+                    </button>
+                    <h4>Datos de Envío</h4>
+                </div>
+                <form id="integratedCheckoutForm" class="checkout-form">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="custName" placeholder="Ej: Juan Pérez" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono / WhatsApp</label>
+                        <input type="tel" id="custPhone" placeholder="Ej: 300 123 4567" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ciudad y Departamento</label>
+                        <input type="text" id="custCity" placeholder="Ej: Bogotá, Cundinamarca" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Dirección Exacta</label>
+                        <textarea id="custAddress" rows="2" placeholder="Ej: Cra 45 # 123-45, Apto 201"
+                            required></textarea>
+                    </div>
+                    <div class="checkout-summary">
+                        <p>Total a Pagar: <strong id="checkoutTotalDisplay">$0</strong></p>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Confirmar Pedido (WhatsApp)</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3D Category Carousel Section -->
+        <!-- 3D Category Carousel Section -->
+        <section id="inicio" class="carousel-section">
+            <!-- Background Slider -->
+            <div class="hero-bg-slider" id="heroBgSlider">
+                <div class="hero-slide active" style="background-image: url('images/store-bg-1.jpg')"></div>
+                <div class="hero-slide" style="background-image: url('images/store-bg-2.jpg')"></div>
+                <div class="hero-slide" style="background-image: url('images/store-bg-3.jpg')"></div>
+                <div class="hero-slide" style="background-image: url('images/store-bg-4.jpg')"></div>
+                <div class="hero-slide" style="background-image: url('images/store-bg-5.jpg')"></div>
+            </div>
+            <div class="hero-overlay"></div>
+
+            <div class="carousel-container">
+                <div class="carousel-header">
+                    <h1>EXPLORA NUESTRAS COLECCIONES</h1>
+                    <p>Mira las categorías más poderosas para jugar, destacar y brillar ⚡</p>
+                </div>
+
+                <div class="carousel-3d" id="carousel3D">
+                    <!-- Card 1: Guayos -->
+                    <div class="carousel-card active" data-index="0"
+                        onclick="window.location.href='collections.html?category=guayos'">
+                        <div class="card-image">
+                            <img src="images/guayo1.png" alt="Guayos Profesionales">
+                            <div class="card-overlay">
+                                <span class="card-tag">GAMA ALTA</span>
+                                <h3>GUAYOS</h3>
+                                <div class="btn-fake">Ver Colección</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Tenis -->
+                    <div class="carousel-card next" data-index="1"
+                        onclick="window.location.href='collections.html?category=tenis-guayos'">
+                        <div class="card-image">
+                            <img src="images/tenis1.png" alt="Tenis Deportivos">
+                            <div class="card-overlay">
+                                <span class="card-tag">LIFESTYLE</span>
+                                <h3>TENIS-GUAYOS</h3>
+                                <div class="btn-fake">Ver Colección</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Futsal -->
+                    <div class="carousel-card" data-index="2"
+                        onclick="window.location.href='collections.html?category=futsal'">
+                        <div class="card-image">
+                            <img src="images/futsal1.png" alt="Fútbol Sala">
+                            <div class="card-overlay">
+                                <span class="card-tag">INDOOR / SINTÉTICA</span>
+                                <h3>FÚTSAL</h3>
+                                <div class="btn-fake">Ver Colección</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Niños -->
+                    <div class="carousel-card prev" data-index="3"
+                        onclick="window.location.href='collections.html?category=ninos'">
+                        <div class="card-image">
+                            <img src="images/ninos1.jpg" alt="Para Niños">
+                            <div class="card-overlay">
+                                <span class="card-tag">FUTURAS ESTRELLAS</span>
+                                <h3>NIÑOS</h3>
+                                <div class="btn-fake">Ver Colección</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-controls">
+                    <button class="carousel-btn prev-btn" id="carouselPrev">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                    </button>
+                    <button class="carousel-btn next-btn" id="carouselNext">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background Elements -->
             <div class="hero-decoration">
                 <div class="decoration-circle"></div>
-                <div class="decoration-cross"></div>
                 <div class="decoration-pixels"></div>
             </div>
         </section>
 
-        <section id="catalogo" class="catalog">
-            <div class="container">
-                <h2 class="section-title">Catálogo de Tenis y Guayos</h2>
-                <div class="category-filter">
-                    <button class="filter-btn active" data-category="tenis-guayos">TENIS-GUAYOS</button>
-                    <button class="filter-btn" data-category="guayos">Guayos</button>
-                    <button class="filter-btn" data-category="futsal">FUTSAL</button>
-                    <button class="filter-btn" data-category="tennis">TENNIS</button>
-                    <button class="filter-btn" data-category="ninos">NIÑOS</button>
-                </div>
-                <div class="products-grid" id="productsGrid">
-                    <!-- Products will be dynamically inserted here -->
-                </div>
-            </div>
-        </section>
+        <!-- Main Categories Breakdown (REMOVED: Now Navigational Only) -->
+
 
         <!-- Finanzas Section (Pagos y Crédito) -->
         <section id="finanzas" class="finance-section">
@@ -212,43 +409,16 @@
         </section>
 
         <!-- Uniformes Section -->
-        <section id="uniformes" class="uniforms-section">
-            <div class="container">
-                <h2 class="section-title">👕 Uniformes de Fútbol y Futsal</h2>
-                <div class="uniforms-content">
-                    <div class="uniforms-hero">
-                        <h3>Equipamos a Tu Equipo</h3>
-                        <p>Uniformes personalizados para equipos de fútbol, fútbol sala y más</p>
-                    </div>
-                    <div class="uniforms-features">
-                        <div class="uniform-feature">
-                            <div class="uniform-icon">🎨</div>
-                            <h4>Personalización</h4>
-                            <p>Diseños únicos con los colores y logo de tu equipo</p>
-                        </div>
-                        <div class="uniform-feature">
-                            <div class="uniform-icon">👔</div>
-                            <h4>Alta Calidad</h4>
-                            <p>Telas deportivas de primera calidad, resistentes y cómodas</p>
-                        </div>
-                        <div class="uniform-feature">
-                            <div class="uniform-icon">📦</div>
-                            <h4>Pedidos Mayoristas</h4>
-                            <p>Precios especiales para equipos completos</p>
-                        </div>
-                        <div class="uniform-feature">
-                            <div class="uniform-icon">⚡</div>
-                            <h4>Entrega Rápida</h4>
-                            <p>Producción y entrega en tiempo récord</p>
-                        </div>
-                    </div>
-                    <div class="uniforms-cta">
-                        <a href="https://wa.me/573204961453?text=Hola!%20Quiero%20cotizar%20uniformes%20para%20mi%20equipo"
-                            target="_blank" class="btn btn-primary">
-                            Cotizar Uniformes
-                        </a>
-                    </div>
-                </div>
+        <!-- Uniformes Section (Shopify Style Banner) -->
+        <section id="uniformes" class="uniforms-banner" style="background-image: url('images/uniformes-main.png');">
+            <div class="uniforms-overlay"></div>
+            <div class="uniforms-content-center">
+                <h2 class="flashy-title">¿BUSCAS UNIFORMES?</h2>
+                <p class="flashy-subtitle">Personaliza la piel de tu equipo con los mejores diseños</p>
+                <a href="https://wa.me/573204961453?text=Hola!%20Quiero%20cotizar%20uniformes%20para%20mi%20equipo"
+                    target="_blank" class="btn btn-flashy">
+                    COTIZAR AHORA
+                </a>
             </div>
         </section>
 
@@ -411,7 +581,7 @@
     </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="script.js?v=2.0"></script>
 </body>
 
