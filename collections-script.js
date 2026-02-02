@@ -15,6 +15,9 @@ let activeFilters = {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🎯 Collections page loaded');
 
+    // Show skeleton loaders immediately
+    showSkeletonLoaders();
+
     // Get category from URL
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('category');
@@ -23,6 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeFilters.category = category;
         updateCategoryTitle(category);
     }
+
+    // Update count to show loading state
+    updateResultsCount(-1); // -1 = loading state
 
     // Load products
     await loadProducts();
@@ -35,6 +41,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial render
     applyFilters();
+
+    // Hide skeleton loaders
+    hideSkeletonLoaders();
 });
 
 // Update category title
@@ -328,10 +337,20 @@ function createProductCardHTML(product) {
 }
 
 // Update results count
-function updateResultsCount() {
-    const count = filteredProducts.length;
+function updateResultsCount(count = null) {
     const resultsCount = document.getElementById('resultsCount');
-    resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
+    if (!resultsCount) return;
+
+    // If count is -1, show loading state
+    if (count === -1) {
+        resultsCount.innerHTML = '<span style="opacity: 0.7;">⏳ Cargando productos...</span>';
+        return;
+    }
+
+    // Otherwise show the actual count
+    const total = count !== null ? count : filteredProducts.length;
+    const text = total === 1 ? 'producto' : 'productos';
+    resultsCount.textContent = `${total} ${text}`;
 }
 
 // Clear all filters
@@ -374,6 +393,22 @@ function setupMobileFilters() {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
         });
+    }
+}
+
+// Show skeleton loaders
+function showSkeletonLoaders() {
+    const skeleton = document.getElementById('skeletonLoader');
+    if (skeleton) {
+        skeleton.classList.remove('hidden');
+    }
+}
+
+// Hide skeleton loaders
+function hideSkeletonLoaders() {
+    const skeleton = document.getElementById('skeletonLoader');
+    if (skeleton) {
+        skeleton.classList.add('hidden');
     }
 }
 

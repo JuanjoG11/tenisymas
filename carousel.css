@@ -6,7 +6,7 @@
     flex-direction: column;
     justify-content: center;
     overflow: hidden;
-    padding-top: 80px;
+    padding-top: 40px;
 }
 
 .carousel-container {
@@ -21,7 +21,7 @@
 }
 
 .carousel-header {
-    margin-bottom: var(--spacing-2xl);
+    margin-bottom: var(--spacing-lg);
     position: relative;
     z-index: 3;
 }
@@ -196,7 +196,7 @@
 
 @media (max-width: 768px) {
     .carousel-section {
-        padding-top: 120px;
+        padding-top: 60px;
         height: auto;
         min-height: auto;
     }

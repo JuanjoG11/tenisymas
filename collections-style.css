@@ -8,6 +8,20 @@
     background: var(--color-black);
 }
 
+/* Site Header Sticky */
+.site-header {
+    position: sticky;
+    top: 31px;
+    /* Height of the announcement bar */
+    z-index: 1000;
+    background: var(--color-black);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.header-main {
+    padding: 15px 0;
+}
+
 /* Hide Footer on Collections Page */
 .site-footer {
     display: none;
@@ -364,6 +378,76 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
+}
+
+/* Skeleton Loaders */
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.skeleton-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-info {
+    padding: 20px;
+}
+
+.skeleton-title {
+    height: 20px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    width: 80%;
+}
+
+.skeleton-price {
+    height: 24px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    width: 50%;
+}
+
+.skeleton-button {
+    height: 48px;
+    background: linear-gradient(90deg, rgba(255, 51, 51, 0.1) 0%, rgba(255, 51, 51, 0.2) 50%, rgba(255, 51, 51, 0.1) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Hide skeleton when products loaded */
+.skeleton-grid.hidden {
+    display: none;
 }
 
 /* Empty State */
