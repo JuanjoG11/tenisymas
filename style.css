@@ -722,8 +722,17 @@ body {
     align-items: center;
     gap: 15px;
     margin-bottom: 20px;
-    padding-bottom: 15px;
+    padding: var(--spacing-md);
     border-bottom: 1px solid #333;
+}
+
+#cartView,
+#checkoutView {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Constrain children */
 }
 
 .btn-back-cart {
@@ -742,8 +751,9 @@ body {
 }
 
 .checkout-form {
-    padding: 0 5px;
+    padding: var(--spacing-md);
     overflow-y: auto;
+    flex: 1;
 }
 
 .form-group {
@@ -918,6 +928,8 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
+    min-height: 0;
+    /* Crucial for flex scrolling */
 }
 
 .cart-item {
@@ -1112,27 +1124,18 @@ body {
 
 .cart-trust {
     margin-top: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-}
-
-.cart-trust p {
-    font-size: 0.8rem;
-    color: #999;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
+    padding: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .trust-icons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    font-size: 0.8rem;
-    color: #ccc;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    /* More space for two items */
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 500;
 }
 
 .trust-icons span {

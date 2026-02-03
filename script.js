@@ -496,7 +496,20 @@ function setupSmoothScroll() {
 async function syncProducts() {
     if (!supabaseClient) return;
 
+    // 1. Try to load from cache first for immediate UI availability
+    const cachedData = sessionStorage.getItem('productsCache');
+    if (cachedData) {
+        try {
+            products = JSON.parse(cachedData);
+            renderHomepageSections();
+            console.log('⚡ Homepage loaded from cache');
+        } catch (e) {
+            console.error('Failed to parse products cache');
+        }
+    }
+
     try {
+        // 2. Fetch data (Reverting to * to fix column errors)
         const { data, error } = await supabaseClient
             .from('products')
             .select('*')
@@ -506,12 +519,20 @@ async function syncProducts() {
 
         if (data && data.length > 0) {
             products = data;
-            renderHomepageSections(); // Re-render with new data
+
+            // 3. Update cache for this and other pages (collections, etc)
+            try {
+                sessionStorage.setItem('productsCache', JSON.stringify(products));
+            } catch (quotaError) {
+                console.warn('Caché llena, no se pudo guardar.');
+            }
+
+            renderHomepageSections();
+            console.log('✅ Products synced and cached');
         }
     } catch (err) {
         console.error('Supabase sync failed:', err);
     }
-
 }
 
 // Initialize

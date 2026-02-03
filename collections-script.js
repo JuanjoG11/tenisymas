@@ -62,28 +62,24 @@ function updateCategoryTitle(category) {
 }
 
 // Load products from Supabase
+// Load products from Supabase (Optimized)
 async function loadProducts() {
     try {
-        console.log('📦 Loading products...');
+        console.log('📦 Loading products (Performance Mode)...');
 
-        // 1. Try to get from Global Variable (fastest)
-        if (typeof products !== 'undefined' && products.length > 0) {
-            allProducts = [...products];
-            console.log(`✅ Loaded ${allProducts.length} from Global`);
-        }
-        // 2. Try to get from Session Storage (fast)
-        else {
-            const cached = sessionStorage.getItem('productsCache');
-            if (cached) {
-                allProducts = JSON.parse(cached);
-                console.log(`⚡ Loaded ${allProducts.length} from Session Cache`);
-                // Trigger background refetch to keep fresh
-                fetchAndCacheProducts();
-            } else {
-                // 3. Last Resort: Network Fetch (slow initially, but caches for next time)
-                console.log('⚠️ No cache, fetching from Supabase...');
-                await fetchAndCacheProducts();
-            }
+        // 1. Prioritize Session Cache (populated by script.js or previous visits)
+        const cached = sessionStorage.getItem('productsCache');
+        if (cached) {
+            allProducts = JSON.parse(cached);
+            console.log(`⚡ Loaded ${allProducts.length} from Shared Cache`);
+
+            // Background update if needed can be disabled for speed 
+            // but we'll keep it silent to ensure data freshness
+            fetchAndCacheProducts(true);
+        } else {
+            // 2. Network Fetch if no cache exists
+            console.log('⚠️ No cache found, performing cold fetch...');
+            await fetchAndCacheProducts(false);
         }
     } catch (error) {
         console.error('❌ Error loading products:', error);
@@ -91,45 +87,39 @@ async function loadProducts() {
     }
 }
 
-async function fetchAndCacheProducts() {
+async function fetchAndCacheProducts(isBackground = false) {
     try {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
         if (!client) throw new Error('Supabase client missing');
 
-        const { data, error } = await client.from('products').select('*');
+        // Reverting to '*' to fix "column brand does not exist" error
+        const { data, error } = await client
+            .from('products')
+            .select('*')
+            .order('id', { ascending: true });
+
         if (error) throw error;
 
-        // Minify data to avoid QuotaExceededError
-        const essentialData = (data || []).map(p => ({
-            id: p.id,
-            name: p.name || p.nombre,
-            price: p.price || p.precio,
-            image: p.image || p.imagen,
-            category: p.category || p.categoria,
-            brand: p.brand || p.marca,
-            old_price: p.old_price || p.precio_anterior
-        }));
+        allProducts = data || [];
 
-        allProducts = essentialData;
-
-        // Save to cache (now much smaller)
+        // Save to cache
         try {
             sessionStorage.setItem('productsCache', JSON.stringify(allProducts));
-            console.log(`📥 Cached ${allProducts.length} items (Minified).`);
         } catch (quotaError) {
-            console.error("Cache full, skipping storage but proceeding.");
+            console.warn("Storage full.");
         }
 
-        // Re-render if this was a background update
-        renderProducts(allProducts);
-        populateBrandFilters(); // Update filters too
+        // Only re-render and re-populate if it's NOT a background update 
+        // OR if the grid is currently empty
+        const productsGrid = document.getElementById('productsGrid');
+        if (!isBackground || !productsGrid || productsGrid.children.length === 0) {
+            renderProducts();
+            populateBrandFilters();
+            populateSizeFilters();
+        }
     } catch (e) {
-        console.error("Background fetch failed", e);
+        console.error("Fetch failed", e);
     }
-
-    // Populate dynamic filters (Ensure valid rendering)
-    populateBrandFilters();
-    populateSizeFilters();
 }
 
 // Populate brand filters dynamically
