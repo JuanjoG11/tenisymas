@@ -1,4 +1,4 @@
-// ==================== COLLECTIONS PAGE JAVASCRIPT ====================
+// ==================== COLLECTIONS PAGE JAVASCRIPT (OPTIMIZED) ====================
 
 // Global variables
 let allProducts = [];
@@ -11,14 +11,16 @@ let activeFilters = {
     discount: false
 };
 
+// Pagination / Infinite Scroll State
+let currentPage = 1;
+const itemsPerPage = 12;
+let observer = null;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🎯 Collections page loaded');
+    console.log('🚀 Collections page loaded (Optimized)');
 
-    // Show skeleton loaders immediately
-    showSkeletonLoaders();
-
-    // Get category from URL
+    // 1. Get category immediately to ensure correct initial render
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('category');
 
@@ -27,22 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateCategoryTitle(category);
     }
 
-    // Update count to show loading state
-    updateResultsCount(-1); // -1 = loading state
+    // 2. Setup Intersection Observer for infinite scroll
+    setupIntersectionObserver();
 
-    // Load products
+    // 3. Load Products (SWR Strategy)
     await loadProducts();
 
-    // Setup filters
+    // 4. Setup Event Listeners
     setupFilters();
-
-    // Setup mobile filters
     setupMobileFilters();
-
-    // Initial render and population handled inside loadProducts()
-
-    // Hide skeleton loaders
-    hideSkeletonLoaders();
 });
 
 // Update category title
@@ -56,46 +51,77 @@ function updateCategoryTitle(category) {
     };
 
     const info = titles[category] || { title: 'CATÁLOGO COMPLETO', subtitle: 'Toda nuestra colección' };
-    document.getElementById('categoryTitle').textContent = info.title;
-    document.getElementById('categorySubtitle').textContent = info.subtitle;
+    const titleEl = document.getElementById('categoryTitle');
+    const subtitleEl = document.getElementById('categorySubtitle');
+
+    if (titleEl) titleEl.textContent = info.title;
+    if (subtitleEl) subtitleEl.textContent = info.subtitle;
 }
 
-// Load products from Supabase
-// Load products from Supabase (Optimized)
+// Load products using Stale-While-Revalidate
 async function loadProducts() {
     try {
-        updateResultsCount(-1); // Show "Cargando..."
+        updateResultsCount(-1); // Loading state
 
-        // Wait for global sync from script.js if it's already in progress
-        if (window.productsLoaded) {
-            allProducts = await window.productsLoaded;
-        } else if (typeof syncProducts === 'function') {
-            // If script.js hasn't started yet but is available
-            allProducts = await syncProducts();
-        } else {
-            // Fallback: Perform its own fetch if shared logic missing
-            const cached = localStorage.getItem('productsCache_v2');
-            if (cached) {
+        // --- STEP 1: IMMEDIATE CACHE LOAD ---
+        const cached = localStorage.getItem('productsCache_v2');
+        if (cached) {
+            try {
                 allProducts = JSON.parse(cached);
-                console.log('⚡ Loaded from persistent cache fallback');
-            } else {
-                await fetchAndCacheProducts(false);
+                console.log('⚡ Instant load from cache');
+
+                // IMPORTANT: Apply filters immediately with cached data
+                applyFilters();
+                hideSkeletonLoaders();
+            } catch (e) {
+                console.warn('Cache parse error retrying fetch');
             }
+        } else {
+            // Only show skeletons if we have NO cache
+            showSkeletonLoaders();
         }
 
-        if (allProducts && allProducts.length > 0) {
-            applyFilters(); // This calls renderProducts()
+        // --- STEP 2: BACKGROUND FRESH FETCH ---
+        // We wait for the main script to sync, or we force a sync
+        let freshData = [];
+
+        if (window.productsLoaded) {
+            freshData = await window.productsLoaded;
+        } else if (typeof syncProducts === 'function') {
+            freshData = await syncProducts();
         } else {
+            // Fallback fetch if syncProducts isn't valid
+            await fetchAndCacheProducts(true);
+            return;
+        }
+
+        // --- STEP 3: SILENT UPDATE ---
+        if (freshData && freshData.length > 0) {
+            // Only update if data changed (simplified check by length or deep compare)
+            // For now, we trust the sync and update internal state
+            const previousCount = allProducts.length;
+            allProducts = freshData;
+
+            // If we didn't have cache, render now
+            if (!cached || allProducts.length !== previousCount) {
+                console.log('🔄 Fresh data applied');
+                applyFilters();
+                hideSkeletonLoaders();
+            }
+        } else if (!cached) {
             showEmptyState();
         }
+
     } catch (error) {
         console.error('❌ Error loading products:', error);
-        showEmptyState();
+        // If we have cached data, we are fine, otherwise show empty
+        if (allProducts.length === 0) showEmptyState();
+        hideSkeletonLoaders();
     }
 }
 
+// Fallback fetcher
 async function fetchAndCacheProducts(isBackground = false) {
-    // This is now purely a fallback or background refresher
     try {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
         if (!client) return;
@@ -107,8 +133,6 @@ async function fetchAndCacheProducts(isBackground = false) {
 
         if (!error && data) {
             allProducts = data;
-            try { sessionStorage.setItem('productsCache', JSON.stringify(allProducts)); } catch (e) { }
-
             if (!isBackground) {
                 applyFilters();
                 populateBrandFilters();
@@ -120,20 +144,22 @@ async function fetchAndCacheProducts(isBackground = false) {
     }
 }
 
-// Populate brand filters dynamically
+// Populate filters (Brand & Size)
 function populateBrandFilters() {
     const brands = [...new Set(allProducts.map(p => p.brand || p.marca).filter(Boolean))];
-    const brandFiltersContainer = document.getElementById('brandFilters');
-
-    brandFiltersContainer.innerHTML = brands.sort().map(brand => `
-        <label class="filter-checkbox">
-            <input type="checkbox" value="${brand}" data-filter="brand">
-            <span>${brand}</span>
-        </label>
-    `).join('');
+    const container = document.getElementById('brandFilters');
+    if (container) {
+        container.innerHTML = brands.sort().map(brand => `
+            <label class="filter-checkbox">
+                <input type="checkbox" value="${brand}" data-filter="brand">
+                <span>${brand}</span>
+            </label>
+        `).join('');
+        // Re-attach listeners for new inputs
+        attachFilterListeners();
+    }
 }
 
-// Populate size filters dynamically
 function populateSizeFilters() {
     const allSizes = new Set();
     allProducts.forEach(product => {
@@ -141,60 +167,44 @@ function populateSizeFilters() {
         sizes.forEach(size => allSizes.add(size));
     });
 
-    const sizesArray = Array.from(allSizes).sort((a, b) => {
-        const numA = parseFloat(a);
-        const numB = parseFloat(b);
-        return numA - numB;
-    });
-
-    const sizeFiltersContainer = document.getElementById('sizeFilters');
-    sizeFiltersContainer.innerHTML = sizesArray.map(size => `
-        <label class="filter-checkbox">
-            <input type="checkbox" value="${size}" data-filter="size">
-            <span>${size}</span>
-        </label>
-    `).join('');
+    const sizesArray = Array.from(allSizes).sort((a, b) => parseFloat(a) - parseFloat(b));
+    const container = document.getElementById('sizeFilters');
+    if (container) {
+        container.innerHTML = sizesArray.map(size => `
+            <label class="filter-checkbox">
+                <input type="checkbox" value="${size}" data-filter="size">
+                <span>${size}</span>
+            </label>
+        `).join('');
+        attachFilterListeners(); // Re-attach
+    }
 }
 
-// Setup filter event listeners
+function attachFilterListeners() {
+    // Helper to re-attach listeners after dynamic population
+    document.querySelectorAll('[data-filter="brand"]').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            e.target.checked ? activeFilters.brands.push(e.target.value) : activeFilters.brands = activeFilters.brands.filter(b => b !== e.target.value);
+            applyFilters();
+        });
+    });
+    document.querySelectorAll('[data-filter="size"]').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            e.target.checked ? activeFilters.sizes.push(e.target.value) : activeFilters.sizes = activeFilters.sizes.filter(s => s !== e.target.value);
+            applyFilters();
+        });
+    });
+}
+
 function setupFilters() {
-    // Brand filters
-    document.querySelectorAll('[data-filter="brand"]').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.brands.push(e.target.value);
-            } else {
-                activeFilters.brands = activeFilters.brands.filter(b => b !== e.target.value);
-            }
+    // Only static filters like Price need setup here, dynamic ones handled in populate*
+    document.querySelectorAll('[data-filter="price"]').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            e.target.checked ? activeFilters.prices.push(e.target.value) : activeFilters.prices = activeFilters.prices.filter(p => p !== e.target.value);
             applyFilters();
         });
     });
 
-    // Price filters
-    document.querySelectorAll('[data-filter="price"]').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.prices.push(e.target.value);
-            } else {
-                activeFilters.prices = activeFilters.prices.filter(p => p !== e.target.value);
-            }
-            applyFilters();
-        });
-    });
-
-    // Size filters
-    document.querySelectorAll('[data-filter="size"]').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.sizes.push(e.target.value);
-            } else {
-                activeFilters.sizes = activeFilters.sizes.filter(s => s !== e.target.value);
-            }
-            applyFilters();
-        });
-    });
-
-    // Discount filter
     const discountFilter = document.getElementById('discountFilter');
     if (discountFilter) {
         discountFilter.addEventListener('change', (e) => {
@@ -203,88 +213,81 @@ function setupFilters() {
         });
     }
 
-    // Clear filters button
-    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+    const clearBtn = document.getElementById('clearFilters');
+    if (clearBtn) clearBtn.addEventListener('click', clearAllFilters);
 }
 
-// Apply all filters
+// ==================== CORE FILTER LOGIC ====================
 function applyFilters() {
-    console.log('🔍 Applying filters:', activeFilters);
+    // 1. Reset Pagination
+    currentPage = 1;
 
+    // 2. Filter Data
     filteredProducts = allProducts.filter(product => {
-        // Category filter
-        // Category filter
+        // Category
         if (activeFilters.category) {
-            // Normalize helper: lowercase and remove accents
             const normalize = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const pCat = normalize(product.category || product.categoria || '');
+            const fCat = normalize(activeFilters.category);
 
-            const productCategory = normalize(product.category || product.categoria || '');
-            const filterCategory = normalize(activeFilters.category);
-
-            // Special case for 'catalog' or 'all' to show everything
-            if (filterCategory === 'catalogo' || filterCategory === 'all') {
-                return true;
-            }
-
-            // Strict matching to prevent mixing (e.g. 'guayos' vs 'tenis-guayos')
-            if (productCategory !== filterCategory) {
-                return false;
-            }
+            if (fCat !== 'catalogo' && fCat !== 'all' && pCat !== fCat) return false;
         }
 
-        // Brand filter
+        // Brand
         if (activeFilters.brands.length > 0) {
-            const productBrand = product.brand || product.marca || '';
-            if (!activeFilters.brands.includes(productBrand)) {
-                return false;
-            }
+            const pBrand = product.brand || product.marca || '';
+            if (!activeFilters.brands.includes(pBrand)) return false;
         }
 
-        // Price filter
+        // Price
         if (activeFilters.prices.length > 0) {
             const price = parsePrice(product.price || product.precio);
-            let matchesPrice = false;
-
+            let match = false;
             activeFilters.prices.forEach(range => {
                 const [min, max] = range.split('-').map(Number);
-                if (price >= min && price <= max) {
-                    matchesPrice = true;
-                }
+                if (price >= min && price <= max) match = true;
             });
-
-            if (!matchesPrice) return false;
+            if (!match) return false;
         }
 
-        // Size filter
+        // Size
         if (activeFilters.sizes.length > 0) {
-            const productSizes = product.sizes || product.tallas || [];
-            const hasMatchingSize = activeFilters.sizes.some(size => productSizes.includes(size));
-            if (!hasMatchingSize) return false;
+            const pSizes = product.sizes || product.tallas || [];
+            if (!activeFilters.sizes.some(s => pSizes.includes(s))) return false;
         }
 
-        // Discount filter
+        // Discount
         if (activeFilters.discount) {
-            const hasDiscount = product.discount || product.descuento || false;
-            if (!hasDiscount) return false;
+            if (!product.discount && !product.descuento) return false;
         }
 
         return true;
     });
 
-    renderProducts();
+    // 3. Populate Filters only on first substantial load to avoid wiping user selection during interaction?
+    // Actually proper pattern is to populate based on ALL data, not filtered data, so that's fine.
+    // We only populate once usually, or check if empty.
+    const brandContainer = document.getElementById('brandFilters');
+    if (brandContainer && brandContainer.children.length === 0) populateBrandFilters();
+    const sizeContainer = document.getElementById('sizeFilters');
+    if (sizeContainer && sizeContainer.children.length === 0) populateSizeFilters();
+
+    // 4. Render First Page
+    renderProducts(true);
     updateResultsCount();
 }
 
-// Parse price string to number
 function parsePrice(priceString) {
     if (typeof priceString === 'number') return priceString;
     return parseInt(priceString.replace(/[^\d]/g, '')) || 0;
 }
 
-// Render filtered products
-function renderProducts() {
+// ==================== RENDERING (CHUNKED) ====================
+function renderProducts(reset = true) {
     const productsGrid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
+    const sentinels = document.querySelectorAll('.scroll-sentinel');
+    sentinels.forEach(s => s.remove()); // Remove old sentinels
 
     if (filteredProducts.length === 0) {
         productsGrid.style.display = 'none';
@@ -295,11 +298,46 @@ function renderProducts() {
     productsGrid.style.display = 'grid';
     emptyState.style.display = 'none';
 
-    productsGrid.innerHTML = filteredProducts.map(product => createProductCardHTML(product)).join('');
+    // Calculate Slice
+    // If reset, we start from 0 to itemsPerPage
+    // If appending, we just add the ONE next chunk
+
+    // Actually, simpler logic:
+    // If reset, clear innerHTML. Then append chunk 1.
+    if (reset) {
+        productsGrid.innerHTML = '';
+        window.scrollTo(0, 0);
+    }
+
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const chunk = filteredProducts.slice(start, end);
+
+    // Create HTML
+    const html = chunk.map(product => createProductCardHTML(product)).join('');
+
+    // Append to Grid
+    if (reset) {
+        productsGrid.innerHTML = html;
+    } else {
+        productsGrid.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Add Sentinel if there are more products to show
+    if (end < filteredProducts.length) {
+        const sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        sentinel.style.height = '10px';
+        sentinel.style.width = '100%';
+        productsGrid.appendChild(sentinel);
+
+        // Observe it
+        if (observer) observer.observe(sentinel);
+    }
 }
 
-// Generate HTML for a product card
 function createProductCardHTML(product) {
+    // Added 'contain-content' CSS class optimization if we had css for it, but standard HTML for now
     return `
         <div class="product-card" data-category="${product.category || ''}">
             <img src="${product.image}" 
@@ -307,7 +345,7 @@ function createProductCardHTML(product) {
                  class="product-image" 
                  loading="lazy" 
                  decoding="async"
-                 width="300"
+                 width="300" 
                  height="300">
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
@@ -324,46 +362,60 @@ function createProductCardHTML(product) {
     `;
 }
 
-// Update results count
+// ==================== INFINITE SCROLL ====================
+function setupIntersectionObserver() {
+    const options = {
+        root: null,
+        rootMargin: '200px', // Pre-load before user hits bottom
+        threshold: 0.1
+    };
+
+    observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Remove sentinel from observer to prevent double firing
+                observer.unobserve(entry.target);
+                entry.target.remove();
+
+                // Load next page
+                currentPage++;
+                renderProducts(false); // Append
+            }
+        });
+    }, options);
+}
+
+// ==================== UTILS ====================
 function updateResultsCount(count = null) {
     const resultsCount = document.getElementById('resultsCount');
     if (!resultsCount) return;
 
-    // If count is -1, show loading state
     if (count === -1) {
-        resultsCount.innerHTML = '<span style="opacity: 0.7;">⏳ Cargando productos...</span>';
+        resultsCount.innerHTML = '<span style="opacity: 0.7;">⏳ Cargando...</span>';
         return;
     }
 
-    // Otherwise show the actual count
     const total = count !== null ? count : filteredProducts.length;
-    const text = total === 1 ? 'producto' : 'productos';
-    resultsCount.textContent = `${total} ${text}`;
+    resultsCount.textContent = `${total} ${total === 1 ? 'producto' : 'productos'}`;
 }
 
-// Clear all filters
 function clearAllFilters() {
     activeFilters = {
-        category: activeFilters.category, // Keep category
+        category: activeFilters.category,
         brands: [],
         prices: [],
         sizes: [],
         discount: false
     };
-
-    // Uncheck all checkboxes
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-
     applyFilters();
 }
 
-// Show empty state
 function showEmptyState() {
     document.getElementById('productsGrid').style.display = 'none';
     document.getElementById('emptyState').style.display = 'block';
 }
 
-// Setup mobile filters
 function setupMobileFilters() {
     const mobileBtn = document.getElementById('mobileFiltersBtn');
     const sidebar = document.getElementById('filtersSidebar');
@@ -379,28 +431,26 @@ function setupMobileFilters() {
     if (overlay) {
         overlay.addEventListener('click', () => {
             sidebar.classList.remove('active');
-            overlay.classList.remove('active');
+            // Check if cart is open before removing overlay purely? 
+            // Better to assume overlay handles both or use separate logic. 
+            // For now, simple toggle.
+            if (!document.getElementById('cartDrawer').classList.contains('active')) {
+                overlay.classList.remove('active');
+            }
         });
     }
 }
 
-// Show skeleton loaders
 function showSkeletonLoaders() {
     const skeleton = document.getElementById('skeletonLoader');
-    if (skeleton) {
-        skeleton.classList.remove('hidden');
-    }
+    if (skeleton) skeleton.classList.remove('hidden');
 }
 
-// Hide skeleton loaders
 function hideSkeletonLoaders() {
     const skeleton = document.getElementById('skeletonLoader');
-    if (skeleton) {
-        skeleton.classList.add('hidden');
-    }
+    if (skeleton) skeleton.classList.add('hidden');
 }
 
-// Make clearAllFilters available globally
 window.clearAllFilters = clearAllFilters;
 
-console.log('✅ Collections script loaded');
+console.log('✅ Collections script optimized and ready');

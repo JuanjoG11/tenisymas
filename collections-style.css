@@ -557,3 +557,16 @@
 .back-btn:hover {
     color: var(--color-red);
 }
+
+/* Adjust WhatsApp float position to avoid overlap with Cart Button on this page */
+.whatsapp-float {
+    bottom: 100px !important;
+    right: 30px !important;
+}
+
+@media (max-width: 768px) {
+    .whatsapp-float {
+        bottom: 90px !important;
+        right: 20px !important;
+    }
+}

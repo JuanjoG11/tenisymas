@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Sync with Supabase (Singleton promise)
     window.productsLoaded = syncProducts();
+
+    // 5. Reveal WhatsApp Button after Intro
+    setTimeout(() => {
+        const waBtn = document.querySelector('.whatsapp-float');
+        if (waBtn) waBtn.classList.add('visible');
+    }, 4500);
 });
 
 // ==================== HERO BACKGROUND SLIDER ====================
