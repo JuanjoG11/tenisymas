@@ -440,6 +440,37 @@ function setupSlider() {
     // Initial State
     updateCarousel();
 
+    // ==================== TOUCH/SWIPE SUPPORT ====================
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const carouselSection = document.querySelector('.carousel-section');
+
+    if (carouselSection) {
+        carouselSection.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselSection.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, { passive: true });
+    }
+
+    function handleGesture() {
+        const threshold = 50; // Minimum swipe distance
+        const swipeDistance = touchEndX - touchStartX;
+
+        if (swipeDistance < -threshold) {
+            // Swiped Left -> Show Next
+            rotateNext();
+            resetTimer();
+        } else if (swipeDistance > threshold) {
+            // Swiped Right -> Show Prev
+            rotatePrev();
+            resetTimer();
+        }
+    }
+
     // Auto Play
     let timer = setInterval(rotateNext, 5000);
 
