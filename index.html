@@ -100,14 +100,44 @@
         sessionStorage.setItem('introShown', 'true');
     </script>
     <div id="intro" class="intro">
-        <div class="soccer-ball"></div>
-        <div class="logo-reveal">
+        <div class="logo-reveal" style="animation-delay: 0s;">
             <div class="logo-content">
                 <div class="video-wrapper intro-video-wrapper">
-                    <video src="images/logo-video.mov" poster="images/logo-tm.png"
+                    <video id="introVideo" src="images/logo-video.mov"
                         alt="Tennis y Mas - Tienda de Guayos y Tenis en Colombia" class="intro-logo" autoplay muted
-                        playsinline loop></video>
+                        playsinline preload="auto"></video>
+                    <!-- Static Fallback Logo (Initially hidden) -->
+                    <img id="introFallback" src="images/logo-tm.png" alt="Tennis y Mas" class="intro-logo fallback-logo"
+                        style="display: none;">
                 </div>
+                <script>
+                    const video = document.getElementById('introVideo');
+                    const fallback = document.getElementById('introFallback');
+
+                    if (video) {
+                        // Watchdog: If video doesn't play within 3s, show fallback
+                        const videoTimeout = setTimeout(() => {
+                            if (video.paused || video.readyState < 2) {
+                                video.style.display = 'none';
+                                fallback.style.display = 'block';
+                            }
+                        }, 3000);
+
+                        video.addEventListener('playing', () => {
+                            clearTimeout(videoTimeout);
+                        });
+
+                        video.addEventListener('error', () => {
+                            clearTimeout(videoTimeout);
+                            video.style.display = 'none';
+                            fallback.style.display = 'block';
+                        });
+
+                        video.play().catch(e => {
+                            // If autoplay is blocked, it will show fallback after timeout
+                        });
+                    }
+                </script>
             </div>
         </div>
     </div>
