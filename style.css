@@ -704,8 +704,9 @@ body {
     right: 0;
     width: 100%;
     max-width: 450px;
-    /* Slightly wider for form */
     height: 100vh;
+    height: 100dvh;
+    /* Better mobile support */
     background: var(--color-black);
     z-index: 2001;
     border-left: 1px solid rgba(255, 51, 51, 0.2);
@@ -778,6 +779,38 @@ body {
     font-family: inherit;
     font-size: 1rem;
     transition: var(--transition-short);
+    outline: none;
+}
+
+/* Mobile Tweak for Form */
+@media (max-width: 480px) {
+    .checkout-header {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+
+    .checkout-form {
+        padding: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+    .checkout-summary {
+        margin-bottom: 15px;
+        padding: 12px;
+    }
 }
 
 .form-group input:focus,
@@ -799,6 +832,18 @@ body {
 .checkout-summary strong {
     color: var(--color-red);
     font-size: 1.2rem;
+}
+
+.checkout-footer {
+    padding: var(--spacing-md);
+    background: var(--color-gray);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 480px) {
+    .checkout-footer {
+        padding: 15px;
+    }
 }
 
 .cart-drawer.active {
