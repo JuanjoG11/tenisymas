@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSmoothScroll();
     setupHeroBackgroundSlider();
 
-    // 4. Sync with Supabase (if available)
-    syncProducts();
+    // 4. Sync with Supabase (Singleton promise)
+    window.productsLoaded = syncProducts();
 });
 
 // ==================== HERO BACKGROUND SLIDER ====================
@@ -505,49 +505,72 @@ function setupSmoothScroll() {
 }
 
 // Supabase Sync (Kept from original)
+let isSyncing = false;
+let syncPromise = null;
+
 async function syncProducts() {
-    if (!supabaseClient) return;
+    if (!supabaseClient) return [];
+    if (isSyncing) return syncPromise;
 
-    // 1. Try to load from cache first for immediate UI availability
-    const cachedData = sessionStorage.getItem('productsCache');
-    if (cachedData) {
-        try {
-            products = JSON.parse(cachedData);
-            renderHomepageSections();
-            console.log('⚡ Homepage loaded from cache');
-        } catch (e) {
-            console.error('Failed to parse products cache');
-        }
-    }
+    isSyncing = true;
+    syncPromise = (async () => {
+        const CACHE_KEY = 'productsCache_v2';
+        const CACHE_TIME_KEY = 'productsCache_Time';
+        const THIRTY_MINUTES = 30 * 60 * 1000;
 
-    try {
-        // 2. Fetch data (Reverting to * to fix column errors)
-        const { data, error } = await supabaseClient
-            .from('products')
-            .select('*')
-            .order('id', { ascending: true });
+        // 1. Try to load from localStorage first
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
+        const now = Date.now();
 
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-            products = data;
-
-            // 3. Update cache for this and other pages (collections, etc)
+        if (cachedData) {
             try {
-                sessionStorage.setItem('productsCache', JSON.stringify(products));
-            } catch (quotaError) {
-                console.warn('Caché llena, no se pudo guardar.');
-            }
+                products = JSON.parse(cachedData);
+                renderHomepageSections();
+                console.log('⚡ Data restored from localStorage');
 
-            renderHomepageSections();
-            console.log('✅ Products synced and cached');
+                // If cache is fresh, return immediately and don't fetch
+                if (lastFetch && (now - lastFetch < THIRTY_MINUTES)) {
+                    isSyncing = false;
+                    return products;
+                }
+            } catch (e) {
+                console.error('Cache parse failed');
+            }
         }
-    } catch (err) {
-        console.error('Supabase sync failed:', err);
-    }
+
+        try {
+            // 2. Fetch data (Only if cache expired or missing)
+            console.log('🌐 Fetching fresh data from Supabase...');
+            const { data, error } = await supabaseClient
+                .from('products')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                products = data;
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(products));
+                    localStorage.setItem(CACHE_TIME_KEY, now.toString());
+                } catch (e) { console.warn('localStorage quota exceeded'); }
+
+                renderHomepageSections();
+                console.log('✅ Global sync complete (Fresh)');
+            }
+        } catch (err) {
+            console.error('Supabase sync failed:', err);
+        } finally {
+            isSyncing = false;
+        }
+        return products;
+    })();
+
+    return syncPromise;
 }
 
 // Initialize
-syncProducts();
+// Handled in DOMContentLoaded to prevent double fetch
 
 // End Script

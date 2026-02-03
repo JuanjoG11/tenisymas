@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup mobile filters
     setupMobileFilters();
 
-    // Initial render
-    applyFilters();
+    // Initial render and population handled inside loadProducts()
 
     // Hide skeleton loaders
     hideSkeletonLoaders();
@@ -65,21 +64,29 @@ function updateCategoryTitle(category) {
 // Load products from Supabase (Optimized)
 async function loadProducts() {
     try {
-        console.log('📦 Loading products (Performance Mode)...');
+        updateResultsCount(-1); // Show "Cargando..."
 
-        // 1. Prioritize Session Cache (populated by script.js or previous visits)
-        const cached = sessionStorage.getItem('productsCache');
-        if (cached) {
-            allProducts = JSON.parse(cached);
-            console.log(`⚡ Loaded ${allProducts.length} from Shared Cache`);
-
-            // Background update if needed can be disabled for speed 
-            // but we'll keep it silent to ensure data freshness
-            fetchAndCacheProducts(true);
+        // Wait for global sync from script.js if it's already in progress
+        if (window.productsLoaded) {
+            allProducts = await window.productsLoaded;
+        } else if (typeof syncProducts === 'function') {
+            // If script.js hasn't started yet but is available
+            allProducts = await syncProducts();
         } else {
-            // 2. Network Fetch if no cache exists
-            console.log('⚠️ No cache found, performing cold fetch...');
-            await fetchAndCacheProducts(false);
+            // Fallback: Perform its own fetch if shared logic missing
+            const cached = localStorage.getItem('productsCache_v2');
+            if (cached) {
+                allProducts = JSON.parse(cached);
+                console.log('⚡ Loaded from persistent cache fallback');
+            } else {
+                await fetchAndCacheProducts(false);
+            }
+        }
+
+        if (allProducts && allProducts.length > 0) {
+            applyFilters(); // This calls renderProducts()
+        } else {
+            showEmptyState();
         }
     } catch (error) {
         console.error('❌ Error loading products:', error);
@@ -88,37 +95,28 @@ async function loadProducts() {
 }
 
 async function fetchAndCacheProducts(isBackground = false) {
+    // This is now purely a fallback or background refresher
     try {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
-        if (!client) throw new Error('Supabase client missing');
+        if (!client) return;
 
-        // Reverting to '*' to fix "column brand does not exist" error
         const { data, error } = await client
             .from('products')
             .select('*')
             .order('id', { ascending: true });
 
-        if (error) throw error;
+        if (!error && data) {
+            allProducts = data;
+            try { sessionStorage.setItem('productsCache', JSON.stringify(allProducts)); } catch (e) { }
 
-        allProducts = data || [];
-
-        // Save to cache
-        try {
-            sessionStorage.setItem('productsCache', JSON.stringify(allProducts));
-        } catch (quotaError) {
-            console.warn("Storage full.");
-        }
-
-        // Only re-render and re-populate if it's NOT a background update 
-        // OR if the grid is currently empty
-        const productsGrid = document.getElementById('productsGrid');
-        if (!isBackground || !productsGrid || productsGrid.children.length === 0) {
-            renderProducts();
-            populateBrandFilters();
-            populateSizeFilters();
+            if (!isBackground) {
+                applyFilters();
+                populateBrandFilters();
+                populateSizeFilters();
+            }
         }
     } catch (e) {
-        console.error("Fetch failed", e);
+        console.error("Background fetch failed", e);
     }
 }
 
