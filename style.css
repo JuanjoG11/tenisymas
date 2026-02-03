@@ -1885,6 +1885,21 @@ body {
         padding: var(--spacing-xl) var(--spacing-md);
     }
 
+    .hero-slide {
+        filter: brightness(0.6);
+        /* Increased from 0.3 for mobile visibility */
+    }
+
+    .hero-overlay {
+        background: linear-gradient(to bottom, rgba(10, 10, 10, 0.1), rgba(10, 10, 10, 0.7));
+        /* Lightened gradient */
+    }
+
+    .video-bg video {
+        filter: brightness(0.8);
+        /* Increased from 0.6 for mobile visibility */
+    }
+
     .hero-cta {
         flex-direction: column;
     }
