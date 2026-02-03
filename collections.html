@@ -311,6 +311,22 @@
             <button class="close-cart" id="closeCart">&times;</button>
         </div>
 
+        <!-- Conversion: Urgency Timer -->
+        <div class="cart-urgency-timer" id="cartUrgencyTimer">
+            <span>🔥 Tu carrito expira en </span>
+            <span id="urgencyTimer">10:00</span>
+            <span> minutos. ¡Asegura tus productos ahora!</span>
+        </div>
+
+        <!-- Conversion: Free Shipping Bar -->
+        <div class="cart-shipping-bar">
+            <p id="shippingMsg">¡Estás a <span id="shippingGap">$200.000</span> del <strong>ENVÍO GRATIS</strong>! 🚚
+            </p>
+            <div class="progress-track">
+                <div class="progress-fill" id="shippingProgress" style="width: 0%"></div>
+            </div>
+        </div>
+
         <!-- Cart Items View -->
         <div id="cartView">
             <div class="cart-items" id="cartItems">
@@ -323,6 +339,17 @@
                     <span id="cartTotalPrice">$0</span>
                 </div>
                 <button class="btn btn-primary btn-full" id="btnGoToCheckout">Finalizar Compra</button>
+
+                <!-- Conversion: Trust Badges -->
+                <div class="cart-trust">
+                    <p>🔒 Pago 100% Seguro contraentrega</p>
+                    <div class="trust-icons">
+                        <span>🛡️ Garantía</span>
+                        <span>🚚 Envíos Rápidos</span>
+                        <span>📞 Soporte 24/7</span>
+                        <span>📦 Contraentrega</span>
+                    </div>
+                </div>
             </div>
         </div>
 

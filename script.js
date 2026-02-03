@@ -194,6 +194,70 @@ function updateCartUI() {
     }, 0);
 
     if (cartTotalPrice) cartTotalPrice.textContent = `$${total.toLocaleString('es-CO')}`;
+
+    // Update Shipping Goal
+    updateShippingGoal(total);
+}
+
+function updateShippingGoal(total) {
+    const shippingMsg = document.getElementById('shippingMsg');
+    const shippingProgress = document.getElementById('shippingProgress');
+    const FREE_SHIPPING_THRESHOLD = 250000;
+
+    if (!shippingMsg || !shippingProgress) return;
+
+    if (total === 0) {
+        shippingMsg.innerHTML = `¡Estás a <strong>$250.000</strong> del <strong>ENVÍO GRATIS</strong>! 🚚`;
+        shippingProgress.style.width = '0%';
+        return;
+    }
+
+    if (total >= FREE_SHIPPING_THRESHOLD) {
+        shippingMsg.innerHTML = `🌟 ¡Felicidades! Tienes <strong>ENVÍO GRATIS</strong> 🌟`;
+        shippingProgress.style.width = '100%';
+        shippingProgress.style.background = 'linear-gradient(90deg, #2ecc71 0%, #27ae60 100%)';
+    } else {
+        const remaining = FREE_SHIPPING_THRESHOLD - total;
+        const percent = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+        shippingMsg.innerHTML = `¡Estás a <strong>$${remaining.toLocaleString('es-CO')}</strong> del <strong>ENVÍO GRATIS</strong>! 🚚`;
+        shippingProgress.style.width = `${percent}%`;
+        shippingProgress.style.background = 'linear-gradient(90deg, #ff3333 0%, #ff6666 100%)';
+    }
+}
+
+let urgencyTimerInterval = null;
+
+function startUrgencyTimer() {
+    if (urgencyTimerInterval) clearInterval(urgencyTimerInterval);
+
+    let timeLeft = 600; // 10 minutes (600 seconds)
+    const timerDisplay = document.getElementById('urgencyTimer');
+    const timerBanner = document.getElementById('cartUrgencyTimer');
+
+    if (!timerDisplay || !timerBanner) return;
+
+    if (cart.length === 0) {
+        timerBanner.style.display = 'none';
+        return;
+    }
+
+    timerBanner.style.display = 'block';
+
+    const updateDisplay = () => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(urgencyTimerInterval);
+            timerDisplay.textContent = "0:00";
+            // Optional: Action when timer ends
+        }
+        timeLeft--;
+    };
+
+    updateDisplay();
+    urgencyTimerInterval = setInterval(updateDisplay, 1000);
 }
 
 function setupCartInteractions() {
@@ -275,6 +339,7 @@ function openCart() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.add('active');
     if (overlay) overlay.classList.add('active');
+    startUrgencyTimer();
 }
 
 function closeCartDrawer() {
