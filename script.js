@@ -286,19 +286,8 @@ function setupCartInteractions() {
 
     if (btnGoToCheckout) {
         btnGoToCheckout.addEventListener('click', () => {
-            document.getElementById('cartView').style.display = 'none';
-            document.getElementById('checkoutView').style.display = 'flex'; // Use flex
-
-            // Hide conversion elements for more space on mobile
-            const timer = document.getElementById('cartUrgencyTimer');
-            const shipBar = document.querySelector('.cart-shipping-bar');
-            if (timer) timer.style.display = 'none';
-            if (shipBar) shipBar.style.display = 'none';
-
-            // Update total in checkout view
-            const total = document.getElementById('cartTotalPrice');
-            const checkoutTotal = document.getElementById('checkoutTotalDisplay');
-            if (total && checkoutTotal) checkoutTotal.textContent = total.textContent;
+            // Redirect to the new professional checkout page
+            window.location.href = 'checkout.html';
         });
     }
 

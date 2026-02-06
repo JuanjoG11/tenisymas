@@ -14,6 +14,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
         rel="stylesheet">
+
+    <!-- Performance: Preconnect to Supabase -->
+    <link rel="preconnect" href="https://nrlaadaggmpjtdmtntoz.supabase.co">
+    <link rel="dns-prefetch" href="https://nrlaadaggmpjtdmtntoz.supabase.co">
+
+    <!-- Performance: Show WhatsApp button immediately -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const waBtn = document.querySelector('.whatsapp-float');
+            if (waBtn) waBtn.classList.add('visible');
+        });
+    </script>
 </head>
 
 <body>
@@ -62,35 +74,43 @@
         </div>
     </div>
 
-    <!-- HEADER -->
-    <header class="site-header">
-        <div class="header-main">
-            <div class="container header-grid">
-                <!-- Left: Back Button -->
-                <div class="header-socials">
-                    <a href="index.html" class="back-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                        Volver
-                    </a>
-                </div>
-
-                <!-- Center: Logo -->
-                <div class="header-logo">
-                    <a href="index.html">
-                        <img src="images/logo-tm.png" alt="TennisYMas Logo" class="main-logo">
-                    </a>
-                </div>
-
-                <!-- Right: Spacer for layout balance -->
-                <div class="header-actions">
-                    <!-- Cart button removed - using floating button instead -->
-                </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">
+                    <img src="images/logo-tm.png" alt="Tennis y Mas - Guayos y Tenis Originales" class="nav-logo-img">
+                </a>
             </div>
+
+            <div class="nav-actions">
+                <button class="cart-btn" id="cartBtn" aria-label="Ver Carrito">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="collections.html">Catálogo</a></li>
+                <li><a href="collections.html?category=tenis-guayos">Tenis-Guayos</a></li>
+                <li><a href="collections.html?category=guayos">Guayos</a></li>
+                <li><a href="collections.html?category=futsal">Futsal</a></li>
+                <li><a href="index.html#envios">Envíos</a></li>
+                <li><a href="index.html#contacto">Contacto</a></li>
+            </ul>
         </div>
-    </header>
+    </nav>
 
     <!-- MAIN CONTENT -->
     <main class="collections-main">

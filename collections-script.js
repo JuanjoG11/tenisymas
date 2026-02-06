@@ -15,9 +15,10 @@ let activeFilters = {
 let currentPage = 1;
 const itemsPerPage = 12;
 let observer = null;
+let isLoading = false;
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Collections page loaded (Optimized)');
 
     // 1. Get category immediately to ensure correct initial render
@@ -32,8 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Setup Intersection Observer for infinite scroll
     setupIntersectionObserver();
 
-    // 3. Load Products (SWR Strategy)
-    await loadProducts();
+    // 3. Load Products (Non-blocking cache-first)
+    loadProducts();
 
     // 4. Setup Event Listeners
     setupFilters();
@@ -47,7 +48,8 @@ function updateCategoryTitle(category) {
         'futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' },
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
         'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' },
-        'tenis-guayos': { title: 'TENIS-GUAYOS', subtitle: 'Estilo y rendimiento en un solo lugar' }
+        'tenis-guayos': { title: 'TENIS-GUAYOS', subtitle: 'Estilo y rendimiento en un solo lugar' },
+        'petos,camisetas': { title: 'PETOS Y CAMISETAS', subtitle: 'Equípate con lo mejor para tu equipo' }
     };
 
     const info = titles[category] || { title: 'CATÁLOGO COMPLETO', subtitle: 'Toda nuestra colección' };
@@ -58,65 +60,116 @@ function updateCategoryTitle(category) {
     if (subtitleEl) subtitleEl.textContent = info.subtitle;
 }
 
-// Load products using Stale-While-Revalidate
+// Load products - CACHE-FIRST for instant feedback
 async function loadProducts() {
     try {
-        updateResultsCount(-1); // Loading state
+        // Show skeleton immediately
+        showSkeletonLoaders();
+        updateResultsCount(-1);
 
-        // --- STEP 1: IMMEDIATE CACHE LOAD ---
+        if (isLoading) return;
+        isLoading = true;
+
+        // 1. PHASE 1: Try to render from cache IMMEDIATELY (Instant UI)
         const cached = localStorage.getItem('productsCache_v2');
         if (cached) {
             try {
                 allProducts = JSON.parse(cached);
-                console.log('⚡ Instant load from cache');
-
-                // IMPORTANT: Apply filters immediately with cached data
+                console.log('⚡ Rendered from cache (instant)');
                 applyFilters();
+                populateBrandFilters();
+                populateSizeFilters();
                 hideSkeletonLoaders();
+                // We keep isLoading = true to allow background sync to report status
             } catch (e) {
-                console.warn('Cache parse error retrying fetch');
+                console.warn('Cache error, will wait for sync');
             }
-        } else {
-            // Only show skeletons if we have NO cache
-            showSkeletonLoaders();
         }
 
-        // --- STEP 2: BACKGROUND FRESH FETCH ---
-        // We wait for the main script to sync, or we force a sync
+        // 2. PHASE 2: Wait for fresh data from the global promise (Background Sync)
+        if (window.productsLoaded) {
+            console.log('⏳ Syncing fresh data in background...');
+            try {
+                // Wait for the promise that script.js started
+                const freshData = await window.productsLoaded;
+
+                if (freshData && freshData.length > 0) {
+                    const previousCount = allProducts.length;
+                    allProducts = freshData;
+
+                    // 3. Only re-apply and hide skeleton if:
+                    // - We hadn't rendered anything yet
+                    // - OR the data actually changed
+                    if (previousCount === 0 || freshData.length !== previousCount) {
+                        console.log('🔄 Fresh data applied from sync');
+                        applyFilters();
+                        populateBrandFilters();
+                        populateSizeFilters();
+                    }
+                }
+            } catch (syncErr) {
+                console.warn('Background sync failed, using cached data:', syncErr);
+            }
+        }
+
+        // Final safety check: if still no products, try direct fetch
+        if (allProducts.length === 0) {
+            console.log('📡 Fetch fallback (no cache or sync data)');
+            const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabase?.createClient(
+                'https://nrlaadaggmpjtdmtntoz.supabase.co',
+                'sb_publishable_G9-piiwf5z82J6WGunpV_A_t3XQ1ZF3'
+            );
+
+            if (client) {
+                const { data, error } = await client.from('products').select('*').order('id', { ascending: true });
+                if (data && data.length > 0) {
+                    allProducts = data;
+                    applyFilters();
+                }
+            }
+        }
+
+        isLoading = false;
+        hideSkeletonLoaders(); // Be sure they are hidden eventually
+
+    } catch (error) {
+        console.error('Load error:', error);
+        showEmptyState();
+        hideSkeletonLoaders();
+        isLoading = false;
+    }
+}
+
+
+// Background update function (non-blocking)
+async function updateProductsInBackground() {
+    try {
         let freshData = [];
 
+        // Try to get data from global sync
         if (window.productsLoaded) {
             freshData = await window.productsLoaded;
         } else if (typeof syncProducts === 'function') {
             freshData = await syncProducts();
         } else {
-            // Fallback fetch if syncProducts isn't valid
+            // Fallback: fetch directly
             await fetchAndCacheProducts(true);
             return;
         }
 
-        // --- STEP 3: SILENT UPDATE ---
+        // Update if we got fresh data
         if (freshData && freshData.length > 0) {
-            // Only update if data changed (simplified check by length or deep compare)
-            // For now, we trust the sync and update internal state
             const previousCount = allProducts.length;
             allProducts = freshData;
 
-            // If we didn't have cache, render now
-            if (!cached || allProducts.length !== previousCount) {
-                console.log('🔄 Fresh data applied');
+            // Only re-render if data actually changed
+            if (allProducts.length !== previousCount) {
+                console.log('🔄 Fresh data applied silently');
                 applyFilters();
-                hideSkeletonLoaders();
             }
-        } else if (!cached) {
-            showEmptyState();
         }
-
     } catch (error) {
-        console.error('❌ Error loading products:', error);
-        // If we have cached data, we are fine, otherwise show empty
-        if (allProducts.length === 0) showEmptyState();
-        hideSkeletonLoaders();
+        console.warn('Background update failed (using cached data):', error);
     }
 }
 
@@ -124,8 +177,12 @@ async function loadProducts() {
 async function fetchAndCacheProducts(isBackground = false) {
     try {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
-        if (!client) return;
+        if (!client) {
+            console.error('No Supabase client available');
+            return;
+        }
 
+        console.log('📡 Fetching products directly from Supabase...');
         const { data, error } = await client
             .from('products')
             .select('*')
@@ -133,14 +190,45 @@ async function fetchAndCacheProducts(isBackground = false) {
 
         if (!error && data) {
             allProducts = data;
-            if (!isBackground) {
-                applyFilters();
-                populateBrandFilters();
-                populateSizeFilters();
+            console.log('✅ Products fetched successfully:', data.length);
+
+            // Cache the data (clear old cache first to prevent quota issues)
+            try {
+                // Remove old cache versions
+                localStorage.removeItem('productsCache');
+                localStorage.removeItem('productsCache_v1');
+
+                // Save new cache
+                localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                localStorage.setItem('productsCache_Time', Date.now().toString());
+                console.log('💾 Cache saved successfully');
+            } catch (e) {
+                console.warn('⚠️ Could not save cache (quota exceeded):', e.message);
+                // Try to clear everything except cart and retry
+                try {
+                    const cart = localStorage.getItem('tm_cart');
+                    localStorage.clear();
+                    if (cart) localStorage.setItem('tm_cart', cart);
+                    localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                    localStorage.setItem('productsCache_Time', Date.now().toString());
+                    console.log('💾 Cache saved after cleanup');
+                } catch (e2) {
+                    console.error('❌ Cache save failed even after cleanup');
+                }
             }
+
+            // Always render after fetch
+            applyFilters();
+            populateBrandFilters();
+            populateSizeFilters();
+            hideSkeletonLoaders();
+        } else {
+            console.error('Fetch error:', error);
+            if (allProducts.length === 0) showEmptyState();
         }
     } catch (e) {
-        console.error("Background fetch failed", e);
+        console.error("Direct fetch failed:", e);
+        if (allProducts.length === 0) showEmptyState();
     }
 }
 
@@ -218,19 +306,23 @@ function setupFilters() {
 }
 
 // ==================== CORE FILTER LOGIC ====================
+const normalize = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+
 function applyFilters() {
     // 1. Reset Pagination
     currentPage = 1;
 
+    // Pre-normalize category filter once
+    const fCat = activeFilters.category ? normalize(activeFilters.category) : null;
+    const isSpecialCat = !fCat || fCat === 'catalogo' || fCat === 'all';
+
     // 2. Filter Data
     filteredProducts = allProducts.filter(product => {
         // Category
-        if (activeFilters.category) {
-            const normalize = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (fCat && !isSpecialCat) {
             const pCat = normalize(product.category || product.categoria || '');
-            const fCat = normalize(activeFilters.category);
-
-            if (fCat !== 'catalogo' && fCat !== 'all' && pCat !== fCat) return false;
+            const allowedCats = fCat.split(',').map(normalize);
+            if (!allowedCats.includes(pCat)) return false;
         }
 
         // Brand

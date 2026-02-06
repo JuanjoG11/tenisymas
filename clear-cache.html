@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Caché - TennisYMas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        button {
+            background: #ff3333;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #cc0000;
+        }
+
+        .success {
+            background: #4CAF50;
+        }
+
+        .success:hover {
+            background: #45a049;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧹 Limpiar Caché de TennisYMas</h1>
+        <p>Esta herramienta limpia el localStorage para resolver problemas de carga lenta.</p>
+
+        <div id="cacheInfo" style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 5px;">
+            <strong>Estado actual del caché:</strong>
+            <div id="cacheStatus">Cargando...</div>
+        </div>
+
+        <button onclick="clearCache()">🗑️ Limpiar Caché Completo</button>
+        <button onclick="clearOldCache()" class="success">🔄 Limpiar Solo Caché Viejo</button>
+        <button onclick="goBack()" style="background: #666;">← Volver a Collections</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Check cache status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkCacheStatus();
+        });
+
+        function checkCacheStatus() {
+            const statusDiv = document.getElementById('cacheStatus');
+            let html = '<ul style="margin: 10px 0; padding-left: 20px;">';
+
+            // Check all localStorage items
+            const items = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                const size = new Blob([value]).size;
+                items.push({ key, size });
+            }
+
+            if (items.length === 0) {
+                html += '<li>No hay caché guardado</li>';
+            } else {
+                const totalSize = items.reduce((sum, item) => sum + item.size, 0);
+                html += `<li><strong>Total items:</strong> ${items.length}</li>`;
+                html += `<li><strong>Tamaño total:</strong> ${(totalSize / 1024).toFixed(2)} KB</li>`;
+
+                items.forEach(item => {
+                    html += `<li>${item.key}: ${(item.size / 1024).toFixed(2)} KB</li>`;
+                });
+            }
+
+            html += '</ul>';
+            statusDiv.innerHTML = html;
+        }
+
+        function clearCache() {
+            if (confirm('¿Estás seguro de que quieres limpiar TODO el caché?')) {
+                localStorage.clear();
+                showStatus('✅ Caché limpiado completamente', 'info');
+                checkCacheStatus();
+            }
+        }
+
+        function clearOldCache() {
+            const keysToKeep = ['tm_cart']; // Keep shopping cart
+            const keysToRemove = [];
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!keysToKeep.includes(key)) {
+                    keysToRemove.push(key);
+                }
+            }
+
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+
+            showStatus(`✅ Limpiado ${keysToRemove.length} items del caché (carrito preservado)`, 'info');
+            checkCacheStatus();
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
+
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function goBack() {
+            window.location.href = 'collections.html?category=guayos';
+        }
+    </script>
+</body>
+
+</html>
