@@ -1,7 +1,8 @@
 /* ==================== BURITICA INTERACTIVE GALLERY ==================== */
 :root {
     --collection-color: #ff3333;
-    --transition-cinematic: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-cinematic: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    --transition-impact: all 0.3s cubic-bezier(0.7, 0, 0.3, 1);
 }
 
 * {
@@ -36,15 +37,50 @@ body {
     background-size: cover;
     background-position: center;
     opacity: 0;
-    transform: scale(1.1);
-    transition: var(--transition-cinematic);
+    transform: scale(1.2);
+    filter: blur(10px) brightness(0.5) hue-rotate(20deg);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     z-index: 1;
+    clip-path: inset(0 0 100% 0);
 }
 
 .gallery-slide.active {
     opacity: 1;
     transform: scale(1);
+    filter: blur(0) brightness(1) hue-rotate(0deg);
     z-index: 2;
+    clip-path: inset(0 0 0 0);
+}
+
+/* Glitch Trigger (via JS) */
+.gallery-slide.glitch-out {
+    animation: glitchEffect 0.4s forwards;
+}
+
+@keyframes glitchEffect {
+    0% {
+        transform: scale(1) translate(0);
+        filter: blur(0) hue-rotate(0);
+        opacity: 1;
+    }
+
+    30% {
+        transform: scale(1.05) translate(-10px, 5px);
+        filter: blur(1px) hue-rotate(45deg);
+        opacity: 0.8;
+    }
+
+    60% {
+        transform: scale(0.98) translate(10px, -5px);
+        filter: blur(2px) hue-rotate(-45deg);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0.95) translate(0);
+        filter: blur(5px) hue-rotate(90deg);
+        opacity: 0;
+    }
 }
 
 .gallery-overlay {

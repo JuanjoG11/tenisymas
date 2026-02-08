@@ -85,7 +85,16 @@
         const dots = document.querySelectorAll('.dot');
 
         function showSlide(index) {
-            slides[currentIndex].classList.remove('active');
+            // Add momentary impact effect to previous slide
+            const prevSlide = slides[currentIndex];
+            prevSlide.classList.remove('active');
+            prevSlide.classList.add('glitch-out');
+
+            // Cleanup glitch class after animation
+            setTimeout(() => {
+                prevSlide.classList.remove('glitch-out');
+            }, 300);
+
             dots[currentIndex].classList.remove('active');
 
             currentIndex = (index + slides.length) % slides.length;
@@ -98,8 +107,8 @@
             showSlide(currentIndex + direction);
         }
 
-        // Auto rotation
-        setInterval(() => rotateGallery(1), 5000);
+        // Fast Auto rotation (2 seconds)
+        setInterval(() => rotateGallery(1), 2000);
     </script>
 </body>
 

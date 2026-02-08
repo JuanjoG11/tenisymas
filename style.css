@@ -2138,19 +2138,20 @@ body {
 /* ==================== FEATURED COLLECTION BANNER ==================== */
 .featured-collection-banner {
     position: relative;
-    height: 400px;
-    width: 95%;
-    max-width: 1400px;
+    height: 700px;
+    width: 100%;
+    max-width: 100%;
     margin: 40px auto;
-    border-radius: 30px;
+    border-radius: 0;
     overflow: hidden;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    transition: all 0.4s ease;
     z-index: 5;
+    background: #000;
 }
 
 .featured-collection-banner:hover {
@@ -2164,14 +2165,79 @@ body {
     width: 100%;
     height: 100%;
     z-index: 1;
+    overflow: hidden;
+}
+
+.banner-collage {
+    display: none;
+    /* Desktop only */
+    width: 105%;
+    height: 120%;
+    position: absolute;
+    top: -10%;
+    left: -2.5%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    opacity: 0.6;
+    filter: blur(2px);
+    transform: rotate(-5deg);
+}
+
+.collage-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: fit-content;
+}
+
+.collage-img {
+    width: 100%;
+    height: 350px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+}
+
+/* Column Animations */
+.col-1 {
+    animation: collageScrollDown 40s linear infinite;
+}
+
+.col-2 {
+    animation: collageScrollUp 35s linear infinite;
+}
+
+.col-3 {
+    animation: collageScrollDown 45s linear infinite;
+}
+
+@keyframes collageScrollDown {
+    0% {
+        transform: translateY(-50%);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes collageScrollUp {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-50%);
+    }
 }
 
 .banner-slide {
     width: 100%;
     height: 100%;
+    background-image: inherit;
     background-size: cover;
-    background-position: center;
-    transition: transform 10s linear;
+    background-position: center 20%;
+    transition: transform 6s linear;
 }
 
 .featured-collection-banner:hover .banner-slide {
@@ -2193,6 +2259,8 @@ body {
     z-index: 10;
     text-align: center;
     padding: 20px;
+    width: 100%;
+    max-width: 800px;
 }
 
 .banner-badge {
@@ -2258,15 +2326,30 @@ body {
     transform: translateY(-5px);
 }
 
+@media (min-width: 1024px) {
+    .banner-collage {
+        display: grid;
+    }
+
+    .banner-slide {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
     .featured-collection-banner {
-        height: 500px;
+        height: 450px;
         width: 100%;
         margin: 20px 0;
         border-radius: 0;
     }
 
     .banner-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
+    }
+
+    .banner-slide {
+        background-position: center 10%;
+        display: block;
     }
 }
