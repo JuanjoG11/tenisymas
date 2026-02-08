@@ -2169,24 +2169,45 @@ body {
 }
 
 .banner-collage {
-    display: none;
-    /* Desktop only */
-    width: 105%;
+    display: grid;
+    width: 110%;
     height: 120%;
     position: absolute;
     top: -10%;
-    left: -2.5%;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    opacity: 0.6;
-    filter: blur(2px);
-    transform: rotate(-5deg);
+    left: -5%;
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 cols for mobile */
+    /* No gap for perfect math */
+    opacity: 0.8;
+    filter: brightness(0.9);
+}
+
+@media (min-width: 1024px) {
+    .banner-collage {
+        grid-template-columns: repeat(3, 1fr);
+        /* 3 cols for PC */
+        transform: rotate(-5deg);
+        filter: blur(2px);
+        opacity: 0.6;
+    }
+}
+
+/* Organic Chaos - Random Rotations for "weird" look */
+.collage-img:nth-child(odd) {
+    transform: rotate(3deg);
+}
+
+.collage-img:nth-child(even) {
+    transform: rotate(-3deg);
+}
+
+.collage-img:nth-child(3n) {
+    transform: rotate(2deg) scale(1.05);
 }
 
 .collage-col {
     display: flex;
     flex-direction: column;
-    gap: 15px;
     height: fit-content;
 }
 
@@ -2195,20 +2216,23 @@ body {
     height: 350px;
     background-size: cover;
     background-position: center;
-    border-radius: 15px;
+    border-radius: 10px;
+    background-color: #1a1a1a;
+    margin-bottom: 8px;
+    /* For perfect scroll math */
 }
 
-/* Column Animations */
+/* Column Animations - Significantly slowed for premium feel */
 .col-1 {
-    animation: collageScrollDown 40s linear infinite;
+    animation: collageScrollDown 120s linear infinite;
 }
 
 .col-2 {
-    animation: collageScrollUp 35s linear infinite;
+    animation: collageScrollUp 90s linear infinite;
 }
 
 .col-3 {
-    animation: collageScrollDown 45s linear infinite;
+    animation: collageScrollDown 150s linear infinite;
 }
 
 @keyframes collageScrollDown {
@@ -2302,10 +2326,22 @@ body {
 }
 
 .banner-text {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.5rem;
+    color: #fff;
     margin-bottom: 30px;
-    font-weight: 300;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    line-height: 1.3;
+}
+
+.banner-text .highlight {
+    color: var(--color-red);
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 5px;
+    letter-spacing: 4px;
 }
 
 .banner-cta {
@@ -2327,29 +2363,32 @@ body {
 }
 
 @media (min-width: 1024px) {
-    .banner-collage {
-        display: grid;
-    }
-
     .banner-slide {
         display: none;
+    }
+
+    .collage-col .collage-img {
+        height: 250px;
+    }
+
+    .banner-collage {
+        gap: 8px;
     }
 }
 
 @media (max-width: 768px) {
     .featured-collection-banner {
-        height: 450px;
+        height: 600px;
         width: 100%;
         margin: 20px 0;
         border-radius: 0;
     }
 
     .banner-title {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
     }
 
     .banner-slide {
-        background-position: center 10%;
-        display: block;
+        display: none;
     }
 }

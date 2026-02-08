@@ -52,9 +52,21 @@ body {
     clip-path: inset(0 0 0 0);
 }
 
-/* Glitch Trigger (via JS) */
+/* Variety Transitions */
 .gallery-slide.glitch-out {
-    animation: glitchEffect 0.4s forwards;
+    animation: glitchEffect 0.5s forwards;
+}
+
+.gallery-slide.zoom-out {
+    animation: zoomEffect 0.5s forwards;
+}
+
+.gallery-slide.slide-out {
+    animation: slideEffect 0.5s forwards;
+}
+
+.gallery-slide.pixel-out {
+    animation: pixelEffect 0.5s forwards;
 }
 
 @keyframes glitchEffect {
@@ -70,15 +82,55 @@ body {
         opacity: 0.8;
     }
 
-    60% {
-        transform: scale(0.98) translate(10px, -5px);
-        filter: blur(2px) hue-rotate(-45deg);
-        opacity: 0.5;
+    100% {
+        transform: scale(0.9) translate(20px);
+        filter: blur(10px) hue-rotate(90deg);
+        opacity: 0;
+    }
+}
+
+@keyframes zoomEffect {
+    0% {
+        transform: scale(1);
+        filter: blur(0);
+        opacity: 1;
     }
 
     100% {
-        transform: scale(0.95) translate(0);
-        filter: blur(5px) hue-rotate(90deg);
+        transform: scale(1.5);
+        filter: blur(20px);
+        opacity: 0;
+    }
+}
+
+@keyframes slideEffect {
+    0% {
+        transform: translateX(0) skewX(0);
+        filter: blur(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-100%) skewX(-10deg);
+        filter: blur(10px);
+        opacity: 0;
+    }
+}
+
+@keyframes pixelEffect {
+    0% {
+        clip-path: inset(0 0 0 0);
+        filter: contrast(1);
+        opacity: 1;
+    }
+
+    50% {
+        filter: contrast(5) brightness(2);
+    }
+
+    100% {
+        clip-path: inset(50% 50% 50% 50%);
+        filter: contrast(10);
         opacity: 0;
     }
 }

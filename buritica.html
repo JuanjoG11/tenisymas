@@ -85,15 +85,19 @@
         const dots = document.querySelectorAll('.dot');
 
         function showSlide(index) {
-            // Add momentary impact effect to previous slide
+            // Pick a random transition effect
+            const effects = ['glitch-out', 'zoom-out', 'slide-out', 'pixel-out'];
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+
+            // Add effect to previous slide
             const prevSlide = slides[currentIndex];
             prevSlide.classList.remove('active');
-            prevSlide.classList.add('glitch-out');
+            prevSlide.classList.add(randomEffect);
 
-            // Cleanup glitch class after animation
+            // Cleanup effect class after animation
             setTimeout(() => {
-                prevSlide.classList.remove('glitch-out');
-            }, 300);
+                prevSlide.classList.remove(randomEffect);
+            }, 600);
 
             dots[currentIndex].classList.remove('active');
 
@@ -107,8 +111,8 @@
             showSlide(currentIndex + direction);
         }
 
-        // Fast Auto rotation (2 seconds)
-        setInterval(() => rotateGallery(1), 2000);
+        // Slowed Auto rotation (3 seconds) for a more premium experience
+        setInterval(() => rotateGallery(1), 3000);
     </script>
 </body>
 
