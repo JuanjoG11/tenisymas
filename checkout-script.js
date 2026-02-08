@@ -95,45 +95,48 @@ function setupCheckoutForm() {
 }
 
 async function handleAddiCheckout(customer) {
-    // Show loading state on button
     const btn = document.querySelector('.btn-checkout-final');
     const originalText = btn.textContent;
     btn.textContent = 'Procesando con Addi...';
     btn.disabled = true;
 
-    console.log('🚀 Iniciando checkout con Addi para:', customer);
+    console.log('🚀 Iniciando checkout con Addi...');
 
     try {
-        // Here we would call the Supabase Edge Function
-        // For now, redirect to a mock/whatsapp if we don't have the API set up
+        const orderData = {
+            total: checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0) + SHIPPING_COST,
+            items: checkoutCart.map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                priceClean: parseInt(item.price.replace(/[^0-9]/g, ''))
+            }))
+        };
 
-        // MOCK: simulate server delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // alert('Redirigiendo a Addi... (Necesitaremos configurar tus credenciales en Supabase para el paso final)');
-
-        // Fallback to WhatsApp but notifying it's for Addi
-        const WHATSAPP_NUMBER = '573204961453';
-        let message = `Hola! Quiero pagar con ADDI mi pedido:\n\n`;
-        message += `👤 *Cliente:* ${customer.firstName} ${customer.lastName}\n`;
-        message += `🆔 *Cédula:* ${customer.dni}\n`;
-        message += `📍 *Ciudad:* ${customer.city}\n\n`;
-        message += `🛒 *RESUMEN DE COMPRA:*\n`;
-
-        let total = 0;
-        checkoutCart.forEach(item => {
-            const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
-            total += itemTotal;
-            message += `📦 *${item.quantity}x ${item.name}*\n`;
+        const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/addi-checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                order: orderData,
+                customer: customer
+            })
         });
 
-        message += `\n💰 *TOTAL: $${(total + SHIPPING_COST).toLocaleString('es-CO')}*`;
+        const result = await response.json();
 
-        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
+        if (result.redirectUrl) {
+            window.location.href = result.redirectUrl;
+        } else {
+            console.error('Addi Error Details:', result);
+            throw new Error(result.error || 'Error desconocido al procesar con Addi');
+        }
 
     } catch (err) {
-        console.error('Error Addi:', err);
+        console.error('Error Addi Full:', err);
+        alert('Hubo un error con Addi: ' + err.message + '\n\nPor favor intenta con otro método o contacta a soporte si el problema persiste.');
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;

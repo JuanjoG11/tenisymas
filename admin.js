@@ -1,6 +1,6 @@
 // Supabase Configuration
 const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_G9-piiwf5z82J6WGunpV_A_t3XQ1ZF3';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybGFhZGFnZ21wanRkbXRudG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTM0NjksImV4cCI6MjA4NTAyOTQ2OX0.B7RLhRRvuz5jAsRAHLhWIPtW3KdhEEAKzoKV3DfeoJE';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
         persistSession: false

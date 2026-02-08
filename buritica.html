@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colección 2026 | TENNISYMAS</title>
+    <link rel="stylesheet" href="buritica-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="theme-red" id="collectionPage">
+
+    <!-- Navbar Exit -->
+    <a href="index.html" class="exit-link">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        <span>Volver a la Tienda</span>
+    </a>
+
+    <main class="gallery-container">
+        <!-- Main Image Display -->
+        <div class="gallery-slider" id="gallerySlider">
+            <!-- 14 Photos -->
+            <div class="gallery-slide active" style="background-image: url('images/buritica1.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica2.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica3.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica4.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica5.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica6.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica7.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica8.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica9.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica10.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica11.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica12.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica13.png')"></div>
+            <div class="gallery-slide" style="background-image: url('images/buritica14.png')"></div>
+        </div>
+
+        <div class="gallery-overlay"></div>
+
+        <!-- Content Overlay -->
+        <section class="gallery-content">
+            <div class="text-top">
+                <h1 class="main-title">COLECCIÓN 2026</h1>
+                <p class="tagline">"Del barrio para el barrio"</p>
+            </div>
+
+            <div class="text-bottom">
+                <p class="slogan">VÍSTETE CON ESTILO EN CADA CANCHA QUE VISITES</p>
+                <a href="collections.html?category=petos,camisetas" class="cta-button">
+                    COMPRAR PETOS Y CAMISETAS
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
+        </section>
+
+        <!-- Gallery Navigation -->
+        <button class="nav-btn prev-btn" onclick="rotateGallery(-1)">&#10094;</button>
+        <button class="nav-btn next-btn" onclick="rotateGallery(1)">&#10095;</button>
+
+        <!-- Progress Indicators -->
+        <div class="gallery-dots" id="galleryDots"></div>
+    </main>
+
+    <script>
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.gallery-slide');
+        const dotsContainer = document.getElementById('galleryDots');
+
+        // Create dots
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = `dot ${i === 0 ? 'active' : ''}`;
+            dot.onclick = () => showSlide(i);
+            dotsContainer.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            slides[currentIndex].classList.remove('active');
+            dots[currentIndex].classList.remove('active');
+
+            currentIndex = (index + slides.length) % slides.length;
+
+            slides[currentIndex].classList.add('active');
+            dots[currentIndex].classList.add('active');
+        }
+
+        function rotateGallery(direction) {
+            showSlide(currentIndex + direction);
+        }
+
+        // Auto rotation
+        setInterval(() => rotateGallery(1), 5000);
+    </script>
+</body>
+
+</html>

@@ -117,7 +117,7 @@ async function loadProducts() {
             console.log('📡 Fetch fallback (no cache or sync data)');
             const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabase?.createClient(
                 'https://nrlaadaggmpjtdmtntoz.supabase.co',
-                'sb_publishable_G9-piiwf5z82J6WGunpV_A_t3XQ1ZF3'
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybGFhZGFnZ21wanRkbXRudG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTM0NjksImV4cCI6MjA4NTAyOTQ2OX0.B7RLhRRvuz5jAsRAHLhWIPtW3KdhEEAKzoKV3DfeoJE'
             );
 
             if (client) {
