@@ -570,3 +570,254 @@
         right: 20px !important;
     }
 }
+
+/* ==================== SIZE SELECTOR IN PRODUCT CARDS ==================== */
+.size-selector-container {
+    margin: 12px 0;
+    width: 100%;
+}
+
+.size-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.size-selector {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.size-selector:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-red);
+}
+
+.size-selector:focus {
+    outline: none;
+    border-color: var(--color-red);
+    box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.1);
+}
+
+.size-selector option {
+    background: var(--color-gray);
+    color: white;
+    padding: 10px;
+}
+
+/* Size in cart items */
+.item-size {
+    font-size: 0.85rem;
+    color: var(--color-red);
+    margin: 4px 0;
+    font-weight: 600;
+}
+
+.item-size strong {
+    color: white;
+}
+
+/* Color selector - same styling as size selector */
+.color-selector-container {
+    margin: 12px 0;
+    width: 100%;
+}
+
+.color-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.color-selector {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.color-selector:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-red);
+}
+
+.color-selector:focus {
+    outline: none;
+    border-color: var(--color-red);
+    box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.1);
+}
+
+.color-selector option {
+    background: var(--color-gray);
+    color: white;
+    padding: 10px;
+}
+
+/* Color in cart items */
+.item-color {
+    font-size: 0.85rem;
+    color: var(--color-red);
+    margin: 4px 0;
+    font-weight: 600;
+}
+
+.item-color strong {
+    color: white;
+}
+
+/* ==================== IMAGE CAROUSEL IN PRODUCT CARDS ==================== */
+.product-image-container {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.product-image-container .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.product-image-container .product-image.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Carousel Navigation Buttons */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.product-image-container:hover .carousel-btn {
+    opacity: 1;
+}
+
+.carousel-btn:hover {
+    background: rgba(255, 51, 51, 0.9);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn svg {
+    color: white;
+}
+
+.carousel-prev {
+    left: 10px;
+}
+
+.carousel-next {
+    right: 10px;
+}
+
+/* Carousel Dots */
+.carousel-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dot:hover {
+    background: rgba(255, 255, 255, 0.7);
+    transform: scale(1.2);
+}
+
+.carousel-dot.active {
+    background: var(--color-red);
+    width: 24px;
+    border-radius: 4px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .product-image-container {
+        height: 200px;
+    }
+
+    .carousel-btn {
+        width: 32px;
+        height: 32px;
+        opacity: 0.7;
+    }
+
+    .product-image-container:hover .carousel-btn {
+        opacity: 0.7;
+    }
+
+    .carousel-dot {
+        width: 6px;
+        height: 6px;
+    }
+
+    .carousel-dot.active {
+        width: 18px;
+    }
+}

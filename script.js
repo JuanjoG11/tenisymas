@@ -108,40 +108,56 @@ function renderProductGrid(containerId, category) {
 }
 
 // ==================== CART LOGIC ====================
-function addToCart(productId) {
+function addToCart(productId, size = null, color = null) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
-    const existingItem = cart.find(item => item.id === productId);
+    // For products with sizes/colors, find existing item with same size AND color
+    // For products without, find by ID only
+    const existingItem = (size || color)
+        ? cart.find(item => item.id === productId && item.size === size && item.color === color)
+        : cart.find(item => item.id === productId && !item.size && !item.color);
 
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({
+        const cartItem = {
             id: product.id,
             name: product.name,
             price: product.price,
             image: product.image,
             quantity: 1
-        });
+        };
+
+        // Add size if provided
+        if (size) {
+            cartItem.size = size;
+        }
+
+        // Add color if provided
+        if (color) {
+            cartItem.color = color;
+        }
+
+        cart.push(cartItem);
     }
 
     saveCart();
     openCart(); // Auto open cart to show feedback
 }
 
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
+function removeFromCart(index) {
+    cart.splice(index, 1);
     saveCart();
 }
 
-function updateQuantity(productId, change) {
-    const item = cart.find(i => i.id === productId);
+function updateQuantity(index, change) {
+    const item = cart[index];
     if (!item) return;
 
     item.quantity += change;
     if (item.quantity <= 0) {
-        removeFromCart(productId);
+        removeFromCart(index);
     } else {
         saveCart();
     }
@@ -170,19 +186,21 @@ function updateCartUI() {
         }
     } else {
         if (cartItems) {
-            cartItems.innerHTML = cart.map(item => `
+            cartItems.innerHTML = cart.map((item, index) => `
                 <div class="cart-item">
                     <img src="${item.image}" alt="${item.name}">
                     <div class="item-details">
                         <h4>${item.name}</h4>
+                        ${item.size ? `<p class="item-size">Talla: <strong>${item.size}</strong></p>` : ''}
+                        ${item.color ? `<p class="item-color">Color: <strong>${item.color}</strong></p>` : ''}
                         <p>${item.price}</p>
                         <div class="item-controls">
-                            <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                            <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
                             <span>${item.quantity}</span>
-                            <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                            <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
                         </div>
                     </div>
-                    <button class="remove-btn" onclick="removeFromCart(${item.id})">&times;</button>
+                    <button class="remove-btn" onclick="removeFromCart(${index})">&times;</button>
                 </div>
             `).join('');
         }
@@ -542,7 +560,7 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v2';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        const THIRTY_MINUTES = 30 * 60 * 1000;
+        const TWO_MINUTES = 2 * 60 * 1000;
 
         // 1. Try to load from localStorage first
         const cachedData = localStorage.getItem(CACHE_KEY);
@@ -555,8 +573,8 @@ async function syncProducts() {
                 renderHomepageSections();
                 console.log('⚡ Data restored from localStorage');
 
-                // If cache is fresh, return immediately and don't fetch
-                if (lastFetch && (now - lastFetch < THIRTY_MINUTES)) {
+                // If cache is fresh (less than 2 minutes), return immediately
+                if (lastFetch && (now - lastFetch < TWO_MINUTES)) {
                     isSyncing = false;
                     return products;
                 }

@@ -322,7 +322,7 @@ function applyFilters() {
         if (fCat && !isSpecialCat) {
             const pCat = normalize(product.category || product.categoria || '');
             const allowedCats = fCat.split(',').map(normalize);
-            if (!allowedCats.includes(pCat)) return false;
+            if (!allowedCats.some(cat => pCat.includes(cat))) return false;
         }
 
         // Brand
@@ -428,30 +428,236 @@ function renderProducts(reset = true) {
     }
 }
 
+
+
+
 function createProductCardHTML(product) {
-    // Added 'contain-content' CSS class optimization if we had css for it, but standard HTML for now
+    const hasSizes = product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
+    const hasColors = product.colors && Array.isArray(product.colors) && product.colors.length > 0;
+    const requiresSelection = hasSizes || hasColors;
+
+    // Check if product has multiple images
+    const images = product.images && Array.isArray(product.images) && product.images.length > 0
+        ? product.images
+        : [product.image]; // Fallback to single image
+
+    const hasMultipleImages = images.length > 1;
+
     return `
         <div class="product-card" data-category="${product.category || ''}">
-            <img src="${product.image}" 
-                 alt="${product.name}" 
-                 class="product-image" 
-                 loading="lazy" 
-                 decoding="async"
-                 width="300" 
-                 height="300">
+            <div class="product-image-container" data-product-id="${product.id}">
+                ${images.map((img, index) => `
+                    <img src="${img}" 
+                         alt="${product.name}" 
+                         class="product-image ${index === 0 ? 'active' : ''}" 
+                         loading="lazy" 
+                         decoding="async"
+                         width="300" 
+                         height="300"
+                         data-index="${index}">
+                `).join('')}
+                ${hasMultipleImages ? `
+                    <button class="carousel-btn carousel-prev" onclick="changeProductImage(${product.id}, -1)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="carousel-btn carousel-next" onclick="changeProductImage(${product.id}, 1)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="carousel-dots">
+                        ${images.map((_, index) => `
+                            <span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToProductImage(${product.id}, ${index})"></span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
                     ${product.oldPrice || product.old_price ? `<span class="product-old-price">${product.oldPrice || product.old_price}</span>` : ''}
                     <span class="product-price">${product.price}</span>
                 </div>
-                <button class="product-btn" onclick="addToCart(${product.id})">
+                ${hasSizes ? `
+                    <div class="size-selector-container">
+                        <label for="size-${product.id}" class="size-label">Talla:</label>
+                        <select id="size-${product.id}" class="size-selector">
+                            <option value="">Selecciona una talla</option>
+                            ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+                        </select>
+                    </div>
+                ` : ''}
+                ${hasColors ? `
+                    <div class="color-selector-container">
+                        <label for="color-${product.id}" class="color-label">Color:</label>
+                        <select id="color-${product.id}" class="color-selector">
+                            <option value="">Selecciona un color</option>
+                            ${product.colors.map(color => `<option value="${color}">${color}</option>`).join('')}
+                        </select>
+                    </div>
+                ` : ''}
+                <button class="product-btn" onclick="handleAddToCart(${product.id}, ${hasSizes}, ${hasColors})">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>Agregar al Carrito</span>
                 </button>
             </div>
         </div>
     `;
+}
+
+// ==================== IMAGE CAROUSEL FUNCTIONS ====================
+function changeProductImage(productId, direction) {
+    const container = document.querySelector(`.product-image-container[data-product-id="${productId}"]`);
+    if (!container) return;
+
+    const images = container.querySelectorAll('.product-image');
+    const dots = container.querySelectorAll('.carousel-dot');
+    const currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+
+    let newIndex = currentIndex + direction;
+    if (newIndex < 0) newIndex = images.length - 1;
+    if (newIndex >= images.length) newIndex = 0;
+
+    images[currentIndex].classList.remove('active');
+    images[newIndex].classList.add('active');
+
+    if (dots.length > 0) {
+        dots[currentIndex].classList.remove('active');
+        dots[newIndex].classList.add('active');
+    }
+}
+
+function goToProductImage(productId, index) {
+    const container = document.querySelector(`.product-image-container[data-product-id="${productId}"]`);
+    if (!container) return;
+
+    const images = container.querySelectorAll('.product-image');
+    const dots = container.querySelectorAll('.carousel-dot');
+    const currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+
+    if (currentIndex !== index) {
+        images[currentIndex].classList.remove('active');
+        images[index].classList.add('active');
+
+        if (dots.length > 0) {
+            dots[currentIndex].classList.remove('active');
+            dots[index].classList.add('active');
+        }
+    }
+}
+
+// Add touch/swipe support
+document.addEventListener('DOMContentLoaded', () => {
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.product-image-container')) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        const container = e.target.closest('.product-image-container');
+        if (container) {
+            touchEndX = e.changedTouches[0].screenX;
+            const productId = parseInt(container.dataset.productId);
+
+            if (touchEndX < touchStartX - 50) {
+                // Swipe left - next image
+                changeProductImage(productId, 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                // Swipe right - previous image
+                changeProductImage(productId, -1);
+            }
+        }
+    }, { passive: true });
+});
+
+// ==================== SIZE & COLOR SELECTION HANDLER ====================
+function handleAddToCart(productId, requiresSize, requiresColor) {
+    let selectedSize = null;
+    let selectedColor = null;
+    let hasError = false;
+
+    // Validate Size
+    if (requiresSize) {
+        const sizeSelector = document.getElementById(`size-${productId}`);
+        selectedSize = sizeSelector ? sizeSelector.value : '';
+
+        if (!selectedSize) {
+            hasError = true;
+            sizeSelector.style.border = '2px solid #ff3333';
+
+            const errorMsg = document.createElement('div');
+            errorMsg.textContent = 'Por favor selecciona una talla';
+            errorMsg.style.cssText = 'color: #ff3333; font-size: 12px; margin-top: 5px; font-weight: bold;';
+            errorMsg.className = 'selection-error-msg';
+
+            const existingError = sizeSelector.parentElement.querySelector('.selection-error-msg');
+            if (existingError) existingError.remove();
+
+            sizeSelector.parentElement.appendChild(errorMsg);
+
+            setTimeout(() => {
+                sizeSelector.style.border = '';
+                errorMsg.remove();
+            }, 3000);
+        } else {
+            sizeSelector.style.border = '';
+        }
+    }
+
+    // Validate Color
+    if (requiresColor) {
+        const colorSelector = document.getElementById(`color-${productId}`);
+        selectedColor = colorSelector ? colorSelector.value : '';
+
+        if (!selectedColor) {
+            hasError = true;
+            colorSelector.style.border = '2px solid #ff3333';
+
+            const errorMsg = document.createElement('div');
+            errorMsg.textContent = 'Por favor selecciona un color';
+            errorMsg.style.cssText = 'color: #ff3333; font-size: 12px; margin-top: 5px; font-weight: bold;';
+            errorMsg.className = 'selection-error-msg';
+
+            const existingError = colorSelector.parentElement.querySelector('.selection-error-msg');
+            if (existingError) existingError.remove();
+
+            colorSelector.parentElement.appendChild(errorMsg);
+
+            setTimeout(() => {
+                colorSelector.style.border = '';
+                errorMsg.remove();
+            }, 3000);
+        } else {
+            colorSelector.style.border = '';
+        }
+    }
+
+    // If there are errors, stop here
+    if (hasError) {
+        return;
+    }
+
+    // Call addToCart with size and color
+    if (typeof addToCart === 'function') {
+        addToCart(productId, selectedSize, selectedColor);
+
+        // Reset selectors after adding
+        if (requiresSize) {
+            const sizeSelector = document.getElementById(`size-${productId}`);
+            if (sizeSelector) sizeSelector.value = '';
+        }
+        if (requiresColor) {
+            const colorSelector = document.getElementById(`color-${productId}`);
+            if (colorSelector) colorSelector.value = '';
+        }
+    }
 }
 
 // ==================== INFINITE SCROLL ====================

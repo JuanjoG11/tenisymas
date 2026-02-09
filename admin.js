@@ -152,7 +152,8 @@ function setupEventListeners() {
             category: document.getElementById('category').value,
             price: document.getElementById('price').value,
             oldPrice: document.getElementById('oldPrice').value,
-            image: imageInput.value || 'images/placeholder.png'
+            image: imageInput.value || 'images/placeholder.png',
+            sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
         };
 
         await saveProduct(productData);
@@ -231,6 +232,7 @@ function renderAdminProducts() {
             <div class="item-info">
                 <h4>${product.name}</h4>
                 <p>${product.category} | ${product.price}</p>
+                <p class="item-sizes">${product.sizes ? product.sizes.join(', ') : 'Sin tallas'}</p>
             </div>
             <div class="item-actions">
                 <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
@@ -260,6 +262,7 @@ window.editProduct = (id) => {
     document.getElementById('price').value = product.price;
     document.getElementById('oldPrice').value = product.oldPrice || '';
     document.getElementById('image').value = product.image;
+    document.getElementById('sizes').value = product.sizes ? product.sizes.join(', ') : '';
 
     imagePreview.src = product.image;
     imagePreview.style.display = 'block';

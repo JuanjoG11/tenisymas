@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Colección petos 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #ff3333;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #cc0000;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Agregar "Colección petos 1"</h1>
+
+        <div class="warning">
+            <strong>⚠️ Nota:</strong> La base de datos no tiene columna "sizes". El producto se agregará sin ese campo.
+            Puedes agregar la información de tallas en el nombre o descripción del producto.
+        </div>
+
+        <div class="info">
+            <strong>Producto a agregar:</strong><br>
+            • Nombre: Colección petos 1 (S, M, L, XL)<br>
+            • Categoría: petos<br>
+            • Precio: $150.000<br>
+            • Imagen: images/uniformes-main.png
+        </div>
+
+        <button id="btnAgregar" onclick="agregarProducto()">Agregar Producto Ahora</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybGFhZGFnZ21wanRkbXRudG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTM0NjksImV4cCI6MjA4NTAyOTQ2OX0.B7RLhRRvuz5jAsRAHLhWIPtW3KdhEEAKzoKV3DfeoJE';
+
+        async function agregarProducto() {
+            const resultDiv = document.getElementById('result');
+            const btnAgregar = document.getElementById('btnAgregar');
+
+            btnAgregar.disabled = true;
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = 'Agregando producto...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        name: 'Colección petos 1 (S, M, L, XL)',
+                        category: 'petos',
+                        price: '$150.000',
+                        image: 'images/uniformes-main.png'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(`Error ${response.status}: ${errorData}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <strong>✓ ¡Producto agregado exitosamente!</strong><br><br>
+                    El producto "Colección petos 1" ha sido agregado a la base de datos.<br>
+                    <strong>ID del producto:</strong> ${data[0]?.id || 'N/A'}<br><br>
+                    Espera unos 2 minutos y luego revisa la categoría "PETOS" en tu sitio web.<br><br>
+                    <em>Puedes cerrar esta página ahora.</em>
+                `;
+
+                // Limpiar el cache de productos
+                try {
+                    localStorage.removeItem('productsCache_v2');
+                    localStorage.removeItem('productsCache_Time');
+                } catch (e) {
+                    console.log('No se pudo limpiar el cache:', e);
+                }
+
+            } catch (error) {
+                btnAgregar.disabled = false;
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <strong>✗ Error al agregar el producto</strong><br><br>
+                    ${error.message}<br><br>
+                    Por favor, intenta de nuevo.
+                `;
+                console.error('Error completo:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
