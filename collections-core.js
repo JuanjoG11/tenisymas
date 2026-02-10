@@ -121,7 +121,12 @@ async function loadProducts() {
             );
 
             if (client) {
-                const { data, error } = await client.from('products').select('*').order('id', { ascending: true });
+                // OPTIMIZED QUERY: Select only necessary columns
+                const { data, error } = await client
+                    .from('products')
+                    .select('id, name, price, image, category, sizes, colors, images')
+                    .order('id', { ascending: true });
+
                 if (data && data.length > 0) {
                     allProducts = data;
                     applyFilters();
@@ -483,10 +488,24 @@ function createProductCardHTML(product) {
                 ${hasSizes ? `
                     <div class="size-selector-container">
                         <label for="size-${product.id}" class="size-label">Talla:</label>
-                        <select id="size-${product.id}" class="size-selector">
-                            <option value="">Selecciona una talla</option>
-                            ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
-                        </select>
+                        ${['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running'].includes((product.category || '').toLowerCase().trim())
+                ? `
+                            <!-- Custom Chip Selector for Footwear -->
+                            <input type="hidden" id="size-${product.id}" value="">
+                            <div class="size-chips-grid" id="size-grid-${product.id}">
+                                ${[37, 38, 39, 40, 41, 42, 43, 44].map(size => `
+                                    <div class="size-chip" onclick="selectSize(${product.id}, '${size}', this)">${size}</div>
+                                `).join('')}
+                            </div>
+                            `
+                : `
+                            <!-- Standard Dropdown for other categories -->
+                            <select id="size-${product.id}" class="size-selector">
+                                <option value="">Selecciona una talla</option>
+                                ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+                            </select>
+                            `
+            }
                     </div>
                 ` : ''}
                 ${hasColors ? `
@@ -588,9 +607,14 @@ function handleAddToCart(productId, requiresSize, requiresColor) {
         const sizeSelector = document.getElementById(`size-${productId}`);
         selectedSize = sizeSelector ? sizeSelector.value : '';
 
+        // Helper to find the visual container (dropdown or grid)
+        const sizeGrid = document.getElementById(`size-grid-${productId}`);
+        const visualElement = sizeGrid || sizeSelector;
+
         if (!selectedSize) {
             hasError = true;
-            sizeSelector.style.border = '2px solid #ff3333';
+            visualElement.style.border = '2px solid #ff3333';
+            if (sizeGrid) visualElement.style.borderRadius = '8px'; // Add radius for grid border
 
             const errorMsg = document.createElement('div');
             errorMsg.textContent = 'Por favor selecciona una talla';
@@ -603,13 +627,14 @@ function handleAddToCart(productId, requiresSize, requiresColor) {
             sizeSelector.parentElement.appendChild(errorMsg);
 
             setTimeout(() => {
-                sizeSelector.style.border = '';
+                visualElement.style.border = '';
                 errorMsg.remove();
             }, 3000);
         } else {
-            sizeSelector.style.border = '';
+            visualElement.style.border = '';
         }
     }
+
 
     // Validate Color
     if (requiresColor) {
@@ -751,4 +776,26 @@ function hideSkeletonLoaders() {
 
 window.clearAllFilters = clearAllFilters;
 
+// Custom selector for footwear sizes
+window.selectSize = function (productId, size, element) {
+    // 1. Update hidden input
+    const input = document.getElementById(`size-${productId}`);
+    if (input) input.value = size;
+
+    // 2. Update visuals
+    const grid = document.getElementById(`size-grid-${productId}`);
+    if (grid) {
+        // Remove active class from all chips
+        grid.querySelectorAll('.size-chip').forEach(chip => chip.classList.remove('selected'));
+        // Add active class to clicked chip
+        element.classList.add('selected');
+
+        // Remove error border if it exists
+        grid.style.border = '';
+        const errorMsg = grid.parentElement.querySelector('.selection-error-msg');
+        if (errorMsg) errorMsg.remove();
+    }
+};
+
 console.log('✅ Collections script optimized and ready');
+

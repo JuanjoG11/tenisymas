@@ -1,7 +1,12 @@
 {
-  "name": "Colección petos 1",
+  "name": "Colección Los Calidosos",
   "category": "petos",
-  "price": "$150.000",
-  "sizes": ["S", "M", "L", "XL"],
+  "price": "$65.000",
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL"
+  ],
   "image": "images/uniformes-main.png"
 }

@@ -237,8 +237,30 @@
     transition: opacity 0.2s;
 }
 
-.clear-filters:hover {
-    opacity: 0.8;
+.close-filters-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+@media (max-width: 768px) {
+    .close-filters-btn {
+        display: block;
+    }
+
+    .filters-header {
+        position: sticky;
+        top: 0;
+        background: #141414;
+        z-index: 10;
+        margin-top: -5px;
+        padding-top: 5px;
+    }
 }
 
 /* Filter Groups */
@@ -513,7 +535,7 @@
         width: 85%;
         max-width: 320px;
         height: 100vh;
-        z-index: 2000;
+        z-index: 2100;
         transition: left 0.3s ease;
         max-height: 100vh;
         border-radius: 0;
@@ -529,17 +551,42 @@
     }
 
     .products-grid-collections {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 16px;
+        grid-template-columns: 1fr;
+        /* Una sola columna para que las fotos se vean grandes */
+        gap: 30px;
+        /* Más espacio entre tarjetas */
+        padding: 0 10px;
+    }
+
+    .product-card {
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .product-info {
+        padding: 16px;
+        /* Más compacto */
+    }
+
+    .product-name {
+        font-size: 1.4rem;
+        /* Nombre más grande y legible */
+        margin-bottom: 8px;
+    }
+
+    .product-price {
+        font-size: 1.5rem;
+        /* Precio resaltado */
     }
 
     .category-header {
         padding: 20px 10px 10px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .category-header h1 {
-        font-size: 2rem;
+        font-size: 2.2rem;
     }
 }
 
@@ -697,7 +744,51 @@
     color: white;
 }
 
-/* ==================== IMAGE CAROUSEL IN PRODUCT CARDS ==================== */
+/* ==================== SIZE SELECTOR CHIPS ==================== */
+.size-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.size-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.size-chip:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.size-chip.selected {
+    background: var(--color-red);
+    border-color: var(--color-red);
+    color: white;
+    font-weight: 700;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(255, 51, 51, 0.3);
+}
+
+/* Make sure container handles different content heights */
+.product-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 .product-image-container {
     position: relative;
     width: 100%;
@@ -799,17 +890,44 @@
 /* Mobile optimizations */
 @media (max-width: 768px) {
     .product-image-container {
-        height: 200px;
+        height: 320px;
+        /* Foto mucho más grande y "gruesa" */
+        border-radius: 16px 16px 0 0;
+    }
+
+    /* Selectores más profesionales en móvil */
+    .size-selector-container,
+    .color-selector-container {
+        margin: 8px 0;
+    }
+
+    .size-label,
+    .color-label {
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    .size-selector,
+    .color-selector {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+
+    /* Botón más pro */
+    .product-btn {
+        margin-top: 10px;
+        padding: 14px;
+        font-size: 1rem;
     }
 
     .carousel-btn {
-        width: 32px;
-        height: 32px;
-        opacity: 0.7;
+        width: 36px;
+        height: 36px;
+        opacity: 0.8;
     }
 
     .product-image-container:hover .carousel-btn {
-        opacity: 0.7;
+        opacity: 0.8;
     }
 
     .carousel-dot {
@@ -818,6 +936,6 @@
     }
 
     .carousel-dot.active {
-        width: 18px;
+        width: 20px;
     }
 }

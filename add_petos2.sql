@@ -1,11 +1,11 @@
--- Script para agregar el producto "Colección petos 2"
+-- Script para agregar el producto "Colección La Pesada" (Anteriormente Petos 2)
 -- Ejecuta este script en el SQL Editor de Supabase
 
 INSERT INTO products (name, category, price, image, sizes, colors, images)
 VALUES (
-    'Colección petos 2',          -- Nombre
+    'Colección La Pesada',          -- Nombre
     'petos',                      -- Categoría
-    '$150.000',                   -- Precio
+    '$65.000',                   -- Precio
     'images/petos2_portada.jpg.jpeg',  -- Imagen Principal
     '["S", "M", "L", "XL"]'::jsonb, -- Tallas
     '["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"]'::jsonb, -- Colores
@@ -21,4 +21,4 @@ VALUES (
 );
 
 -- Verificar inserción
-SELECT * FROM products WHERE name = 'Colección petos 2';
+SELECT * FROM products WHERE name = 'Colección La Pesada';

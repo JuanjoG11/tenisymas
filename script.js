@@ -10,6 +10,7 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
         persistSession: false
     }
 }) : null;
+window.supabaseClient = supabaseClient;
 
 // Initial Load
 document.addEventListener('DOMContentLoaded', () => {
@@ -560,7 +561,8 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v2';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        const TWO_MINUTES = 2 * 60 * 1000;
+        // Increase cache to 30 minutes for better performance
+        const CACHE_DURATION = 30 * 60 * 1000;
 
         // 1. Try to load from localStorage first
         const cachedData = localStorage.getItem(CACHE_KEY);
@@ -573,8 +575,8 @@ async function syncProducts() {
                 renderHomepageSections();
                 console.log('⚡ Data restored from localStorage');
 
-                // If cache is fresh (less than 2 minutes), return immediately
-                if (lastFetch && (now - lastFetch < TWO_MINUTES)) {
+                // If cache is fresh, return immediately
+                if (lastFetch && (now - lastFetch < CACHE_DURATION)) {
                     isSyncing = false;
                     return products;
                 }
@@ -586,9 +588,11 @@ async function syncProducts() {
         try {
             // 2. Fetch data (Only if cache expired or missing)
             console.log('🌐 Fetching fresh data from Supabase...');
+
+            // OPTIMIZED QUERY: Select only necessary columns
             const { data, error } = await supabaseClient
                 .from('products')
-                .select('*')
+                .select('id, name, price, image, category, sizes, colors, images')
                 .order('id', { ascending: true });
 
             if (error) throw error;
