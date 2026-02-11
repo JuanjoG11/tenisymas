@@ -1,0 +1,2 @@
+﻿--- Testing Variation: addi-prod.auth0.com ---
+Auth with addi-prod.auth0.com failed, falling back to auth.addi.com

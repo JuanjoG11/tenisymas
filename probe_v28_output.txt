@@ -1,0 +1,2 @@
+﻿Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

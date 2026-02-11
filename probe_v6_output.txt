@@ -1,0 +1,16 @@
+﻿
+--- Testing Variation: With birthDate (YYYY-MM-DD) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: With gender (MALE) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: With brand in item ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: Minimal (Removing redirectionUrls from body - sometimes only headers) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

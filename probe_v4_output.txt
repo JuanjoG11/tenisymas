@@ -1,0 +1,16 @@
+﻿
+--- Testing Variation: Adding 'totalAmount' to item ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: Removing 'category' from items and adding 'productType' ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: Using 'client.phoneNumber' ONLY ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: Adding 'pickUpLocation' (sometimes mandatory for some allies) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

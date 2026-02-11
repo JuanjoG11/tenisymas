@@ -182,6 +182,7 @@
 
 .method-logos {
     display: flex;
+    align-items: center;
     gap: 12px;
 }
 
@@ -193,6 +194,22 @@
 .wompi-logo-checkout {
     height: 24px;
     width: auto;
+}
+
+.addi-text-fallback,
+.wompi-text-fallback {
+    display: none;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--color-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Show text if image fails (using CSS sibling selector since we hide image on error) */
+.addi-logo-checkout[style*="display: none"]+.addi-text-fallback,
+.wompi-logo-checkout[style*="display: none"]+.wompi-text-fallback {
+    display: inline-block;
 }
 
 .method-description {

@@ -103,40 +103,74 @@ async function handleAddiCheckout(customer) {
     console.log('🚀 Iniciando checkout con Addi...');
 
     try {
-        const orderData = {
-            total: checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0) + SHIPPING_COST,
-            items: checkoutCart.map(item => ({
-                id: item.id,
-                name: item.name,
-                quantity: item.quantity,
-                priceClean: parseInt(item.price.replace(/[^0-9]/g, ''))
-            }))
+        // Función MÁXIMA LIMPIEZA: Tildes fuera, mayúsculas, trim
+        const cleanStr = (str) => {
+            if (!str) return "";
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
         };
 
+        // Teléfono: 10 dígitos limpios
+        const cleanPhone = customer.phone.replace(/\D/g, '');
+        const finalPhone = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+
+        const totalAmount = Math.round(checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0) + SHIPPING_COST);
+
+        const payload = {
+            orderData: {
+                allySlug: "tennisymasco-ecommerce",
+                orderId: "TM-" + Date.now(),
+                totalAmount: totalAmount,
+                currency: "COP",
+                shippingAddress: {
+                    line1: cleanStr(customer.address) || "CALLE 123", // Fallback para evitar vacíos
+                    city: cleanStr(customer.city) || "BOGOTA",
+                    country: "CO"
+                },
+                client: {
+                    idType: "CC",
+                    idNumber: customer.dni.trim(),
+                    firstName: cleanStr(customer.firstName),
+                    lastName: cleanStr(customer.lastName),
+                    email: customer.email.trim(),
+                    cellphone: finalPhone
+                },
+                redirectionUrls: {
+                    success: "https://tenisymas.com/success.html",
+                    failure: "https://tenisymas.com/checkout.html",
+                    cancel: "https://tenisymas.com/checkout.html"
+                },
+                items: [{
+                    sku: "REF-001",
+                    name: "COMPRA TENIS Y MAS CO",
+                    quantity: 1,
+                    unitPrice: totalAmount,
+                    category: "Fashion"
+                }]
+            }
+        };
+
+        // El fetch debe enviar el payload tal cual
         const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/addi-checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${SUPABASE_KEY}`
             },
-            body: JSON.stringify({
-                order: orderData,
-                customer: customer
-            })
+            body: JSON.stringify(payload)
         });
 
         const result = await response.json();
 
-        if (result.redirectUrl) {
-            window.location.href = result.redirectUrl;
+        if (result.redirectionUrl) {
+            window.location.href = result.redirectionUrl;
         } else {
-            console.error('Addi Error Details:', result);
-            throw new Error(result.error || 'Error desconocido al procesar con Addi');
+            console.error('Addi Error Details:', JSON.stringify(result, null, 2));
+            throw new Error('Error Addi: ' + (result.message || JSON.stringify(result)));
         }
 
     } catch (err) {
         console.error('Error Addi Full:', err);
-        alert('Hubo un error con Addi: ' + err.message + '\n\nPor favor intenta con otro método o contacta a soporte si el problema persiste.');
+        alert('Detalles del Error Addi (Copia esto):\n\n' + err.message);
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;

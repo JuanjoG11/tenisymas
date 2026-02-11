@@ -49,10 +49,21 @@ function updateCategoryTitle(category) {
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
         'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' },
         'tenis-guayos': { title: 'TENIS-GUAYOS', subtitle: 'Estilo y rendimiento en un solo lugar' },
-        'petos,camisetas': { title: 'PETOS Y CAMISETAS', subtitle: 'Equípate con lo mejor para tu equipo' }
+        'petos,camisetas': { title: 'PETOS Y CAMISETAS', subtitle: 'Equípate con lo mejor para tu equipo' },
+        'tenis-running': { title: 'RUNNING', subtitle: 'Máximo confort y amortiguación' },
+        'tenis-futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' }
     };
 
-    const info = titles[category] || { title: 'CATÁLOGO COMPLETO', subtitle: 'Toda nuestra colección' };
+    // Robust title selection: fallback to the category name itself formatted if no match
+    let info = titles[category];
+    if (!info && category) {
+        // Format category name (e.g. tenis-guayos -> TENIS GUAYOS)
+        const displayTitle = category.replace(/[-,]/g, ' ').toUpperCase();
+        info = { title: displayTitle, subtitle: 'Nuestra mejor selección' };
+    } else if (!info) {
+        info = { title: 'CATÁLOGO COMPLETO', subtitle: 'Toda nuestra colección' };
+    }
+
     const titleEl = document.getElementById('categoryTitle');
     const subtitleEl = document.getElementById('categorySubtitle');
 
@@ -91,40 +102,47 @@ async function loadProducts() {
             updateResultsCount(-1);
         }
 
-        // 2. PHASE 2: Silent Background Sync
-        const syncTask = async () => {
-            try {
-                const freshData = window.productsLoaded ? (await window.productsLoaded) : null;
-
-                if (freshData && freshData.length > 0) {
-                    // SILENT COMPARISON: Avoid refresh if data results in same hash
-                    const oldHash = allProducts.length > 0 ? JSON.stringify(allProducts.map(p => p.id + (p.price || ''))) : '';
-                    const newHash = JSON.stringify(freshData.map(p => p.id + (p.price || '')));
-
-                    if (oldHash !== newHash) {
-                        console.log('🔄 Sync: Data changed, updating UI silently');
-                        allProducts = freshData;
-                        applyFilters(); // Silent re-render
-                        populateBrandFilters();
-                        populateSizeFilters();
-                    } else {
-                        console.log('✅ Sync: Data identical, no refresh needed');
-                    }
-                }
-            } catch (err) {
-                console.warn('Background sync failed');
-            } finally {
-                isLoading = false;
-                hideSkeletonLoaders();
+        // 2. PHASE 2: Background Update
+        // Use the global window.productsLoaded if available, otherwise fetch
+        try {
+            let data = null;
+            if (window.productsLoaded) {
+                data = await window.productsLoaded;
+            } else {
+                // Fallback to direct fetch if main script hasn't started sync
+                const { data: directData } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('id', { ascending: true });
+                data = directData;
             }
-        };
 
-        // Run sync task
-        await syncTask();
+            if (data && data.length > 0) {
+                // Simplified comparison: length or first/last item check
+                const isDifferent = allProducts.length !== data.length ||
+                    (allProducts.length > 0 && (allProducts[0].id !== data[0].id));
 
-        // Safety fallback if everything failed
-        if (allProducts.length === 0) {
-            await fetchAndCacheProducts();
+                if (isDifferent || !hasRenderedFromCache) {
+                    allProducts = data;
+
+                    // Cache it
+                    try {
+                        localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                        localStorage.setItem('productsCache_Time', Date.now().toString());
+                    } catch (err) { }
+
+                    applyFilters();
+                    populateBrandFilters();
+                    populateSizeFilters();
+                }
+            }
+        } catch (e) {
+            console.warn('Silent sync failed:', e);
+            // If we have nothing at all, try one last direct fetch
+            if (allProducts.length === 0) await fetchAndCacheProducts();
+        } finally {
+            isLoading = false;
+            hideSkeletonLoaders();
         }
 
     } catch (error) {
@@ -475,23 +493,30 @@ function createProductCardHTML(product) {
         : [product.image]; // Fallback to single image
 
     const hasMultipleImages = images.length > 1;
+    const mainImage = images[0];
 
     // Determine correct selector type (Chips vs Dropdown)
     const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala'].includes(category);
 
     return `
-        <div class="product-card" data-category="${category}">
+        <div class="product-card" data-id="${product.id}" data-category="${product.category}">
+            ${product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : ''}
             <div class="product-image-container" data-product-id="${product.id}">
-                ${images.map((img, index) => `
-                    <img src="${img}" 
-                         alt="${product.name}" 
-                         class="product-image ${index === 0 ? 'active' : ''}" 
-                         loading="lazy" 
-                         decoding="async"
-                         width="300" 
-                         height="300"
-                         data-index="${index}">
-                `).join('')}
+                <img src="${mainImage}" 
+                     alt="${product.name}" 
+                     class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
+                     loading="lazy"
+                     onload="this.classList.add('loaded')"
+                     decoding="async"
+                     width="300" 
+                     height="300"
+                >
+                ${images.length > 1 ? `<img src="${images[1]}" class="product-image hover-img" loading="lazy" decoding="async" width="300" height="300">` : ''}
+                <div class="product-actions">
+                    <button class="action-btn quick-view" onclick="openQuickView(${product.id})" aria-label="Vista Rápida">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
                 ${hasMultipleImages ? `
                     <button class="carousel-btn carousel-prev" onclick="changeProductImage(${product.id}, -1)">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -524,7 +549,7 @@ function createProductCardHTML(product) {
                             <!-- Custom Chip Selector for Footwear -->
                             <input type="hidden" id="size-${product.id}" value="">
                             <div class="size-chips-grid" id="size-grid-${product.id}">
-                                ${[37, 38, 39, 40, 41, 42, 43, 44].map(size => `
+                                ${product.sizes.map(size => `
                                     <div class="size-chip" onclick="selectSize(${product.id}, '${size}', this)">${size}</div>
                                 `).join('')}
                             </div>

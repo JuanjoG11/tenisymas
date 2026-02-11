@@ -81,8 +81,8 @@
     }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=2.0">
-    <link rel="stylesheet" href="carousel.css?v=1.0">
+    <link rel="stylesheet" href="style.css?v=8.0">
+    <link rel="stylesheet" href="carousel.css?v=8.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -105,7 +105,7 @@
                 <div class="video-wrapper intro-video-wrapper">
                     <video id="introVideo" src="images/logo-video.mov"
                         alt="Tennis y Mas - Tienda de Guayos y Tenis en Colombia" class="intro-logo" autoplay muted
-                        playsinline preload="auto"></video>
+                        playsinline preload="metadata"></video>
                     <!-- Static Fallback Logo (Initially hidden) -->
                     <img id="introFallback" src="images/logo-tm.png" alt="Tennis y Mas" class="intro-logo fallback-logo"
                         style="display: none;">
@@ -334,10 +334,9 @@
 
                 <div class="carousel-3d" id="carousel3D">
                     <!-- Card 1: Guayos -->
-                    <div class="carousel-card active" data-index="0"
-                        onclick="window.location.href='collections.html?category=guayos'">
+                    <div class="carousel-card active" data-index="0" data-url="collections.html?category=guayos">
                         <div class="card-image">
-                            <img src="images/guayos-nuevo.png" alt="Guayos Profesionales">
+                            <img src="images/guayos-nuevo.png" alt="Guayos Profesionales" loading="lazy">
                             <div class="card-overlay">
                                 <span class="card-tag">DISEÑADOS PARA CÉSPED NATURAL (GAMA ALTA)</span>
                                 <h3>GUAYOS</h3>
@@ -346,11 +345,10 @@
                         </div>
                     </div>
 
-                    <!-- Card 2: Tenis -->
-                    <div class="carousel-card next" data-index="1"
-                        onclick="window.location.href='collections.html?category=tenis-guayos'">
+                    <!-- Card 2: Tenis-Guayos -->
+                    <div class="carousel-card" data-index="1" data-url="collections.html?category=tenis-guayos">
                         <div class="card-image">
-                            <img src="images/tenis1.png" alt="Tenis Deportivos">
+                            <img src="images/tenis1.png" alt="Tenis Deportivos" loading="lazy">
                             <div class="card-overlay">
                                 <span class="card-tag">DISEÑADOS PARA CÉSPED SINTÉTICO (GAMA ALTA)</span>
                                 <h3>TENIS-GUAYOS</h3>
@@ -360,10 +358,9 @@
                     </div>
 
                     <!-- Card 3: Futsal -->
-                    <div class="carousel-card" data-index="2"
-                        onclick="window.location.href='collections.html?category=futsal'">
+                    <div class="carousel-card" data-index="2" data-url="collections.html?category=futsal">
                         <div class="card-image">
-                            <img src="images/futsal-nuevo.jpeg" alt="Fútbol Sala">
+                            <img src="images/futsal-nuevo.jpeg" alt="Fútbol Sala" loading="lazy">
                             <div class="card-overlay">
                                 <span class="card-tag">DISEÑADOS PARA PISO RÚSTICO Y SALÓN (GAMA ALTA)</span>
                                 <h3>FÚTSAL</h3>
@@ -373,10 +370,9 @@
                     </div>
 
                     <!-- Card 4: Niños -->
-                    <div class="carousel-card prev" data-index="3"
-                        onclick="window.location.href='collections.html?category=ninos'">
+                    <div class="carousel-card" data-index="3" data-url="collections.html?category=ninos">
                         <div class="card-image">
-                            <img src="images/ninos1.jpg" alt="Para Niños">
+                            <img src="images/ninos1.jpg" alt="Para Niños" loading="lazy">
                             <div class="card-overlay">
                                 <span class="card-tag">FUTURAS ESTRELLAS</span>
                                 <h3>NIÑOS</h3>
@@ -386,10 +382,9 @@
                     </div>
 
                     <!-- Card 5: Petos y Camisetas -->
-                    <div class="carousel-card" data-index="4"
-                        onclick="window.location.href='collections.html?category=petos,camisetas'">
+                    <div class="carousel-card" data-index="4" data-url="collections.html?category=petos,camisetas">
                         <div class="card-image">
-                            <img src="images/uniformes-main.png" alt="Petos y Camisetas">
+                            <img src="images/uniformes-main.png" alt="Petos y Camisetas" loading="lazy">
                             <div class="card-overlay">
                                 <span class="card-tag">EQUIPACIONES</span>
                                 <h3>PETOS Y CAMISETAS</h3>
@@ -756,8 +751,8 @@
     </a>
     </div>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=6.0"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
+    <script src="script.js?v=8.0" defer></script>
 
     <!-- WhatsApp Floating Button -->
 

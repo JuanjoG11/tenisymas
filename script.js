@@ -448,11 +448,26 @@ function setupSlider() {
         resetTimer();
     });
 
-    // Make cards clickable for navigation if they are effectively next/prev (optional UX)
-    // But our cards have onclick links now.
-
     // Initial State
     updateCarousel();
+
+    // Click on cards to rotate or navigate
+    cards.forEach((card, index) => {
+        card.addEventListener('click', (e) => {
+            const cardIndex = parseInt(card.getAttribute('data-index'));
+            const url = card.getAttribute('data-url');
+
+            if (cardIndex === currentIndex) {
+                // Focus: Navigate only if active
+                if (url) window.location.href = url;
+            } else {
+                // Not active: Rotate to this card first
+                currentIndex = cardIndex;
+                updateCarousel();
+                resetTimer();
+            }
+        });
+    });
 
     // ==================== TOUCH/SWIPE SUPPORT ====================
     let touchStartX = 0;
@@ -561,10 +576,8 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v2';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        // Increase cache to 30 minutes for better performance
         const CACHE_DURATION = 30 * 60 * 1000;
 
-        // 1. Try to load from localStorage first
         const cachedData = localStorage.getItem(CACHE_KEY);
         const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
         const now = Date.now();
@@ -573,9 +586,8 @@ async function syncProducts() {
             try {
                 products = JSON.parse(cachedData);
                 renderHomepageSections();
-                console.log('⚡ Data restored from localStorage');
+                console.log('⚡ Restore: Instant render from cache');
 
-                // If cache is fresh, return immediately
                 if (lastFetch && (now - lastFetch < CACHE_DURATION)) {
                     isSyncing = false;
                     return products;
@@ -585,14 +597,12 @@ async function syncProducts() {
             }
         }
 
+        // Fetch fresh data if needed or missing
         try {
-            // 2. Fetch data (Only if cache expired or missing)
-            console.log('🌐 Fetching fresh data from Supabase...');
-
-            // OPTIMIZED QUERY: Select only necessary columns
+            console.log('🌐 Fetch: Background sync started...');
             const { data, error } = await supabaseClient
                 .from('products')
-                .select('id, name, price, image, category, sizes, colors, images')
+                .select('*')
                 .order('id', { ascending: true });
 
             if (error) throw error;
@@ -605,7 +615,7 @@ async function syncProducts() {
                 } catch (e) { console.warn('localStorage quota exceeded'); }
 
                 renderHomepageSections();
-                console.log('✅ Global sync complete (Fresh)');
+                console.log('✅ Sync: Global data updated');
             }
         } catch (err) {
             console.error('Supabase sync failed:', err);

@@ -1,0 +1,3 @@
+﻿Testing: https://api.addi.com/v1/allies/tennisymasco-ecommerce/applications with phoneNumber
+Status: 404
+Response: {"code":"000-404","message":"La ruta proporcionada no fue encontrada"}

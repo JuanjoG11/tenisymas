@@ -1,0 +1,16 @@
+﻿
+--- Testing Variation: idType as COL_CC (Audience: https://api.addi.com) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
+
+--- Testing Variation: Audience with trailing slash (Audience: https://api.addi.com/) ---
+Status: 401
+Response: {"code":"000-401","message":"La solicitud carece de credenciales v├ílidas de autenticaci├│n"}
+
+--- Testing Variation: Both idType COL_CC and trailing slash (Audience: https://api.addi.com/) ---
+Status: 401
+Response: {"code":"000-401","message":"La solicitud carece de credenciales v├ílidas de autenticaci├│n"}
+
+--- Testing Variation: Using 'birthDate' and 'gender' with 'COL_CC' (Audience: https://api.addi.com) ---
+Status: 400
+Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

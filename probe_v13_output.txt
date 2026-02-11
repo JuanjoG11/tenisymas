@@ -1,0 +1,4 @@
+﻿
+--- Testing V3: V3 Checkout Session Standard ---
+Status: 404
+Response: {"code":"000-404","message":"La ruta proporcionada no fue encontrada"}
