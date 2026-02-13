@@ -74,6 +74,7 @@ function updateCategoryTitle(category) {
 // Load products - CACHE-FIRST for instant feedback
 // Load products - ULTRA-AGGRESSIVE CACHE-FIRST for marketplace speed
 async function loadProducts() {
+    console.time('loadProducts');
     try {
         if (isLoading) return;
         isLoading = true;
@@ -84,16 +85,33 @@ async function loadProducts() {
 
         if (cached) {
             try {
+                console.time('parseCache');
                 allProducts = JSON.parse(cached);
+                console.timeEnd('parseCache');
+
                 console.log('⚡ Instant render from cache');
+
+                console.time('firstRender');
                 applyFilters();
                 populateBrandFilters();
                 populateSizeFilters();
                 hideSkeletonLoaders();
+                console.timeEnd('firstRender');
+
                 hasRenderedFromCache = true;
             } catch (e) {
                 console.warn('Cache corrupted');
             }
+        }
+        // ... (rest of function) ...
+
+        function parsePrice(priceString) {
+            if (typeof priceString === 'number') return priceString;
+            if (!priceString) return 0;
+            if (typeof priceString === 'string') {
+                return parseInt(priceString.replace(/[^\d]/g, '')) || 0;
+            }
+            return 0;
         }
 
         // If no cache, show skeleton
@@ -419,7 +437,12 @@ function applyFilters() {
 
 function parsePrice(priceString) {
     if (typeof priceString === 'number') return priceString;
-    return parseInt(priceString.replace(/[^\d]/g, '')) || 0;
+    if (!priceString) return 0;
+    if (typeof priceString === 'string') {
+        const clean = priceString.replace(/[^\d]/g, '');
+        return parseInt(clean) || 0;
+    }
+    return 0;
 }
 
 // ==================== RENDERING (CHUNKED) ====================

@@ -212,10 +212,16 @@ function updateCartUI() {
     }
 
     // Update Total Price (Parsing currency string like "$250.000")
+    // Update Total Price (Parsing currency string like "$250.000")
     const total = cart.reduce((sum, item) => {
-        // Remove symbols and dots, but handle carefully
-        const priceClean = parseInt(item.price.replace(/[^0-9]/g, ''));
-        return sum + (priceClean * item.quantity);
+        // Safe price parsing
+        let price = 0;
+        if (typeof item.price === 'number') {
+            price = item.price;
+        } else if (typeof item.price === 'string') {
+            price = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+        }
+        return sum + (price * item.quantity);
     }, 0);
 
     if (cartTotalPrice) cartTotalPrice.textContent = `$${total.toLocaleString('es-CO')}`;
@@ -349,9 +355,15 @@ function handleIntegratedCheckout() {
 
     let total = 0;
     cart.forEach(item => {
-        const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
+        let itemPrice = 0;
+        if (typeof item.price === 'number') {
+            itemPrice = item.price;
+        } else if (typeof item.price === 'string') {
+            itemPrice = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+        }
+        const itemTotal = itemPrice * item.quantity;
         total += itemTotal;
-        message += `📦 *${item.quantity}x ${item.name}* - ${item.price}\n`;
+        message += `📦 *${item.quantity}x ${item.name}* - $${itemPrice.toLocaleString('es-CO')}\n`;
     });
 
     message += `\n💰 *TOTAL GLOBAL: $${total.toLocaleString('es-CO')}*\n\n¿Quedo atento a la confirmación!`;
@@ -383,9 +395,15 @@ function checkout() {
 
     let total = 0;
     cart.forEach(item => {
-        const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
+        let itemPrice = 0;
+        if (typeof item.price === 'number') {
+            itemPrice = item.price;
+        } else if (typeof item.price === 'string') {
+            itemPrice = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+        }
+        const itemTotal = itemPrice * item.quantity;
         total += itemTotal;
-        message += `📦 *${item.quantity}x ${item.name}*\n   Precio: ${item.price}\n`;
+        message += `📦 *${item.quantity}x ${item.name}*\n   Precio: $${itemPrice.toLocaleString('es-CO')}\n`;
     });
 
     message += `\n💰 *TOTAL GLOBAL: $${total.toLocaleString('es-CO')}*\n\n¿Me confirman disponibilidad?`;
@@ -576,30 +594,33 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v2';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        const CACHE_DURATION = 30 * 60 * 1000;
+        // 10 minutes cache to keep it somewhat fresh but fast
+        const CACHE_DURATION = 10 * 60 * 1000;
 
         const cachedData = localStorage.getItem(CACHE_KEY);
         const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
         const now = Date.now();
 
+        // 1. FAST PATH: Return cache immediately if available
         if (cachedData) {
             try {
                 products = JSON.parse(cachedData);
-                renderHomepageSections();
-                console.log('⚡ Restore: Instant render from cache');
+                console.log('⚡ Script.js: Loaded from cache', products.length);
+                renderHomepageSections(); // If needed
 
+                // If cache is fresh, stop here
                 if (lastFetch && (now - lastFetch < CACHE_DURATION)) {
                     isSyncing = false;
                     return products;
                 }
             } catch (e) {
-                console.error('Cache parse failed');
+                console.error('Cache parse failed', e);
             }
         }
 
-        // Fetch fresh data if needed or missing
+        // 2. NETWORK PATH: Fetch from Supabase
         try {
-            console.log('🌐 Fetch: Background sync started...');
+            console.log('🌐 Script.js: Fetching fresh data...');
             const { data, error } = await supabaseClient
                 .from('products')
                 .select('*')
@@ -609,13 +630,15 @@ async function syncProducts() {
 
             if (data && data.length > 0) {
                 products = data;
+
+                // Update Cache
                 try {
                     localStorage.setItem(CACHE_KEY, JSON.stringify(products));
                     localStorage.setItem(CACHE_TIME_KEY, now.toString());
                 } catch (e) { console.warn('localStorage quota exceeded'); }
 
                 renderHomepageSections();
-                console.log('✅ Sync: Global data updated');
+                console.log('✅ Script.js: Data synced', products.length);
             }
         } catch (err) {
             console.error('Supabase sync failed:', err);

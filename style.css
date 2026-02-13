@@ -813,7 +813,9 @@ body {
 }
 
 .cart-drawer.active {
-    transform: translateX(0);
+    right: 0;
+    z-index: 2010;
+    /* Ensure above overlay (2000) */
 }
 
 /* ==================== UNIFORMS BANNER (Shopify Style) ==================== */
