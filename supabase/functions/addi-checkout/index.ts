@@ -46,46 +46,47 @@ serve(async (req) => {
         // 2. Enviar Solicitud a Addi (Payload Estricto y Endpoint Corregido)
         console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
 
-        // Construir el payload final asegurando tipos de datos y campos mandatorios
+        const cleanedAdminDivision = cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city);
+
+        // Construir el payload final ESTÁNDAR V1 (Último intento técnico)
         const addiPayload = {
             allySlug: ALLY_SLUG,
-            totalAmount: Math.floor(Number(orderData.totalAmount)),
+            totalAmount: Math.round(Number(orderData.totalAmount)),
             currency: "COP",
-            orderId: orderData.orderId,
-            productType: "ADDI_PAGO", // Basado en la respuesta del config endpoint
-            redirectionUrls: {
-                success: orderData.redirectionUrls.success,
-                failure: orderData.redirectionUrls.failure || orderData.redirectionUrls.failureUrl,
-                cancel: orderData.redirectionUrls.cancel || orderData.redirectionUrls.cancelUrl,
-                abandoned: orderData.redirectionUrls.abandoned || orderData.redirectionUrls.success, // Safe fallback
-                declined: orderData.redirectionUrls.declined || orderData.redirectionUrls.failure // Safe fallback
-            },
-            shippingAddress: {
-                line1: cleanStr(orderData.shippingAddress.line1),
-                city: cleanStr(orderData.shippingAddress.city),
-                administrativeDivision: cleanStr(orderData.shippingAddress.city), // Usamos ciudad como departamento si no viene separado, en mayúsculas
-                country: "CO"
-            },
+            orderId: String(orderData.orderId),
+            productType: "ADDI_PAGO",
             client: {
-                idType: orderData.client.idType || "CC",
+                idType: "CC",
                 idNumber: String(orderData.client.idNumber).trim(),
                 firstName: cleanStr(orderData.client.firstName),
                 lastName: cleanStr(orderData.client.lastName),
                 email: String(orderData.client.email).trim().toLowerCase(),
-                cellphone: String(orderData.client.cellphone || orderData.client.phoneNumber).replace(/\D/g, '').slice(-10)
+                cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10)
+            },
+            shippingAddress: {
+                line1: cleanStr(orderData.shippingAddress.line1),
+                city: cleanStr(orderData.shippingAddress.city),
+                administrativeDivision: cleanedAdminDivision,
+                country: "CO"
+            },
+            redirectionUrls: {
+                success: "https://tenisymas.com/success.html",
+                failure: "https://tenisymas.com/checkout.html",
+                cancel: "https://tenisymas.com/checkout.html",
+                abandoned: "https://tenisymas.com/checkout.html",
+                declined: "https://tenisymas.com/checkout.html"
             },
             items: orderData.items.map((item: any) => ({
-                sku: String(item.sku),
-                name: String(item.name),
-                quantity: Number(item.quantity),
-                unitPrice: Math.floor(Number(item.unitPrice)),
-                category: "Fashion"
+                sku: String(item.sku || "REF001"),
+                name: cleanStr(item.name || "PRODUCTO"),
+                quantity: Number(item.quantity || 1),
+                unitPrice: Math.round(Number(item.unitPrice))
             }))
         }
 
-        console.log("[Addi] Payload final:", JSON.stringify(addiPayload, null, 2))
+        console.log("[Addi] Payload final (Final Technical Attempt):", JSON.stringify(addiPayload, null, 2))
 
-        // El endpoint corregido que incluye el slug como parámetro
+        // Usamos el slug tanto en el header como en la URL (algunas APIs lo piden duplicado)
         const addiUrl = `https://api.addi.com/v1/online-applications?ally-slug=${ALLY_SLUG}`
 
         const response = await fetch(addiUrl, {
@@ -93,7 +94,8 @@ serve(async (req) => {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${access_token}`,
-                "X-Ally-Slug": ALLY_SLUG // Mantenemos el header por seguridad
+                "X-Ally-Slug": ALLY_SLUG,
+                "X-Region": "CO"
             },
             body: JSON.stringify(addiPayload)
         })
@@ -101,17 +103,28 @@ serve(async (req) => {
         console.log(`[Addi] Respuesta Status: ${response.status}`)
 
         // 3. Manejar Respuesta
+        const responseText = await response.text()
+        console.log(`[Addi] Cuerpo de respuesta REAL de Addi: ${responseText}`)
+
         if (response.ok) {
-            const data = await response.json()
+            const data = JSON.parse(responseText)
             return new Response(JSON.stringify(data), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
             })
-        } else {
-            const errorRaw = await response.text();
-            console.error("DETALLE REAL DE ADDI:", errorRaw);
+        }
+        else {
+            let errorData;
+            try {
+                errorData = JSON.parse(responseText);
+            } catch (e) {
+                errorData = { message: responseText };
+            }
 
-            return new Response(errorRaw, {
+            return new Response(JSON.stringify({
+                ...errorData,
+                debug_payload: addiPayload
+            }), {
                 status: response.status,
                 headers: { ...corsHeaders, "Content-Type": "application/json" }
             });

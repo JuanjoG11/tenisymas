@@ -527,12 +527,12 @@ function createProductCardHTML(product) {
             <div class="product-image-container" data-product-id="${product.id}">
                 <img src="${mainImage}" 
                      alt="${product.name}" 
-                     class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
-                     loading="lazy"
-                     onload="this.classList.add('loaded')"
-                     decoding="async"
-                     width="300" 
-                     height="300"
+                      class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
+                      loading="${filteredProducts.indexOf(product) < 4 ? 'eager' : 'lazy'}"
+                      onload="this.classList.add('loaded')"
+                      decoding="async"
+                      width="300" 
+                      height="300"
                 >
                 ${images.length > 1 ? `<img src="${images[1]}" class="product-image hover-img" loading="lazy" decoding="async" width="300" height="300">` : ''}
                 <div class="product-actions">
@@ -564,6 +564,7 @@ function createProductCardHTML(product) {
                     ${product.oldPrice || product.old_price ? `<span class="product-old-price">${product.oldPrice || product.old_price}</span>` : ''}
                     <span class="product-price">${product.price}</span>
                 </div>
+                <addi-widget price="${product.price.toString().replace(/[^0-9]/g, '')}" ally-slug="tennisymasco-ecommerce"></addi-widget>
                 ${hasSizes ? `
                     <div class="size-selector-container">
                         <label for="size-${product.id}" class="size-label">Talla:</label>

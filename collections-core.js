@@ -455,7 +455,7 @@ function createProductCardHTML(product) {
                     <img src="${img}" 
                          alt="${product.name}" 
                          class="product-image ${index === 0 ? 'active' : ''}" 
-                         loading="lazy" 
+                         loading="${filteredProducts.indexOf(product) < 4 && index === 0 ? 'eager' : 'lazy'}" 
                          decoding="async"
                          width="300" 
                          height="300"
@@ -493,7 +493,7 @@ function createProductCardHTML(product) {
                             <!-- Custom Chip Selector for Footwear -->
                             <input type="hidden" id="size-${product.id}" value="">
                             <div class="size-chips-grid" id="size-grid-${product.id}">
-                                ${[37, 38, 39, 40, 41, 42, 43, 44].map(size => `
+                                ${product.sizes.map(size => `
                                     <div class="size-chip" onclick="selectSize(${product.id}, '${size}', this)">${size}</div>
                                 `).join('')}
                             </div>
