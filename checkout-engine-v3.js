@@ -166,13 +166,22 @@ async function handleAddiCheckout(customer) {
         });
 
         const result = await response.json();
+        console.log('📦 [V3] Respuesta del servidor:', result);
 
         if (result.redirectionUrl) {
             console.log('✅ Redirigiendo a Addi...');
             window.location.href = result.redirectionUrl;
         } else {
-            console.warn('⚠️ [V3] Error de Addi:', result);
-            alert('Addi está presentando un bloqueo administrativo en tu cuenta ("isActiveAlly: false").\n\nNo te preocupes, el sistema te enviará a WhatsApp con tu pedido.');
+            console.error('❌ [V3] Error Crítico de Addi:', result);
+
+            // Si hay detalles específicos de validación, los mostramos en consola
+            if (result.details) {
+                console.error('🔍 Detalles de validación:', result.details);
+            }
+
+            const errorMsg = result.details?.message || result.error || "Error desconocido";
+            alert(`Error de Addi: ${errorMsg}\n\nRevisando detalles en consola... redirigiendo a WhatsApp.`);
+
 
             try {
                 const customerData = {

@@ -48,13 +48,12 @@ serve(async (req) => {
 
         const cleanedAdminDivision = cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city);
 
-        // Construir el payload final ESTÁNDAR V1 (Último intento técnico)
+        // Construir el payload final ESTÁNDAR V1 (Mínimo requerido)
         const addiPayload = {
             allySlug: ALLY_SLUG,
             totalAmount: Math.round(Number(orderData.totalAmount)),
             currency: "COP",
             orderId: String(orderData.orderId),
-            productType: "ADDI_PAGO",
             client: {
                 idType: "CC",
                 idNumber: String(orderData.client.idNumber).trim(),
@@ -72,39 +71,33 @@ serve(async (req) => {
             redirectionUrls: {
                 success: "https://tenisymas.com/success.html",
                 failure: "https://tenisymas.com/checkout.html",
-                cancel: "https://tenisymas.com/checkout.html",
-                abandoned: "https://tenisymas.com/checkout.html",
-                declined: "https://tenisymas.com/checkout.html"
+                cancel: "https://tenisymas.com/checkout.html"
             },
             items: orderData.items.map((item: any) => ({
                 sku: String(item.sku || "REF001"),
-                name: cleanStr(item.name || "PRODUCTO"),
+                name: cleanStr(item.name || "COMPRA"),
                 quantity: Number(item.quantity || 1),
                 unitPrice: Math.round(Number(item.unitPrice))
             }))
         }
 
-        console.log("[Addi] Payload final (Final Technical Attempt):", JSON.stringify(addiPayload, null, 2))
+        console.log("[Addi] Payload final:", JSON.stringify(addiPayload, null, 2))
 
-        // Usamos el slug tanto en el header como en la URL (algunas APIs lo piden duplicado)
-        const addiUrl = `https://api.addi.com/v1/online-applications?ally-slug=${ALLY_SLUG}`
+        const addiUrl = `https://api.addi.com/v1/online-applications`
 
         const response = await fetch(addiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${access_token}`,
-                "X-Ally-Slug": ALLY_SLUG,
-                "X-Region": "CO"
+                "X-Ally-Slug": ALLY_SLUG
             },
             body: JSON.stringify(addiPayload)
         })
 
-        console.log(`[Addi] Respuesta Status: ${response.status}`)
-
-        // 3. Manejar Respuesta
+        const responseStatus = response.status
         const responseText = await response.text()
-        console.log(`[Addi] Cuerpo de respuesta REAL de Addi: ${responseText}`)
+        console.log(`[Addi] Response (${responseStatus}): ${responseText}`)
 
         if (response.ok) {
             const data = JSON.parse(responseText)
@@ -114,21 +107,20 @@ serve(async (req) => {
             })
         }
         else {
-            let errorData;
-            try {
-                errorData = JSON.parse(responseText);
-            } catch (e) {
-                errorData = { message: responseText };
-            }
+            let errorBody;
+            try { errorBody = JSON.parse(responseText); } catch (e) { errorBody = { message: responseText }; }
 
             return new Response(JSON.stringify({
-                ...errorData,
-                debug_payload: addiPayload
+                error: "Addi API Error",
+                status: responseStatus,
+                details: errorBody,
+                sent_payload: addiPayload
             }), {
-                status: response.status,
+                status: responseStatus,
                 headers: { ...corsHeaders, "Content-Type": "application/json" }
             });
         }
+
 
     } catch (err: any) {
         console.error("Error Interno Edge Function:", err.message)

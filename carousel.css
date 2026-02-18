@@ -180,8 +180,8 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     font-size: 1.5rem;
     display: flex;
@@ -189,8 +189,8 @@
     justify-content: center;
     cursor: pointer;
     transition: var(--transition-normal);
-    backdrop-filter: blur(5px);
 }
+
 
 .carousel-btn:hover {
     background: var(--color-red);
