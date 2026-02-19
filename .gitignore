@@ -3,3 +3,20 @@
 node_modules/
 dist/
 *.log
+
+# Binaries
+supabase.exe
+
+# Probe/test files
+addi_probe*.ts
+probe_*_output.txt
+test-*.js
+verify_fix.js
+
+# One-time scripts & data
+*.sql
+*.ps1
+product_sample*.json
+product_data.json
+final_data.json
+insert_product.js

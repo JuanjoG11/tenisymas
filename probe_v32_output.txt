@@ -1,1 +1,0 @@
-﻿Testing: https://api.co.addi.com/v1/applications?ally-slug=tennisymasco-ecommerce

@@ -1,8 +1,0 @@
-﻿
---- Testing: Full Payload with numeric ID and administrativeDivision ---
-Status: 400
-Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}
-
---- Testing: Full Payload with 'id' instead of 'orderId' ---
-Status: 400
-Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

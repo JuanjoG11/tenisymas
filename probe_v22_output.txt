@@ -1,3 +1,0 @@
-﻿Testing: https://api.addi.com/v1/online-applications with Accept header
-Status: 400
-Response: {"code":"000-400","message":"La solicitud no tiene el formato correcto"}

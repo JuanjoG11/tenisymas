@@ -1,3 +1,0 @@
-﻿Testing: https://channels-public-api.addi.com/allies/tennisymasco-ecommerce/config?requestedAmount=150000
-Status: 200
-Response: {"minAmount":50000,"maxAmount":3000000,"policy":{"discount":0,"productType":"ADDI_PAGO","policyMaxAmount":600000.0,"isVisible":true},"policies":[{"discount":0,"productType":"ADDI_PAGO","policyMaxAmount":600000.0,"isVisible":true},{"discount":0,"productType":"ADDI_FINANCIA","policyMaxAmount":3000000.0,"isVisible":true}],"widgetConfig":{"widgetVersion":"ADDI_TEMPLATE_01_LOCAL","widgetShowPreapproval":true},"checkoutConfig":{"version":"DEFAULT"},"isActiveAlly":false,"isActivePayNow":false}
