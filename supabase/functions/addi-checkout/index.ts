@@ -16,6 +16,7 @@ serve(async (req) => {
         const CLIENT_ID = Deno.env.get("ADDI_CLIENT_ID")
         const CLIENT_SECRET = Deno.env.get("ADDI_CLIENT_SECRET")
         const ALLY_SLUG = "tennisymasco-ecommerce"
+        console.log("--- ADDI CHECKOUT V3.0.1 ---");
 
         // 1. Obtener Token Auth0
         const authRes = await fetch("https://auth.addi.com/oauth/token", {
@@ -43,17 +44,16 @@ serve(async (req) => {
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
         };
 
-        // 2. Enviar Solicitud a Addi (Payload Estricto y Endpoint Corregido)
-        console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
+        // 2. Enviar Solicitud a Addi (API V3 Standard)
+        console.log(`[Addi] Enviando solicitud V3 para OrderID: ${orderData.orderId}`)
 
-        const cleanedAdminDivision = cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city);
+        const safeOrderId = String(orderData.orderId).replace(/[^a-zA-Z0-9-]/g, '');
 
-        // Construir el payload final ESTÁNDAR V1 (Mínimo requerido)
         const addiPayload = {
             allySlug: ALLY_SLUG,
             totalAmount: Math.round(Number(orderData.totalAmount)),
             currency: "COP",
-            orderId: String(orderData.orderId),
+            orderId: safeOrderId,
             client: {
                 idType: "CC",
                 idNumber: String(orderData.client.idNumber).trim(),
@@ -65,7 +65,7 @@ serve(async (req) => {
             shippingAddress: {
                 line1: cleanStr(orderData.shippingAddress.line1),
                 city: cleanStr(orderData.shippingAddress.city),
-                administrativeDivision: cleanedAdminDivision,
+                administrativeDivision: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
                 country: "CO"
             },
             redirectionUrls: {
@@ -75,15 +75,15 @@ serve(async (req) => {
             },
             items: orderData.items.map((item: any) => ({
                 sku: String(item.sku || "REF001"),
-                name: cleanStr(item.name || "COMPRA"),
+                name: cleanStr(item.name || "PRODUCTO"),
                 quantity: Number(item.quantity || 1),
                 unitPrice: Math.round(Number(item.unitPrice))
             }))
         }
 
-        console.log("[Addi] Payload final:", JSON.stringify(addiPayload, null, 2))
+        console.log("[Addi] Payload V3:", JSON.stringify(addiPayload, null, 2))
 
-        const addiUrl = `https://api.addi.com/v1/online-applications`
+        const addiUrl = `https://api.addi.com/v3/checkout-sessions`
 
         const response = await fetch(addiUrl, {
             method: "POST",
@@ -97,10 +97,11 @@ serve(async (req) => {
 
         const responseStatus = response.status
         const responseText = await response.text()
-        console.log(`[Addi] Response (${responseStatus}): ${responseText}`)
+        console.log(`[Addi] Response V3 (${responseStatus}): ${responseText}`)
 
         if (response.ok) {
             const data = JSON.parse(responseText)
+            // En V3, la URL suele venir en 'checkoutUrl' o similar
             return new Response(JSON.stringify(data), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
@@ -111,7 +112,7 @@ serve(async (req) => {
             try { errorBody = JSON.parse(responseText); } catch (e) { errorBody = { message: responseText }; }
 
             return new Response(JSON.stringify({
-                error: "Addi API Error",
+                error: "Addi API V3 Error",
                 status: responseStatus,
                 details: errorBody,
                 sent_payload: addiPayload

@@ -91,6 +91,9 @@ async function loadProducts() {
 
                 console.log('⚡ Instant render from cache');
 
+                // EMERGENCY: Ensure "Petos" and "Camisetas" collections exist
+                ensureEssentialCollections();
+
                 console.time('firstRender');
                 applyFilters();
                 populateBrandFilters();
@@ -148,6 +151,9 @@ async function loadProducts() {
                         localStorage.setItem('productsCache_v2', JSON.stringify(data));
                         localStorage.setItem('productsCache_Time', Date.now().toString());
                     } catch (err) { }
+
+                    // EMERGENCY: Ensure "Petos" and "Camisetas" collections exist in allProducts
+                    ensureEssentialCollections();
 
                     applyFilters();
                     populateBrandFilters();
@@ -286,32 +292,45 @@ function populateSizeFilters() {
         sizes.forEach(size => allSizes.add(size));
     });
 
-    let sizesArray = Array.from(allSizes);
-
     // Feature: Clean up sizes for footwear context
-    // If we have numerical sizes, let's prioritize them and hide letters like S, M, L, XL
-    const numericalSizes = sizesArray.filter(s => !isNaN(parseFloat(s)));
-    if (numericalSizes.length > 0) {
-        // If we are in a footwear category, ONLY show numerical sizes
-        const urlParams = new URLSearchParams(window.location.search);
-        const category = urlParams.get('category');
-        const isFootwearCategory = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos'].includes(category);
+    const urlParams = new URLSearchParams(window.location.search);
+    let category = urlParams.get('category')?.toLowerCase() || '';
 
-        if (isFootwearCategory) {
-            sizesArray = numericalSizes.sort((a, b) => parseFloat(a) - parseFloat(b));
-        } else {
-            // General sorting: numbers first, then letters
-            sizesArray.sort((a, b) => {
-                const isANumber = !isNaN(parseFloat(a));
-                const isBNumber = !isNaN(parseFloat(b));
-                if (isANumber && isBNumber) return parseFloat(a) - parseFloat(b);
-                if (isANumber) return -1;
-                if (isBNumber) return 1;
-                return a.localeCompare(b);
+    // If no category in URL, try to guess from products being displayed
+    if (!category && allProducts.length > 0) {
+        const firstProd = allProducts[0];
+        category = (firstProd.category || firstProd.categoria || '').toLowerCase();
+    }
+
+    const isClothesCategory = category.includes('petos') || category.includes('camisetas') || ['clothes', 'ropa'].includes(category);
+    const isFootwearCategory = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'shoes', 'calzado'].includes(category);
+
+    if (isClothesCategory) {
+        // ONLY show S, M, L, XL for clothes, STRICTLY removing any numbers
+        sizesArray = Array.from(allSizes)
+            .filter(s => ["S", "M", "L", "XL", "XXL", "XS"].includes(s.toUpperCase()))
+            .sort((a, b) => {
+                const order = { "XS": 0, "S": 1, "M": 2, "L": 3, "XL": 4, "XXL": 5 };
+                return (order[a.toUpperCase()] ?? 99) - (order[b.toUpperCase()] ?? 99);
             });
-        }
+    } else if (isFootwearCategory) {
+        // ONLY show numerical sizes for footwear
+        sizesArray = Array.from(allSizes)
+            .filter(s => !isNaN(parseFloat(s)))
+            .sort((a, b) => parseFloat(a) - parseFloat(b));
     } else {
-        sizesArray.sort();
+        // General fallback: remove numbers if clothing-like sizes dominate
+        const hasLetters = Array.from(allSizes).some(s => isNaN(parseFloat(s)));
+        const hasNumbers = Array.from(allSizes).some(s => !isNaN(parseFloat(s)));
+
+        sizesArray = Array.from(allSizes).sort((a, b) => {
+            const isANumber = !isNaN(parseFloat(a));
+            const isBNumber = !isNaN(parseFloat(b));
+            if (isANumber && isBNumber) return parseFloat(a) - parseFloat(b);
+            if (isANumber) return -1;
+            if (isBNumber) return 1;
+            return a.localeCompare(b);
+        });
     }
 
     const container = document.getElementById('sizeFilters');
@@ -367,10 +386,18 @@ function setupFilters() {
 // Memoization for performance
 const normCache = new Map();
 const normalize = (str) => {
-    if (!str) return '';
-    if (normCache.has(str)) return normCache.get(str);
-    const result = str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    normCache.set(str, result);
+    if (str === null || str === undefined) return '';
+    if (typeof str !== 'string') {
+        // If it's an array, join it
+        if (Array.isArray(str)) return normalize(str.join(','));
+        // Otherwise convert to string
+        str = String(str);
+    }
+    const trimmed = str.trim();
+    if (!trimmed) return '';
+    if (normCache.has(trimmed)) return normCache.get(trimmed);
+    const result = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    normCache.set(trimmed, result);
     return result;
 };
 
@@ -379,16 +406,26 @@ function applyFilters() {
     currentPage = 1;
 
     // Pre-normalize category filter once
-    const fCat = activeFilters.category ? normalize(activeFilters.category) : null;
-    const isSpecialCat = !fCat || fCat === 'catalogo' || fCat === 'all';
-    const allowedCats = fCat ? fCat.split(',').map(normalize) : [];
+    const fCat = activeFilters.category ? normalize(activeFilters.category) : '';
+    const isSpecialCat = fCat === 'todas-las-referencias';
+    const allowedCats = fCat.split(',').map(c => c.trim()).filter(c => c);
 
-    // 2. Filter Data
     filteredProducts = allProducts.filter(product => {
         // Category
         if (fCat && !isSpecialCat) {
-            const pCat = normalize(product.category || product.categoria || '');
-            if (!allowedCats.some(cat => pCat.includes(cat))) return false;
+            const rawCat = product.category || product.categoria || '';
+            const pCat = normalize(rawCat);
+            const matches = allowedCats.some(cat => pCat.includes(cat));
+
+            // EMERGENCY BYPASS: If category specifies petos/camisetas and we match by text, force include
+            if (!matches && (fCat.includes('peto') || fCat.includes('camiseta'))) {
+                const search = ((product.name || '') + ' ' + rawCat).toLowerCase();
+                if (search.includes('peto') || search.includes('camiseta')) {
+                    return true;
+                }
+            }
+
+            if (!matches) return false;
         }
 
         // Brand
@@ -425,10 +462,13 @@ function applyFilters() {
     // 3. Populate Filters only on first substantial load to avoid wiping user selection during interaction?
     // Actually proper pattern is to populate based on ALL data, not filtered data, so that's fine.
     // We only populate once usually, or check if empty.
+    // 3. Populate Filters
     const brandContainer = document.getElementById('brandFilters');
     if (brandContainer && brandContainer.children.length === 0) populateBrandFilters();
+
+    // Always refresh size filters to match current category
     const sizeContainer = document.getElementById('sizeFilters');
-    if (sizeContainer && sizeContainer.children.length === 0) populateSizeFilters();
+    if (sizeContainer) populateSizeFilters();
 
     // 4. Render First Page
     renderProducts(true);
@@ -534,26 +574,34 @@ function createProductCardHTML(product) {
                       width="300" 
                       height="300"
                 >
-                ${images.length > 1 ? `<img src="${images[1]}" class="product-image hover-img" loading="lazy" decoding="async" width="300" height="300">` : ''}
+                ${images.map((img, idx) => `
+                    <img src="${img}" 
+                         alt="${product.name}" 
+                         class="product-image ${idx === 0 ? 'active' : ''} ${idx === 1 ? 'hover-img' : ''}" 
+                         loading="${idx === 0 ? 'eager' : 'lazy'}"
+                         decoding="async"
+                         width="300" 
+                         height="300">
+                `).join('')}
                 <div class="product-actions">
-                    <button class="action-btn quick-view" onclick="openQuickView(${product.id})" aria-label="Vista Rápida">
+                    <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista Rápida">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
                 ${hasMultipleImages ? `
-                    <button class="carousel-btn carousel-prev" onclick="changeProductImage(${product.id}, -1)">
+                    <button class="carousel-btn carousel-prev" onclick="changeProductImage('${product.id}', -1)">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                     </button>
-                    <button class="carousel-btn carousel-next" onclick="changeProductImage(${product.id}, 1)">
+                    <button class="carousel-btn carousel-next" onclick="changeProductImage('${product.id}', 1)">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
                     <div class="carousel-dots">
                         ${images.map((_, index) => `
-                            <span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToProductImage(${product.id}, ${index})"></span>
+                            <span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToProductImage('${product.id}', ${index})"></span>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -574,7 +622,7 @@ function createProductCardHTML(product) {
                             <input type="hidden" id="size-${product.id}" value="">
                             <div class="size-chips-grid" id="size-grid-${product.id}">
                                 ${product.sizes.map(size => `
-                                    <div class="size-chip" onclick="selectSize(${product.id}, '${size}', this)">${size}</div>
+                                    <div class="size-chip" onclick="selectSize('${product.id}', '${size}', this)">${size}</div>
                                 `).join('')}
                             </div>
                             `
@@ -597,7 +645,7 @@ function createProductCardHTML(product) {
                         </select>
                     </div>
                 ` : ''}
-                <button class="product-btn" onclick="handleAddToCart(${product.id}, ${hasSizes}, ${hasColors})">
+                <button class="product-btn" onclick="handleAddToCart('${product.id}', ${hasSizes}, ${hasColors})">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>Agregar al Carrito</span>
                 </button>
@@ -662,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = e.target.closest('.product-image-container');
         if (container) {
             touchEndX = e.changedTouches[0].screenX;
-            const productId = parseInt(container.dataset.productId);
+            const productId = container.dataset.productId;
 
             if (touchEndX < touchStartX - 50) {
                 // Swipe left - next image
@@ -863,6 +911,81 @@ function setupMobileFilters() {
 
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
+}
+
+function ensureEssentialCollections() {
+    console.log('[DEBUG] Running ensureEssentialCollections check...');
+    const petosExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('petos'));
+    const camisetasExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('camisetas'));
+
+    // Inject missing Petos (Expected: 2 collections at $65.000)
+    if (petosExist.length < 2) {
+        const hasCalidosos = petosExist.some(p => p.name.includes('Calidosos'));
+        const hasPesada = petosExist.some(p => p.name.includes('Pesada'));
+
+        if (!hasCalidosos) {
+            console.log('[DEBUG] Injecting virtual Petos: Los Calidosos...');
+            allProducts.push({
+                id: 'v-petos-1',
+                name: 'Colección Los Calidosos',
+                category: 'petos',
+                price: '$65.000',
+                image: 'images/uniformes-main.png',
+                sizes: ["S", "M", "L", "XL"],
+                colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
+                images: [
+                    'images/uniformes-main.png',
+                    'images/collecionpeto1.1.jpeg',
+                    'images/collecionpeto1.2.jpeg'
+                ]
+            });
+        }
+
+        if (!hasPesada) {
+            console.log('[DEBUG] Injecting virtual Petos: La Pesada...');
+            allProducts.push({
+                id: 'v-petos-2',
+                name: 'Colección La Pesada',
+                category: 'petos',
+                price: '$65.000',
+                image: 'images/petos2_portada.jpg.jpeg',
+                sizes: ["S", "M", "L", "XL"],
+                colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
+                images: [
+                    'images/petos2_portada.jpg.jpeg',
+                    'images/petos2_blanco_azul_frente.jpg.jpeg',
+                    'images/petos2_blanco_azul_atras.jpg.jpeg',
+                    'images/petos2_negro_verde.jpg.jpeg',
+                    'images/petos2_comparacion.jpg.jpeg'
+                ]
+            });
+        }
+    }
+
+    // Inject missing Camisetas (Expected: 1 collection at $75.000)
+    if (camisetasExist.length < 1) {
+        const hasGrasa = camisetasExist.some(p => p.name.includes('Grasa'));
+
+        if (!hasGrasa) {
+            console.log('[DEBUG] Injecting virtual Camisetas: La Grasa...');
+            allProducts.push({
+                id: 'v-camisetas-1',
+                name: 'Colección La Grasa',
+                category: 'camisetas',
+                price: '$75.000',
+                image: 'images/camisetas_portada.jpg.jpeg',
+                sizes: ["S", "M", "L", "XL"],
+                colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
+                images: [
+                    'images/camisetas_portada.jpg.jpeg',
+                    'images/camisetas_foto1.jpg.jpeg',
+                    'images/camisetas_foto2.jpg.jpeg',
+                    'images/camisetas_foto3.jpg.jpeg',
+                    'images/camisetas_foto4.jpg.jpeg'
+                ]
+            });
+        }
+    }
 }
 
 function showSkeletonLoaders() {
