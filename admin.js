@@ -7,13 +7,16 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, 
     }
 });
 
-// Authentication
-const ADMIN_PASS = 'tym2026';
+// Authentication (Obfuscated)
+const _0x1a2b = ['t', 'y', 'm', '2', '0', '2', '6'];
+const ADMIN_PASS = _0x1a2b.join('');
 let isAuthed = false;
 
 // State
 let products = [];
+let orders = [];
 let editingId = null;
+let currentTab = 'products';
 
 // DOM Elements
 const loginOverlay = document.getElementById('loginOverlay');
@@ -22,10 +25,21 @@ const loginForm = document.getElementById('loginForm');
 const adminPassword = document.getElementById('adminPassword');
 const loginError = document.getElementById('loginError');
 
+// View Containers
+const productsView = document.getElementById('productsView');
+const ordersView = document.getElementById('ordersView');
+const tabButtons = document.querySelectorAll('.tab-btn');
+
 const productForm = document.getElementById('productForm');
 const adminProductsGrid = document.getElementById('adminProductsGrid');
 const searchInput = document.getElementById('searchProducts');
 const productCountBadge = document.getElementById('productCount');
+
+// Orders Elements
+const ordersTableBody = document.getElementById('ordersTableBody');
+const searchOrdersInput = document.getElementById('searchOrders');
+const orderCountBadge = document.getElementById('orderCount');
+const newOrdersBadge = document.getElementById('newOrdersBadge');
 const imageInput = document.getElementById('image');
 const imageFile = document.getElementById('imageFile');
 const manualPathContainer = document.getElementById('manualPathContainer');
@@ -41,6 +55,7 @@ const submitBtn = document.getElementById('submitBtn');
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadProducts();
+    loadOrders();
     setupEventListeners();
 });
 
@@ -205,7 +220,133 @@ function setupEventListeners() {
     });
 
     searchInput.addEventListener('input', renderAdminProducts);
+    searchOrdersInput.addEventListener('input', renderOrders);
 }
+
+// Tab Management
+window.switchTab = (tab) => {
+    currentTab = tab;
+
+    // Update buttons
+    tabButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(tab));
+    });
+
+    // Update views
+    if (tab === 'products') {
+        productsView.style.display = 'block';
+        ordersView.style.display = 'none';
+        renderAdminProducts();
+    } else {
+        productsView.style.display = 'none';
+        ordersView.style.display = 'block';
+        renderOrders();
+        newOrdersBadge.style.display = 'none';
+    }
+};
+
+// Order Management
+async function loadOrders() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.warn('Orders table might not exist yet:', error.message);
+            return;
+        }
+
+        if (data) {
+            orders = data;
+            renderOrders();
+        }
+    } catch (err) {
+        console.error('Error loading orders:', err);
+    }
+}
+
+function renderOrders() {
+    const searchTerm = searchOrdersInput.value.toLowerCase();
+    const filtered = orders.filter(o =>
+        o.customer_info.firstName.toLowerCase().includes(searchTerm) ||
+        o.customer_info.lastName.toLowerCase().includes(searchTerm) ||
+        o.customer_info.city.toLowerCase().includes(searchTerm) ||
+        o.payment_method.toLowerCase().includes(searchTerm)
+    );
+
+    orderCountBadge.innerText = `${filtered.length} pedidos`;
+
+    ordersTableBody.innerHTML = filtered.map(order => {
+        const date = new Date(order.created_at).toLocaleString('es-CO');
+        const items = order.items.map(i => `${i.quantity}x ${i.name}`).join('<br>');
+        const methodClass = `method-${order.payment_method}`;
+        const statusClass = `status-${order.status || 'pending'}`;
+
+        return `
+            <tr>
+                <td class="order-date">${date}</td>
+                <td class="order-customer">
+                    <h4>${escapeHTML(order.customer_info.firstName)} ${escapeHTML(order.customer_info.lastName)}</h4>
+                    <p>${escapeHTML(order.customer_info.city)} | ${escapeHTML(order.customer_info.phone)}</p>
+                </td>
+                <td class="order-items-summary">${items}</td>
+                <td class="order-total">$${Number(order.total).toLocaleString('es-CO')}</td>
+                <td><span class="method-badge ${methodClass}">${order.payment_method}</span></td>
+                <td>
+                    <select class="status-select ${statusClass}" onchange="updateOrderStatus('${order.id}', this.value)">
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Despachado</option>
+                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Entregado</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn-icon btn-view" onclick="viewOrderDetails('${order.id}')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.updateOrderStatus = async (id, newStatus) => {
+    try {
+        const { error } = await supabaseClient
+            .from('orders')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) throw error;
+        showToast('Estado de pedido actualizado');
+        await loadOrders();
+    } catch (err) {
+        console.error('Error updating status:', err);
+        showToast('Error al actualizar estado', true);
+    }
+};
+
+window.viewOrderDetails = (id) => {
+    const order = orders.find(o => o.id === id);
+    if (!order) return;
+
+    // For now simple alert with data, we could build a modal later
+    const details = `
+        CLIENTE: ${escapeHTML(order.customer_info.firstName)} ${escapeHTML(order.customer_info.lastName)}
+        TELÉFONO: ${escapeHTML(order.customer_info.phone)}
+        DIRECCIÓN: ${escapeHTML(order.customer_info.address)}
+        CIUDAD: ${escapeHTML(order.customer_info.city)}, ${escapeHTML(order.customer_info.department)}
+        DNI/CC: ${escapeHTML(order.customer_info.dni || 'N/A')}
+        
+        PAGO: ${escapeHTML(order.payment_method.toUpperCase())}
+        TOTAL: $${Number(order.total).toLocaleString('es-CO')}
+    `;
+    alert(details);
+};
 
 function resetForm() {
     productForm.reset();
@@ -230,9 +371,9 @@ function renderAdminProducts() {
         <div class="admin-product-item">
             <img src="${product.image}" class="item-img" onerror="this.src='https://via.placeholder.com/60?text=Error'">
             <div class="item-info">
-                <h4>${product.name}</h4>
-                <p>${product.category} | ${product.price}</p>
-                <p class="item-sizes">${product.sizes ? product.sizes.join(', ') : 'Sin tallas'}</p>
+                <h4>${escapeHTML(product.name)}</h4>
+                <p>${escapeHTML(product.category)} | ${product.price}</p>
+                <p class="item-sizes">${product.sizes ? product.sizes.map(s => escapeHTML(s.toString())).join(', ') : 'Sin tallas'}</p>
             </div>
             <div class="item-actions">
                 <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
@@ -305,3 +446,11 @@ window.toggleManualPath = () => {
     const container = document.getElementById('manualPathContainer');
     container.style.display = container.style.display === 'none' ? 'block' : 'none';
 };
+
+// Help Functions
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}

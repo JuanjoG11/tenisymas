@@ -79,7 +79,38 @@ serve(async (req) => {
             throw new Error(data.message || "Error al crear la preferencia de pago")
         }
 
-        // 3. Devolver los datos necesarios para el Checkout
+        // 3. (NUEVO) Registrar el pedido en la tabla 'orders' para el administrador
+        try {
+            const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
+            const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+
+            if (SUPABASE_URL && SERVICE_ROLE) {
+                const orderRecord = {
+                    customer_info: customer,
+                    items: items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+                    total: items.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0),
+                    payment_method: 'mercadopago',
+                    status: 'pending',
+                    external_reference: orderId
+                }
+
+                await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${SERVICE_ROLE}`,
+                        "apikey": SERVICE_ROLE,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    },
+                    body: JSON.stringify(orderRecord)
+                })
+                console.log("✅ Pedido registrado en la base de datos")
+            }
+        } catch (dbErr) {
+            console.error("❌ Error registrando pedido (no bloqueante):", dbErr)
+        }
+
+        // 4. Devolver los datos necesarios para el Checkout
         return new Response(JSON.stringify({
             id: data.id,
             init_point: data.init_point,

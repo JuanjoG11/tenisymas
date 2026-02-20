@@ -101,7 +101,47 @@ serve(async (req) => {
 
         if (response.ok) {
             const data = JSON.parse(responseText)
-            // En V3, la URL suele venir en 'checkoutUrl' o similar
+
+            // (NUEVO) Registrar el pedido en la tabla 'orders' para el administrador
+            try {
+                const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
+                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+
+                if (SUPABASE_URL && SERVICE_ROLE) {
+                    const orderRecord = {
+                        customer_info: {
+                            firstName: orderData.client.firstName,
+                            lastName: orderData.client.lastName,
+                            email: orderData.client.email,
+                            phone: orderData.client.cellphone,
+                            address: orderData.shippingAddress.line1,
+                            city: orderData.shippingAddress.city,
+                            department: orderData.shippingAddress.administrativeDivision,
+                            dni: orderData.client.idNumber
+                        },
+                        items: orderData.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice })),
+                        total: orderData.totalAmount,
+                        payment_method: 'addi',
+                        status: 'pending',
+                        external_reference: safeOrderId
+                    }
+
+                    await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${SERVICE_ROLE}`,
+                            "apikey": SERVICE_ROLE,
+                            "Content-Type": "application/json",
+                            "Prefer": "return=minimal"
+                        },
+                        body: JSON.stringify(orderRecord)
+                    })
+                    console.log("✅ Pedido Addi registrado en la base de datos")
+                }
+            } catch (dbErr) {
+                console.error("❌ Error registrando pedido Addi (no bloqueante):", dbErr)
+            }
+
             return new Response(JSON.stringify(data), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,

@@ -290,7 +290,7 @@ async function handleMercadoPagoCheckout(customer) {
 }
 
 
-function handleWhatsAppFallback(customer) {
+async function handleWhatsAppFallback(customer) {
     const WHATSAPP_NUMBER = '573204961453';
     let message = `Hola! Realizo mi pedido por la web:\n\n`;
     message += `👤 *Cliente:* ${customer.firstName || "Cliente"} ${customer.lastName || ""}\n`;
@@ -298,12 +298,37 @@ function handleWhatsAppFallback(customer) {
     message += `🏠 *Dirección:* ${customer.address || "No especificada"}\n\n`;
 
     let total = 0;
-    checkoutCart.forEach(item => {
-        const itemTotal = parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity;
-        total += itemTotal;
+    const orderItems = checkoutCart.map(item => {
+        const itemPrice = parseInt(item.price.replace(/[^0-9]/g, ''));
+        total += itemPrice * item.quantity;
         message += `📦 *${item.quantity}x ${item.name}*\n`;
+        return {
+            name: item.name,
+            quantity: item.quantity,
+            price: itemPrice,
+            size: item.size || null
+        };
     });
 
-    message += `\n💰 *TOTAL: $${(total + SHIPPING_COST).toLocaleString('es-CO')}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+    const finalTotal = total + SHIPPING_COST;
+    message += `\n💰 *TOTAL: $${finalTotal.toLocaleString('es-CO')}*`;
+
+    // (NUEVO) Registrar en la base de datos de pedidos
+    try {
+        if (window.supabaseClient) {
+            await window.supabaseClient.from('orders').insert([{
+                customer_info: customer,
+                items: orderItems,
+                total: finalTotal,
+                payment_method: 'whatsapp',
+                status: 'pending'
+            }]);
+            console.log('✅ Pedido por WhatsApp registrado');
+        }
+    } catch (e) {
+        console.error('Error registrando pedido WhatsApp:', e);
+    }
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
 }

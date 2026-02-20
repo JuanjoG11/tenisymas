@@ -32,6 +32,11 @@
         <header class="admin-header">
             <div class="admin-nav">
                 <h1>Panel de Control</h1>
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchTab('products')">Productos</button>
+                    <button class="tab-btn" onclick="switchTab('orders')">Pedidos <span id="newOrdersBadge"
+                            class="new-badge" style="display: none;">!</span></button>
+                </div>
                 <div class="admin-actions">
                     <button id="logoutBtn" class="btn-logout">Cerrar Sesión</button>
                     <a href="index.html" class="btn-back">Ver Sitio</a>
@@ -40,89 +45,125 @@
         </header>
 
         <main class="admin-content">
-            <div class="admin-grid">
-                <!-- Product Form -->
-                <section class="admin-section">
-                    <div class="admin-card">
-                        <h2 id="formTitle">Agregar Nuevo Producto</h2>
-                        <form id="productForm">
-                            <input type="hidden" id="productId">
-                            <div class="form-group">
-                                <label for="name">Nombre del Producto</label>
-                                <input type="text" id="name" placeholder="Ej: Tenis Adidas Neo" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">Categoría</label>
-                                <select id="category" required>
-                                    <option value="tenis-guayos">TENIS-GUAYOS</option>
-                                    <option value="guayos">Guayos</option>
-                                    <option value="futsal">FUTSAL</option>
-                                    <option value="ninos">NIÑOS</option>
-                                    <option value="petos,camisetas">PETOS Y CAMISETAS</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="sizes">Tallas (separadas por coma)</label>
-                                <input type="text" id="sizes" placeholder="S, M, L, XL">
-                            </div>
-                            <div class="form-row">
+            <!-- Products View -->
+            <div id="productsView" class="tab-content active">
+                <div class="admin-grid">
+                    <!-- Product Form -->
+                    <section class="admin-section">
+                        <div class="admin-card">
+                            <h2 id="formTitle">Agregar Nuevo Producto</h2>
+                            <form id="productForm">
+                                <input type="hidden" id="productId">
                                 <div class="form-group">
-                                    <label for="price">Precio Actual</label>
-                                    <input type="text" id="price" placeholder="$250.000" required>
+                                    <label for="name">Nombre del Producto</label>
+                                    <input type="text" id="name" placeholder="Ej: Tenis Adidas Neo" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="oldPrice">Precio Anterior (Tachado)</label>
-                                    <input type="text" id="oldPrice" placeholder="$320.000">
+                                    <label for="category">Categoría</label>
+                                    <select id="category" required>
+                                        <option value="tenis-guayos">TENIS-GUAYOS</option>
+                                        <option value="guayos">Guayos</option>
+                                        <option value="futsal">FUTSAL</option>
+                                        <option value="ninos">NIÑOS</option>
+                                        <option value="petos,camisetas">PETOS Y CAMISETAS</option>
+                                    </select>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Imagen del Producto</label>
-                                <div class="image-upload-wrapper">
-                                    <input type="file" id="imageFile" accept="image/*" class="file-input">
-                                    <button type="button" class="btn btn-secondary btn-full"
-                                        onclick="document.getElementById('imageFile').click()">
-                                        📸 Cargar desde Galería
-                                    </button>
+                                <div class="form-group">
+                                    <label for="sizes">Tallas (separadas por coma)</label>
+                                    <input type="text" id="sizes" placeholder="S, M, L, XL">
                                 </div>
-                                <div class="manual-path-toggle">
-                                    <button type="button" class="btn-text" onclick="toggleManualPath()">O usar ruta
-                                        manual (avanzado)</button>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="price">Precio Actual</label>
+                                        <input type="text" id="price" placeholder="$250.000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="oldPrice">Precio Anterior (Tachado)</label>
+                                        <input type="text" id="oldPrice" placeholder="$320.000">
+                                    </div>
                                 </div>
-                                <div id="manualPathContainer" style="display: none; margin-top: 10px;">
-                                    <input type="text" id="image" placeholder="images/nombre-imagen.png">
-                                    <p class="help-text">Ej: images/tenis1.png</p>
+                                <div class="form-group">
+                                    <label>Imagen del Producto</label>
+                                    <div class="image-upload-wrapper">
+                                        <input type="file" id="imageFile" accept="image/*" class="file-input">
+                                        <button type="button" class="btn btn-secondary btn-full"
+                                            onclick="document.getElementById('imageFile').click()">
+                                            📸 Cargar desde Galería
+                                        </button>
+                                    </div>
+                                    <div class="manual-path-toggle">
+                                        <button type="button" class="btn-text" onclick="toggleManualPath()">O usar ruta
+                                            manual (avanzado)</button>
+                                    </div>
+                                    <div id="manualPathContainer" style="display: none; margin-top: 10px;">
+                                        <input type="text" id="image" placeholder="images/nombre-imagen.png">
+                                        <p class="help-text">Ej: images/tenis1.png</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div id="imagePreview" class="image-preview">
-                                <p>Previsualización de imagen</p>
-                                <img src="" alt="" style="display: none;">
-                            </div>
-                            <div class="form-buttons">
-                                <button type="submit" id="submitBtn" class="btn btn-primary">Guardar Producto</button>
-                                <button type="button" id="cancelBtn" class="btn btn-secondary"
-                                    style="display: none;">Cancelar</button>
-                            </div>
-                        </form>
-                    </div>
+                                <div id="imagePreview" class="image-preview">
+                                    <p>Previsualización de imagen</p>
+                                    <img src="" alt="" style="display: none;">
+                                </div>
+                                <div class="form-buttons">
+                                    <button type="submit" id="submitBtn" class="btn btn-primary">Guardar
+                                        Producto</button>
+                                    <button type="button" id="cancelBtn" class="btn btn-secondary"
+                                        style="display: none;">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
 
-                    <!-- The Export section was removed to maintain a cleaner, more professional interface. -->
-                </section>
+                    <!-- Product List -->
+                    <section class="admin-section">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h2>Lista de Productos</h2>
+                                <span id="productCount" class="badge">0 productos</span>
+                            </div>
+                            <div class="admin-search">
+                                <input type="text" id="searchProducts" placeholder="Buscar producto...">
+                            </div>
+                            <div id="adminProductsGrid" class="admin-products-list">
+                                <!-- Products will be listed here -->
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
 
-                <!-- Product List -->
-                <section class="admin-section">
-                    <div class="admin-card">
-                        <div class="card-header">
-                            <h2>Lista de Productos</h2>
-                            <span id="productCount" class="badge">0 productos</span>
-                        </div>
-                        <div class="admin-search">
-                            <input type="text" id="searchProducts" placeholder="Buscar producto...">
-                        </div>
-                        <div id="adminProductsGrid" class="admin-products-list">
-                            <!-- Products will be listed here -->
+            <!-- Orders View -->
+            <div id="ordersView" class="tab-content" style="display: none;">
+                <div class="admin-card orders-card">
+                    <div class="card-header">
+                        <h2>Gestión de Pedidos</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar</button>
+                            <span id="orderCount" class="badge">0 pedidos</span>
                         </div>
                     </div>
-                </section>
+                    <div class="admin-search">
+                        <input type="text" id="searchOrders" placeholder="Buscar por cliente, ciudad o método...">
+                    </div>
+                    <div class="orders-table-wrapper">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Método</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Orders will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
