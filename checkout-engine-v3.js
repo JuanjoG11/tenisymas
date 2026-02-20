@@ -4,9 +4,10 @@ console.log('%c🚀 ADDI CORE ENGINE V3.0 ACTIVATED', 'color: #00ff00; font-weig
 let checkoutCart = [];
 const SHIPPING_COST = 16500;
 
-// ==================== WOMPI CONFIGURATION ====================
-const WOMPI_PUBLIC_KEY = 'pub_prod_KVXCvqA1WbupHGHkYRwSOpwkYnPrqu2d';
-const WOMPI_INTEGRITY_SECRET = 'prod_integrity_71mRhaicKJUmSjsjIJcUu8WMDFWXUgmM';
+// ==================== MERCADO PAGO CONFIGURATION ====================
+const MP_PUBLIC_KEY = 'APP_USR-c4eb2276-e656-4cc8-ad42-3135168127fe';
+const mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'es-CO' });
+let selectorsSetup = false;
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -57,11 +58,26 @@ function renderCheckoutSummary() {
 }
 
 function setupPaymentSelectors() {
+    if (selectorsSetup) return;
+    selectorsSetup = true;
+
     const cards = document.querySelectorAll('.payment-method-card');
+    const mainSubmitBtn = document.querySelector('.btn-checkout-final');
+
     cards.forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', async () => {
+            const method = card.dataset.method;
             cards.forEach(c => c.classList.remove('active'));
             card.classList.add('active');
+
+            // Ensure submit button is always visible
+            if (mainSubmitBtn) mainSubmitBtn.style.display = 'block';
+
+            // Toggle visibility of Payment Brick container (now always hidden)
+            const mpView = document.getElementById('premiumMPView');
+            if (mpView) {
+                mpView.style.display = 'none';
+            }
         });
     });
 }
@@ -90,8 +106,8 @@ function setupCheckoutForm() {
 
             if (selectedMethod === 'addi') {
                 handleAddiCheckout(customerData);
-            } else if (selectedMethod === 'wompi') {
-                handleWompiCheckout(customerData);
+            } else if (selectedMethod === 'mercadopago') {
+                handleMercadoPagoCheckout(customerData);
             } else if (selectedMethod === 'whatsapp') {
                 handleWhatsAppFallback(customerData);
             } else {
@@ -206,68 +222,67 @@ async function handleAddiCheckout(customer) {
     }
 }
 
-// ==================== WOMPI INTEGRATION ====================
+// ==================== MERCADO PAGO INTEGRATION ====================
 
-async function generateWompiSignature(reference, amountInCents, currency, secret) {
-    const message = `${reference}${amountInCents}${currency}${secret}`;
-    const msgUint8 = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+// ==================== MERCADO PAGO REDIRECTION FLOW ====================
 
-async function handleWompiCheckout(customer) {
+async function handleMercadoPagoCheckout(customer) {
     const btn = document.querySelector('.btn-checkout-final');
     const originalText = btn.textContent;
-    btn.textContent = 'Abriendo Wompi...';
+    btn.textContent = 'Redirigiendo a Mercado Pago...';
     btn.disabled = true;
 
+    console.log('🚀 Iniciando checkout con Mercado Pago (Redirect)...');
+
     try {
-        const subtotal = checkoutCart.reduce((sum, item) => {
-            const price = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
-            return sum + (price * item.quantity);
-        }, 0);
-        const totalAmount = subtotal + SHIPPING_COST;
-        const amountInCents = totalAmount * 100;
-        const currency = 'COP';
-        const reference = `TM-${Date.now()}`;
+        const getAbsoluteUrl = (url) => {
+            if (!url) return "";
+            if (url.startsWith('http')) return url;
+            return window.location.origin + (url.startsWith('/') ? '' : '/') + url;
+        };
 
-        console.log('🔐 Generando firma de integridad Wompi...');
-        const signature = await generateWompiSignature(reference, amountInCents, currency, WOMPI_INTEGRITY_SECRET);
+        const items = checkoutCart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: parseInt(item.price.replace(/[^0-9]/g, '')),
+            quantity: item.quantity,
+            image: getAbsoluteUrl(item.image)
+        }));
 
-        const checkout = new WidgetCheckout({
-            currency: currency,
-            amountInCents: amountInCents,
-            reference: reference,
-            publicKey: WOMPI_PUBLIC_KEY,
-            signature: { integrity: signature },
-            customerData: {
-                email: customer.email,
-                fullName: `${customer.firstName} ${customer.lastName}`,
-                phoneNumber: customer.phone,
-                phoneNumberPrefix: '+57'
+        items.push({
+            name: "Costo de Envío",
+            price: SHIPPING_COST,
+            quantity: 1
+        });
+
+        const payload = {
+            orderId: "TM-" + Date.now(),
+            customer: customer,
+            items: items
+        };
+
+        const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/mercadopago-checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_KEY}`
             },
-            shippingAddress: {
-                addressLine1: customer.address,
-                city: customer.city,
-                phoneNumber: customer.phone,
-                region: customer.department,
-                country: 'CO'
-            }
+            body: JSON.stringify(payload)
         });
 
-        checkout.open(function (result) {
-            const transaction = result.transaction;
-            console.log('Transaction ID: ', transaction.id);
-            console.log('Transaction status: ', transaction.status);
-            if (transaction.status === 'APPROVED') {
-                window.location.href = 'success.html';
-            }
-        });
+        const result = await response.json();
+        console.log('🎫 Respuesta de MP:', result);
 
-    } catch (err) {
-        console.error('❌ Error abriendo Wompi:', err);
-        alert('Hubo un error al iniciar el pago con Wompi. Por favor intenta de nuevo o usa otro método.');
+        if (result.init_point) {
+            console.log('✅ Redirigiendo a Pasarela Oficial...');
+            window.location.href = result.init_point;
+        } else {
+            throw new Error("No se obtuvo el punto de inicio (init_point)");
+        }
+    } catch (error) {
+        console.error('❌ Error en Mercado Pago Checkout:', error);
+        alert('Hubo un problema al conectar con Mercado Pago. Intentando por WhatsApp...');
+        handleWhatsAppFallback(customer);
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;

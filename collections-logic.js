@@ -645,7 +645,7 @@ function createProductCardHTML(product) {
                         </select>
                     </div>
                 ` : ''}
-                <button class="product-btn" onclick="handleAddToCart('${product.id}', ${hasSizes}, ${hasColors})">
+                <button class="product-btn" onclick="handleAddToCart('${product.id}', ${hasSizes}, ${hasColors}, this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>Agregar al Carrito</span>
                 </button>
@@ -725,23 +725,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==================== SIZE & COLOR SELECTION HANDLER ====================
-function handleAddToCart(productId, requiresSize, requiresColor) {
+function handleAddToCart(productId, requiresSize, requiresColor, btnElement) {
     let selectedSize = null;
     let selectedColor = null;
     let hasError = false;
 
+    // Get the product card context
+    const productCard = btnElement ? btnElement.closest('.product-card') : document.getElementById(`size-${productId}`)?.closest('.product-card');
+    if (!productCard) {
+        console.error("No se encontró el contenedor del producto");
+        return;
+    }
+
     // Validate Size
     if (requiresSize) {
-        const sizeSelector = document.getElementById(`size-${productId}`);
+        const sizeSelector = productCard.querySelector(`[id="size-${productId}"]`) || productCard.querySelector('.size-selector') || productCard.querySelector('input[type="hidden"]');
         selectedSize = sizeSelector ? sizeSelector.value : '';
 
         // Helper to find the visual container (dropdown or grid)
-        const sizeGrid = document.getElementById(`size-grid-${productId}`);
+        const sizeGrid = productCard.querySelector(`.size-chips-grid`) || productCard.querySelector(`#size-grid-${productId}`);
         const visualElement = sizeGrid || sizeSelector;
 
         if (!selectedSize) {
             hasError = true;
-            visualElement.style.border = '2px solid #ff3333';
+            if (visualElement) visualElement.style.border = '2px solid #ff3333';
             if (sizeGrid) visualElement.style.borderRadius = '8px'; // Add radius for grid border
 
             const errorMsg = document.createElement('div');
@@ -749,45 +756,47 @@ function handleAddToCart(productId, requiresSize, requiresColor) {
             errorMsg.style.cssText = 'color: #ff3333; font-size: 12px; margin-top: 5px; font-weight: bold;';
             errorMsg.className = 'selection-error-msg';
 
-            const existingError = sizeSelector.parentElement.querySelector('.selection-error-msg');
+            const container = visualElement ? visualElement.parentElement : productCard.querySelector('.size-selector-container');
+            const existingError = container.querySelector('.selection-error-msg');
             if (existingError) existingError.remove();
 
-            sizeSelector.parentElement.appendChild(errorMsg);
+            if (container) container.appendChild(errorMsg);
 
             setTimeout(() => {
-                visualElement.style.border = '';
+                if (visualElement) visualElement.style.border = '';
                 errorMsg.remove();
             }, 3000);
         } else {
-            visualElement.style.border = '';
+            if (visualElement) visualElement.style.border = '';
         }
     }
 
     // Validate Color
     if (requiresColor) {
-        const colorSelector = document.getElementById(`color-${productId}`);
+        const colorSelector = productCard.querySelector(`[id="color-${productId}"]`) || productCard.querySelector('.color-selector');
         selectedColor = colorSelector ? colorSelector.value : '';
 
         if (!selectedColor) {
             hasError = true;
-            colorSelector.style.border = '2px solid #ff3333';
+            if (colorSelector) colorSelector.style.border = '2px solid #ff3333';
 
             const errorMsg = document.createElement('div');
             errorMsg.textContent = 'Por favor selecciona un color';
             errorMsg.style.cssText = 'color: #ff3333; font-size: 12px; margin-top: 5px; font-weight: bold;';
             errorMsg.className = 'selection-error-msg';
 
-            const existingError = colorSelector.parentElement.querySelector('.selection-error-msg');
+            const container = colorSelector ? colorSelector.parentElement : productCard.querySelector('.color-selector-container');
+            const existingError = container.querySelector('.selection-error-msg');
             if (existingError) existingError.remove();
 
-            colorSelector.parentElement.appendChild(errorMsg);
+            if (container) container.appendChild(errorMsg);
 
             setTimeout(() => {
-                colorSelector.style.border = '';
+                if (colorSelector) colorSelector.style.border = '';
                 errorMsg.remove();
             }, 3000);
         } else {
-            colorSelector.style.border = '';
+            if (colorSelector) colorSelector.style.border = '';
         }
     }
 
@@ -802,11 +811,16 @@ function handleAddToCart(productId, requiresSize, requiresColor) {
 
         // Reset selectors after adding
         if (requiresSize) {
-            const sizeSelector = document.getElementById(`size-${productId}`);
+            const sizeSelector = productCard.querySelector(`[id="size-${productId}"]`) || productCard.querySelector('.size-selector') || productCard.querySelector('input[type="hidden"]');
             if (sizeSelector) sizeSelector.value = '';
+
+            const grid = productCard.querySelector('.size-chips-grid');
+            if (grid) {
+                grid.querySelectorAll('.size-chip').forEach(chip => chip.classList.remove('selected'));
+            }
         }
         if (requiresColor) {
-            const colorSelector = document.getElementById(`color-${productId}`);
+            const colorSelector = productCard.querySelector(`[id="color-${productId}"]`) || productCard.querySelector('.color-selector');
             if (colorSelector) colorSelector.value = '';
         }
     }
@@ -815,11 +829,14 @@ function handleAddToCart(productId, requiresSize, requiresColor) {
 // Global function (moved out of handleAddToCart)
 function selectSize(productId, size, element) {
     // 1. Update hidden input
-    const input = document.getElementById(`size-${productId}`);
+    const productCard = element.closest('.product-card');
+    if (!productCard) return;
+
+    const input = productCard.querySelector(`input[type="hidden"]`) || productCard.querySelector(`#size-${productId}`);
     if (input) input.value = size;
 
     // 2. Update visuals
-    const grid = document.getElementById(`size-grid-${productId}`);
+    const grid = element.closest('.size-chips-grid');
     if (grid) {
         // Remove active class from all chips
         grid.querySelectorAll('.size-chip').forEach(chip => chip.classList.remove('selected'));
@@ -828,8 +845,11 @@ function selectSize(productId, size, element) {
 
         // Remove error border if it exists
         grid.style.border = '';
-        const errorMsg = grid.parentElement.querySelector('.selection-error-msg');
-        if (errorMsg) errorMsg.remove();
+        const container = grid.parentElement;
+        if (container) {
+            const errorMsg = container.querySelector('.selection-error-msg');
+            if (errorMsg) errorMsg.remove();
+        }
     }
 }
 

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
         rel="stylesheet">
-    <script type="text/javascript" src="https://checkout.wompi.co/widget.js"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 
 <body class="checkout-page">
@@ -131,19 +131,21 @@
                             </div>
 
 
-                            <!-- Wompi/PSE Option -->
-                            <div class="payment-method-card" data-method="wompi">
+                            <!-- Mercado Pago Option -->
+                            <div class="payment-method-card" data-method="mercadopago">
                                 <div class="method-header">
                                     <div class="radio-indicator"></div>
                                     <div class="method-content">
-                                        <span class="method-name">Wompi (PSE, Tarjetas, Nequi)</span>
+                                        <span class="method-name">Mercado Pago (Tarjetas, PSE, Efecty)</span>
                                     </div>
                                     <div class="method-logo-wrapper">
-                                        <img src="images/wompi-logo.jpg" alt="Wompi">
+                                        <img src="https://logodownload.org/wp-content/uploads/2019/06/mercado-pago-logo-0.png"
+                                            alt="Mercado Pago" class="method-logo-img mp-logo"
+                                            style="max-height: 40px; filter: brightness(1);">
                                     </div>
                                 </div>
                                 <div class="method-description">
-                                    <p>Paga con tu banco, Nequi o tarjetas de crédito de forma segura.</p>
+                                    <p>Paga con tarjetas de crédito, PSE o el medio que prefieras de forma segura.</p>
                                 </div>
                             </div>
 
@@ -182,7 +184,7 @@
                                         stroke-width="2">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                                     </svg>
-                                    <span>Compra Segura</span>
+                                    <span>Secure Payments</span>
                                 </div>
                             </div>
                     </section>
@@ -234,7 +236,7 @@
     </main>
 
     <script src="script.js?v=7.0"></script>
-    <script src="checkout-engine-v3.js?v=1.0"></script>
+    <script src="checkout-engine-v3.js?v=1.1"></script>
 </body>
 
 </html>

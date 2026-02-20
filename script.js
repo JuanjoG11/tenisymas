@@ -111,7 +111,7 @@ function renderProductGrid(containerId, category) {
 
 // ==================== CART LOGIC ====================
 function addToCart(productId, size = null, color = null) {
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (!product) return;
 
     // For products with sizes/colors, find existing item with same size AND color
