@@ -80,7 +80,7 @@ async function loadProducts() {
         isLoading = true;
 
         // 1. PHASE 1: Instant Cache Render (ZERO DELAY)
-        const cached = localStorage.getItem('productsCache_v2');
+        const cached = localStorage.getItem('productsCache_v3');
         let hasRenderedFromCache = false;
 
         if (cached) {
@@ -129,13 +129,16 @@ async function loadProducts() {
             let data = null;
             if (window.productsLoaded) {
                 data = await window.productsLoaded;
-            } else {
+            } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                 // Fallback to direct fetch if main script hasn't started sync
                 const { data: directData } = await supabaseClient
                     .from('products')
                     .select('*')
                     .order('id', { ascending: true });
                 data = directData;
+            } else {
+                // No Supabase client available (CDN failed, etc) — use virtual products only
+                throw new Error('No Supabase client available');
             }
 
             if (data && data.length > 0) {
@@ -148,7 +151,7 @@ async function loadProducts() {
 
                     // Cache it
                     try {
-                        localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                        localStorage.setItem('productsCache_v3', JSON.stringify(data));
                         localStorage.setItem('productsCache_Time', Date.now().toString());
                     } catch (err) { }
 
@@ -159,11 +162,28 @@ async function loadProducts() {
                     populateBrandFilters();
                     populateSizeFilters();
                 }
+            } else if (!hasRenderedFromCache) {
+                // Supabase returned empty (402, quota exceeded, etc.) and no cache — show virtual products
+                console.warn('⚠️ Supabase returned empty data. Showing virtual products as fallback.');
+                ensureEssentialCollections();
+                applyFilters();
+                populateBrandFilters();
+                populateSizeFilters();
             }
         } catch (e) {
             console.warn('Silent sync failed:', e);
             // If we have nothing at all, try one last direct fetch
-            if (allProducts.length === 0) await fetchAndCacheProducts();
+            if (allProducts.length === 0) {
+                await fetchAndCacheProducts();
+            }
+            // Regardless of network result: always inject essential collections and render
+            if (allProducts.length === 0) {
+                // Network completely failed — inject virtual products so page is never blank
+                ensureEssentialCollections();
+            }
+            applyFilters();
+            populateBrandFilters();
+            populateSizeFilters();
         } finally {
             isLoading = false;
             hideSkeletonLoaders();
@@ -171,7 +191,9 @@ async function loadProducts() {
 
     } catch (error) {
         console.error('Load error:', error);
-        if (allProducts.length === 0) showEmptyState();
+        // Even on hard failure, inject virtual products and render
+        ensureEssentialCollections();
+        applyFilters();
         hideSkeletonLoaders();
         isLoading = false;
     }
@@ -236,7 +258,7 @@ async function fetchAndCacheProducts(isBackground = false) {
                 localStorage.removeItem('productsCache_v1');
 
                 // Save new cache
-                localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                localStorage.setItem('productsCache_v3', JSON.stringify(data));
                 localStorage.setItem('productsCache_Time', Date.now().toString());
                 console.log('💾 Cache saved successfully');
             } catch (e) {
@@ -246,7 +268,7 @@ async function fetchAndCacheProducts(isBackground = false) {
                     const cart = localStorage.getItem('tm_cart');
                     localStorage.clear();
                     if (cart) localStorage.setItem('tm_cart', cart);
-                    localStorage.setItem('productsCache_v2', JSON.stringify(data));
+                    localStorage.setItem('productsCache_v3', JSON.stringify(data));
                     localStorage.setItem('productsCache_Time', Date.now().toString());
                     console.log('💾 Cache saved after cleanup');
                 } catch (e2) {
@@ -261,11 +283,21 @@ async function fetchAndCacheProducts(isBackground = false) {
             hideSkeletonLoaders();
         } else {
             console.error('Fetch error:', error);
-            if (allProducts.length === 0) showEmptyState();
+            if (allProducts.length === 0) {
+                // Inject virtual products as last resort
+                ensureEssentialCollections();
+                applyFilters();
+                hideSkeletonLoaders();
+            }
         }
     } catch (e) {
         console.error("Direct fetch failed:", e);
-        if (allProducts.length === 0) showEmptyState();
+        if (allProducts.length === 0) {
+            // Inject virtual products as last resort
+            ensureEssentialCollections();
+            applyFilters();
+            hideSkeletonLoaders();
+        }
     }
 }
 
@@ -288,8 +320,20 @@ function populateBrandFilters() {
 function populateSizeFilters() {
     const allSizes = new Set();
     allProducts.forEach(product => {
-        const sizes = product.sizes || product.tallas || [];
-        sizes.forEach(size => allSizes.add(size));
+        let sizes = product.sizes || product.tallas || [];
+        if (typeof sizes === 'string') {
+            try {
+                sizes = JSON.parse(sizes);
+            } catch (e) {
+                sizes = sizes.split(',').map(s => s.trim());
+            }
+        }
+        if (Array.isArray(sizes)) {
+            sizes.forEach(size => {
+                const cleanSize = String(size).replace(/[\[\]"]/g, '').trim();
+                if (cleanSize) allSizes.add(cleanSize);
+            });
+        }
     });
 
     // Feature: Clean up sizes for footwear context
@@ -543,7 +587,26 @@ function renderProducts(reset = true) {
 
 
 function createProductCardHTML(product) {
-    const hasSizes = product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
+    // Defensive size parsing logic for rendering
+    let currentSizes = [];
+    if (product.sizes) {
+        if (Array.isArray(product.sizes)) {
+            // Clean up elements that might still have brackets or quotes from previous bad imports
+            currentSizes = product.sizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+        } else if (typeof product.sizes === 'string') {
+            try {
+                if (product.sizes.startsWith('[') && product.sizes.endsWith(']')) {
+                    currentSizes = JSON.parse(product.sizes).map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+                } else {
+                    currentSizes = product.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                }
+            } catch (e) {
+                currentSizes = product.sizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+    }
+
+    const hasSizes = currentSizes.length > 0;
     const hasColors = product.colors && Array.isArray(product.colors) && product.colors.length > 0;
     const requiresSelection = hasSizes || hasColors;
 
@@ -621,7 +684,7 @@ function createProductCardHTML(product) {
                             <!-- Custom Chip Selector for Footwear -->
                             <input type="hidden" id="size-${product.id}" value="">
                             <div class="size-chips-grid" id="size-grid-${product.id}">
-                                ${product.sizes.map(size => `
+                                ${currentSizes.map(size => `
                                     <div class="size-chip" onclick="selectSize('${product.id}', '${size}', this)">${size}</div>
                                 `).join('')}
                             </div>
@@ -630,7 +693,7 @@ function createProductCardHTML(product) {
                             <!-- Standard Dropdown for other categories (Camisetas, Petos, etc) -->
                             <select id="size-${product.id}" class="size-selector">
                                 <option value="">Selecciona una talla</option>
-                                ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+                                ${currentSizes.map(size => `<option value="${size}">${size}</option>`).join('')}
                             </select>
                             `
             }
@@ -952,7 +1015,7 @@ function ensureEssentialCollections() {
                 price: '$65.000',
                 image: 'images/uniformes-main.png',
                 sizes: ["S", "M", "L", "XL"],
-                colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
+                colors: ["NEGRO", "MORADO", "ROSADO"],
                 images: [
                     'images/uniformes-main.png',
                     'images/collecionpeto1.1.jpeg',

@@ -3,8 +3,8 @@
 let products = [];
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybGFhZGFnZ21wanRkbXRudG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTM0NjksImV4cCI6MjA4NTAyOTQ2OX0.B7RLhRRvuz5jAsRAHLhWIPtW3KdhEEAKzoKV3DfeoJE';
+const SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
         persistSession: false
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const waBtn = document.querySelector('.whatsapp-float');
         if (waBtn) waBtn.classList.add('visible');
-    }, 4500);
+    }, 3500);
 });
 
 // ==================== HERO BACKGROUND SLIDER ====================
@@ -593,7 +593,7 @@ async function syncProducts() {
 
     isSyncing = true;
     syncPromise = (async () => {
-        const CACHE_KEY = 'productsCache_v2';
+        const CACHE_KEY = 'productsCache_v3';
         const CACHE_TIME_KEY = 'productsCache_Time';
         // 10 minutes cache to keep it somewhat fresh but fast
         const CACHE_DURATION = 10 * 60 * 1000;

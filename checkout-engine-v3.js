@@ -172,7 +172,7 @@ async function handleAddiCheckout(customer) {
             }
         };
 
-        const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/addi-checkout', {
+        const response = await fetch('https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -261,11 +261,12 @@ async function handleMercadoPagoCheckout(customer) {
             items: items
         };
 
-        const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/mercadopago-checkout', {
+        const response = await fetch('https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/mercadopago-checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_KEY}`
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'apikey': SUPABASE_KEY
             },
             body: JSON.stringify(payload)
         });

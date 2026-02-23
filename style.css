@@ -82,7 +82,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 10000;
-    animation: fadeOutIntro 0.5s ease 4s forwards;
+    animation: fadeOutIntro 0.5s ease 3s forwards;
 }
 
 @keyframes fadeOutIntro {
@@ -242,7 +242,7 @@ body {
 
 .main-content {
     opacity: 0;
-    animation: fadeInContent 0.5s ease 4s forwards;
+    animation: fadeInContent 0.5s ease 3s forwards;
 }
 
 @keyframes fadeInContent {
@@ -2030,6 +2030,9 @@ body {
         visibility: visible !important;
     }
 }
+
+
+
 
 /* Utility for screen readers and SEO */
 .sr-only {

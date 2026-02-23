@@ -1,6 +1,6 @@
 // Supabase Configuration
-const SUPABASE_URL = 'https://nrlaadaggmpjtdmtntoz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybGFhZGFnZ21wanRkbXRudG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTM0NjksImV4cCI6MjA4NTAyOTQ2OX0.B7RLhRRvuz5jAsRAHLhWIPtW3KdhEEAKzoKV3DfeoJE';
+const SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
         persistSession: false
@@ -119,19 +119,55 @@ async function seedInitialData() {
     if (!error) products = data;
 }
 
-async function saveProduct(productData) {
+// Helper for Space Optimization: Upload to Supabase Storage
+async function uploadImage(file) {
+    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    const filePath = `products/${fileName}`;
+
+    const { data, error } = await supabaseClient.storage
+        .from('product-images')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) {
+        if (error.message.includes('bucket not found')) {
+            throw new Error('El bucket "product-images" no existe en Supabase Storage. Por favor créalo.');
+        }
+        throw error;
+    }
+
+    const { data: { publicUrl } } = supabaseClient.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+    return publicUrl;
+}
+
+async function saveProduct(productData, file) {
     try {
+        let finalImageUrl = productData.image;
+
+        // If it's a new file (not just a string URL), upload it
+        if (file) {
+            showToast('Subiendo imagen...', false);
+            finalImageUrl = await uploadImage(file);
+        }
+
+        const dataToSave = { ...productData, image: finalImageUrl };
+
         if (editingId) {
             const { error } = await supabaseClient
                 .from('products')
-                .update(productData)
+                .update(dataToSave)
                 .eq('id', editingId);
             if (error) throw error;
             showToast('Producto actualizado');
         } else {
             const { error } = await supabaseClient
                 .from('products')
-                .insert([productData]);
+                .insert([dataToSave]);
             if (error) throw error;
             showToast('Producto agregado');
         }
@@ -139,7 +175,7 @@ async function saveProduct(productData) {
         resetForm();
     } catch (err) {
         console.error('Error saving product:', err);
-        showToast('Error al guardar', true);
+        showToast(err.message || 'Error al guardar', true);
     }
 }
 
@@ -162,6 +198,8 @@ function setupEventListeners() {
 
     productForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const file = imageFile.files[0];
+
         const productData = {
             name: document.getElementById('name').value,
             category: document.getElementById('category').value,
@@ -171,7 +209,7 @@ function setupEventListeners() {
             sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
         };
 
-        await saveProduct(productData);
+        await saveProduct(productData, file);
     });
 
     cancelBtn.addEventListener('click', resetForm);
@@ -292,7 +330,11 @@ function renderOrders() {
                     <p>${escapeHTML(order.customer_info.city)} | ${escapeHTML(order.customer_info.phone)}</p>
                 </td>
                 <td class="order-items-summary">${items}</td>
-                <td class="order-total">$${Number(order.total).toLocaleString('es-CO')}</td>
+                <td class="order-total">
+                    $${Number(order.total).toLocaleString('es-CO')}
+                    ${order.status_payment ? `<br><span class="payment-status-badge status-${order.status_payment}">${order.status_payment}</span>` : ''}
+                    ${order.paid_at ? `<br><small style="color: #666; font-size: 10px;">Pagado: ${new Date(order.paid_at).toLocaleDateString()}</small>` : ''}
+                </td>
                 <td><span class="method-badge ${methodClass}">${order.payment_method}</span></td>
                 <td>
                     <select class="status-select ${statusClass}" onchange="updateOrderStatus('${order.id}', this.value)">
@@ -403,7 +445,14 @@ window.editProduct = (id) => {
     document.getElementById('price').value = product.price;
     document.getElementById('oldPrice').value = product.oldPrice || '';
     document.getElementById('image').value = product.image;
-    document.getElementById('sizes').value = product.sizes ? product.sizes.join(', ') : '';
+    let currentSizes = product.sizes || [];
+    if (typeof currentSizes === 'string') {
+        try { currentSizes = JSON.parse(currentSizes); } catch (e) { currentSizes = currentSizes.split(',').map(s => s.trim()); }
+    }
+    if (Array.isArray(currentSizes)) {
+        currentSizes = currentSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+    }
+    document.getElementById('sizes').value = currentSizes.join(', ');
 
     imagePreview.src = product.image;
     imagePreview.style.display = 'block';

@@ -2,13 +2,14 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
     // Manejo de CORS
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: corsHeaders, status: 200 })
     }
 
     try {
@@ -57,7 +58,7 @@ serve(async (req) => {
             auto_return: "approved",
             statement_descriptor: "TENNIS Y MAS",
             external_reference: orderId,
-            notification_url: "https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/mercadopago-webhook",
+            notification_url: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/mercadopago-webhook",
         }
 
         console.log("Preference created:", JSON.stringify(preference, null, 2))

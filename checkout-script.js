@@ -155,7 +155,7 @@ async function handleAddiCheckout(customer) {
         };
 
         // El fetch debe enviar el payload tal cual
-        const response = await fetch('https://nrlaadaggmpjtdmtntoz.supabase.co/functions/v1/addi-checkout', {
+        const response = await fetch('https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
