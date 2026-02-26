@@ -133,7 +133,19 @@ async function handleAddiCheckout(customer) {
 
         const cleanPhone = customer.phone.replace(/\D/g, '');
         const finalPhone = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
-        const totalAmount = Math.round(checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0) + SHIPPING_COST);
+
+        // Calcular total real
+        const subtotal = checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0);
+        const totalAmount = Math.round(subtotal + SHIPPING_COST);
+
+        // Mapear items reales para Addi
+        const addiItems = checkoutCart.map(item => ({
+            sku: String(item.id || "REF-001"),
+            name: cleanStr(item.name).slice(0, 100),
+            quantity: parseInt(item.quantity) || 1,
+            unitPrice: parseInt(item.price.replace(/[^0-9]/g, '')),
+            category: "Fashion"
+        }));
 
         const payload = {
             orderData: {
@@ -157,18 +169,10 @@ async function handleAddiCheckout(customer) {
                 },
                 redirectionUrls: {
                     success: window.location.origin + "/success.html",
-                    failure: window.location.href,
-                    cancel: window.location.href,
-                    abandoned: window.location.href,
-                    declined: window.location.href
+                    failure: window.location.origin + "/checkout.html",
+                    cancel: window.location.origin + "/checkout.html"
                 },
-                items: [{
-                    sku: "REF-001",
-                    name: "COMPRA TENIS Y MAS CO",
-                    quantity: 1,
-                    unitPrice: totalAmount,
-                    category: "Fashion"
-                }]
+                items: addiItems
             }
         };
 
@@ -176,7 +180,8 @@ async function handleAddiCheckout(customer) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_KEY}`
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'apikey': SUPABASE_KEY
             },
             body: JSON.stringify(payload)
         });
@@ -184,43 +189,38 @@ async function handleAddiCheckout(customer) {
         const result = await response.json();
         console.log('📦 [V3] Respuesta del servidor:', result);
 
-        if (result.redirectionUrl) {
-            console.log('✅ Redirigiendo a Addi...');
-            window.location.href = result.redirectionUrl;
+        // Addi V3 puede retornar redirectionUrl o checkoutUrl
+        const redirectUrl = result.redirectionUrl || result.checkoutUrl;
+
+        if (redirectUrl) {
+            console.log('✅ Redirigiendo a Addi:', redirectUrl);
+            window.location.href = redirectUrl;
         } else {
             console.error('❌ [V3] Error Crítico de Addi:', result);
 
-            // Si hay detalles específicos de validación, los mostramos en consola
+            // Log full details for debugging
             if (result.details) {
-                console.error('🔍 Detalles de validación:', result.details);
+                console.log('🔍 Detalles del error Addi:', JSON.stringify(result.details, null, 2));
+            }
+            if (result.called_url) {
+                console.log('🔗 URL llamada:', result.called_url);
             }
 
-            const errorMsg = result.details?.message || result.error || "Error desconocido";
-            alert(`Error de Addi: ${errorMsg}\n\nRevisando detalles en consola... redirigiendo a WhatsApp.`);
+            const errorMsg = result.details?.message || result.error || "Error de respuesta del servidor";
+            alert(`Error de Addi (Status ${result.status}): ${errorMsg}\n\nPor favor, revisa la consola del navegador para ver los detalles técnicos y envíame una captura.`);
 
-
-            try {
-                const customerData = {
-                    firstName: document.getElementById('firstName')?.value || "Cliente",
-                    lastName: document.getElementById('lastName')?.value || "",
-                    city: document.getElementById('city')?.value || "No especificada",
-                    department: document.getElementById('department')?.options[document.getElementById('department').selectedIndex]?.text || "No especificado",
-                    address: document.getElementById('address')?.value || "No especificada"
-                };
-                handleWhatsAppFallback(customerData);
-            } catch (e) {
-                handleWhatsAppFallback({ firstName: "Cliente", lastName: "", city: "", department: "", address: "" });
-            }
+            handleWhatsAppFallback(customer);
         }
     } catch (err) {
         console.error('❌ [V3] Error General:', err);
-        alert('Hubo un inconveniente técnico. Te redirigiremos a WhatsApp directamente.');
-        handleWhatsAppFallback({ firstName: "Cliente", lastName: "", city: "", department: "", address: "" });
+        alert('Hubo un inconveniente técnico con Addi. Te redirigiremos a WhatsApp para finalizar tu compra.');
+        handleWhatsAppFallback(customer);
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
     }
 }
+
 
 // ==================== MERCADO PAGO INTEGRATION ====================
 

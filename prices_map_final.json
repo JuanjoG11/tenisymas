@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Tenis Adidas Rosados",
+    "price": "$250.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Tenis Nike Morados",
+    "price": "$220.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Tenis Blancos/Azules",
+    "price": "$200.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Tenis Amarillos Ne├│n",
+    "price": "$180.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Guayos Adidas Rosados",
+    "price": "$320.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Guayos Adidas Blancos",
+    "price": "$350.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Guayos Nike Negros/Dorados",
+    "price": "$300.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Guayos Nike Aqua",
+    "price": "$340.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Futsal Nike Blancos Multicolor",
+    "price": "$280.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Futsal Morados Arco├¡ris",
+    "price": "$260.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Futsal Nike Fucsia",
+    "price": "$270.000",
+    "oldPrice": null
+  },
+  {
+    "name": "Futsal Nike Total 90",
+    "price": "$290.000",
+    "oldPrice": null
+  }
+]

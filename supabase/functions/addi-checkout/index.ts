@@ -60,7 +60,7 @@ serve(async (req) => {
                 firstName: cleanStr(orderData.client.firstName),
                 lastName: cleanStr(orderData.client.lastName),
                 email: String(orderData.client.email).trim().toLowerCase(),
-                cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10)
+                cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10).padStart(10, '0')
             },
             shippingAddress: {
                 line1: cleanStr(orderData.shippingAddress.line1),
@@ -69,13 +69,13 @@ serve(async (req) => {
                 country: "CO"
             },
             redirectionUrls: {
-                success: "https://tenisymas.com/success.html",
-                failure: "https://tenisymas.com/checkout.html",
-                cancel: "https://tenisymas.com/checkout.html"
+                success: orderData.redirectionUrls?.success || "https://tenisymas.com/success.html",
+                failure: orderData.redirectionUrls?.failure || "https://tenisymas.com/checkout.html",
+                cancel: orderData.redirectionUrls?.cancel || orderData.redirectionUrls?.failure || "https://tenisymas.com/checkout.html"
             },
             items: orderData.items.map((item: any) => ({
                 sku: String(item.sku || "REF001"),
-                name: cleanStr(item.name || "PRODUCTO"),
+                name: cleanStr(item.name || "PRODUCTO").slice(0, 100),
                 quantity: Number(item.quantity || 1),
                 unitPrice: Math.round(Number(item.unitPrice))
             }))
@@ -83,7 +83,7 @@ serve(async (req) => {
 
         console.log("[Addi] Payload V3:", JSON.stringify(addiPayload, null, 2))
 
-        const addiUrl = `https://api.addi.com/v3/checkout-sessions`
+        const addiUrl = `https://api.addi.com/v1/checkouts`
 
         const response = await fetch(addiUrl, {
             method: "POST",
@@ -102,7 +102,7 @@ serve(async (req) => {
         if (response.ok) {
             const data = JSON.parse(responseText)
 
-            // (NUEVO) Registrar el pedido en la tabla 'orders' para el administrador
+            // Registrar el pedido en la tabla 'orders'
             try {
                 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
                 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -149,12 +149,19 @@ serve(async (req) => {
         }
         else {
             let errorBody;
-            try { errorBody = JSON.parse(responseText); } catch (e) { errorBody = { message: responseText }; }
+            try {
+                errorBody = JSON.parse(responseText);
+            } catch (e) {
+                errorBody = { message: responseText };
+            }
+
+            console.error(`❌ ERROR ADDI API: ${responseStatus}`, errorBody);
 
             return new Response(JSON.stringify({
                 error: "Addi API V3 Error",
                 status: responseStatus,
                 details: errorBody,
+                called_url: addiUrl,
                 sent_payload: addiPayload
             }), {
                 status: responseStatus,

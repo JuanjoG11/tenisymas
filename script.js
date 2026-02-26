@@ -79,11 +79,20 @@ function renderHomepageSections() {
     // Content removed - homepage is navigational only
 }
 
+function formatDisplayPrice(price) {
+    if (!price || price === '0' || price === 0 || price === '$0' || price === '0.00') return '$0';
+    if (typeof price === 'number') return '$' + price.toLocaleString('es-CO');
+    if (typeof price === 'string' && /^\d+$/.test(price.replace(/[.,]/g, ''))) {
+        if (!price.startsWith('$')) return '$' + price;
+    }
+    return price;
+}
+
 function renderProductGrid(containerId, category) {
     const container = document.getElementById(containerId);
     if (!container) return; // Container might not exist if we changed HTML structure, fail gracefully
 
-    const filteredProducts = products.filter(p => p.category === category);
+    const filteredProducts = products.filter(p => (p.category || p.categoria) === category);
 
     if (filteredProducts.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:white; opacity:0.7;">Próximamente más productos.</p>';
@@ -96,10 +105,10 @@ function renderProductGrid(containerId, category) {
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
-                    ${product.oldPrice ? `<span class="product-old-price">${product.oldPrice}</span>` : ''}
-                    <span class="product-price">${product.price}</span>
+                    ${product.oldPrice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.old_price || product.precio_anterior)}</span>` : ''}
+                    <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
-                <addi-widget price="${product.price.toString().replace(/[^0-9]/g, '')}" ally-slug="tennisymasco-ecommerce"></addi-widget>
+                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
                 <button class="product-btn" onclick="addToCart(${product.id})">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>Agregar al Carrito</span>
@@ -126,7 +135,7 @@ function addToCart(productId, size = null, color = null) {
         const cartItem = {
             id: product.id,
             name: product.name,
-            price: product.price,
+            price: product.price || product.precio,
             image: product.image,
             quantity: 1
         };
@@ -195,7 +204,7 @@ function updateCartUI() {
                         <h4>${item.name}</h4>
                         ${item.size ? `<p class="item-size">Talla: <strong>${item.size}</strong></p>` : ''}
                         ${item.color ? `<p class="item-color">Color: <strong>${item.color}</strong></p>` : ''}
-                        <p>${item.price}</p>
+                        <p>${formatDisplayPrice(item.price)}</p>
                         <div class="item-controls">
                             <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
                             <span>${item.quantity}</span>
@@ -219,7 +228,7 @@ function updateCartUI() {
         let price = 0;
         if (typeof item.price === 'number') {
             price = item.price;
-        } else if (typeof item.price === 'string') {
+        } else if (typeof item.price === 'string' && item.price) {
             price = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
         }
         return sum + (price * item.quantity);
@@ -359,7 +368,7 @@ function handleIntegratedCheckout() {
         let itemPrice = 0;
         if (typeof item.price === 'number') {
             itemPrice = item.price;
-        } else if (typeof item.price === 'string') {
+        } else if (typeof item.price === 'string' && item.price) {
             itemPrice = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
         }
         const itemTotal = itemPrice * item.quantity;

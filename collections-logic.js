@@ -440,7 +440,13 @@ const normalize = (str) => {
     const trimmed = str.trim();
     if (!trimmed) return '';
     if (normCache.has(trimmed)) return normCache.get(trimmed);
-    const result = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // Improved normalization: remove accents, lowercase, AND remove hyphens/spaces for comparison
+    const result = trimmed.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[ -]/g, ""); // Remove spaces and hyphens
+
     normCache.set(trimmed, result);
     return result;
 };
@@ -529,6 +535,16 @@ function parsePrice(priceString) {
     return 0;
 }
 
+function formatDisplayPrice(price) {
+    if (!price || price === '0' || price === 0 || price === '$0' || price === '0.00') return '$0';
+    if (typeof price === 'number') return '$' + price.toLocaleString('es-CO');
+    // If it's a string that's just digits, add $
+    if (typeof price === 'string' && /^\d+$/.test(price.replace(/[.,]/g, ''))) {
+        if (!price.startsWith('$')) return '$' + price;
+    }
+    return price;
+}
+
 // ==================== RENDERING (CHUNKED) ====================
 function renderProducts(reset = true) {
     const productsGrid = document.getElementById('productsGrid');
@@ -589,25 +605,27 @@ function renderProducts(reset = true) {
 function createProductCardHTML(product) {
     // Defensive size parsing logic for rendering
     let currentSizes = [];
-    if (product.sizes) {
-        if (Array.isArray(product.sizes)) {
+    const rawSizes = product.sizes || product.tallas;
+    if (rawSizes) {
+        if (Array.isArray(rawSizes)) {
             // Clean up elements that might still have brackets or quotes from previous bad imports
-            currentSizes = product.sizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
-        } else if (typeof product.sizes === 'string') {
+            currentSizes = rawSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+        } else if (typeof rawSizes === 'string') {
             try {
-                if (product.sizes.startsWith('[') && product.sizes.endsWith(']')) {
-                    currentSizes = JSON.parse(product.sizes).map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+                if (rawSizes.startsWith('[') && rawSizes.endsWith(']')) {
+                    currentSizes = JSON.parse(rawSizes).map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
                 } else {
-                    currentSizes = product.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                    currentSizes = rawSizes.split(',').map(s => s.trim()).filter(Boolean);
                 }
             } catch (e) {
-                currentSizes = product.sizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
+                currentSizes = rawSizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
             }
         }
     }
 
     const hasSizes = currentSizes.length > 0;
-    const hasColors = product.colors && Array.isArray(product.colors) && product.colors.length > 0;
+    const rawColors = product.colors || product.colores;
+    const hasColors = rawColors && Array.isArray(rawColors) && rawColors.length > 0;
     const requiresSelection = hasSizes || hasColors;
 
     // DEBUG: Check category logic
@@ -672,10 +690,10 @@ function createProductCardHTML(product) {
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
-                    ${product.oldPrice || product.old_price ? `<span class="product-old-price">${product.oldPrice || product.old_price}</span>` : ''}
-                    <span class="product-price">${product.price}</span>
+                    ${product.oldPrice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.old_price || product.precio_anterior)}</span>` : ''}
+                    <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
-                <addi-widget price="${product.price.toString().replace(/[^0-9]/g, '')}" ally-slug="tennisymasco-ecommerce"></addi-widget>
+                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
                 ${hasSizes ? `
                     <div class="size-selector-container">
                         <label for="size-${product.id}" class="size-label">Talla:</label>
@@ -704,7 +722,7 @@ function createProductCardHTML(product) {
                         <label for="color-${product.id}" class="color-label">Color:</label>
                         <select id="color-${product.id}" class="color-selector">
                             <option value="">Selecciona un color</option>
-                            ${product.colors.map(color => `<option value="${color}">${color}</option>`).join('')}
+                            ${(product.colors || product.colores).map(color => `<option value="${color}">${color}</option>`).join('')}
                         </select>
                     </div>
                 ` : ''}
