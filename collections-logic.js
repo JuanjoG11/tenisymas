@@ -465,7 +465,7 @@ function applyFilters() {
         if (fCat && !isSpecialCat) {
             const rawCat = product.category || product.categoria || '';
             const pCat = normalize(rawCat);
-            const matches = allowedCats.some(cat => pCat.includes(cat));
+            const matches = allowedCats.some(cat => pCat === cat);
 
             // EMERGENCY BYPASS: If category specifies petos/camisetas and we match by text, force include
             if (!matches && (fCat.includes('peto') || fCat.includes('camiseta'))) {
