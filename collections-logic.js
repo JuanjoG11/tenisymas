@@ -690,7 +690,7 @@ function createProductCardHTML(product) {
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
-                    ${product.oldPrice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.old_price || product.precio_anterior)}</span>` : ''}
+                    ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
                 <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>

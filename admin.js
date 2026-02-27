@@ -1,11 +1,28 @@
+// Debug helper
+window.addEventListener('error', function (e) {
+    console.error('CRITICAL ERROR:', e.message, 'at', e.filename, ':', e.lineno);
+    if (typeof showToast === 'function') showToast('Error crítico: ' + e.message, true);
+    else alert('Error en la página: ' + e.message);
+});
+
 // Supabase Configuration
 const SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-        persistSession: false
+
+let supabaseClient;
+try {
+    if (!window.supabase) {
+        throw new Error('La librería de Supabase no se cargó. Verifica tu conexión a internet o el bloqueo de rastreo del navegador.');
     }
-});
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: false
+        }
+    });
+} catch (e) {
+    console.error('FALLO AL INICIALIZAR SUPABASE:', e);
+    alert('ERROR: ' + e.message);
+}
 
 // Authentication (Obfuscated)
 const _0x1a2b = ['t', 'y', 'm', '2', '0', '2', '6'];
@@ -60,14 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-    if (sessionStorage.getItem('adminAuthed') === 'true') {
-        showDashboard();
+    try {
+        if (sessionStorage.getItem('adminAuthed') === 'true') {
+            showDashboard();
+        }
+    } catch (e) {
+        console.warn('Storage access blocked, auth session might not persist:', e);
     }
 }
 
 function showDashboard() {
-    loginOverlay.style.display = 'none';
-    adminDashboard.style.display = 'block';
+    console.log('Mostrando Dashboard...');
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (adminDashboard) adminDashboard.style.display = 'block';
     isAuthed = true;
     renderAdminProducts();
 }
@@ -96,23 +118,23 @@ async function loadProducts() {
 
 async function seedInitialData() {
     const defaults = [
-        { name: 'Tenis Adidas Rosados', category: 'tenis-guayos', price: '$250.000', oldPrice: '$320.000', image: 'images/tenis1.png' },
-        { name: 'Tenis Nike Morados', category: 'tenis-guayos', price: '$220.000', oldPrice: '$280.000', image: 'images/tenis2.png' },
-        { name: 'Tenis Blancos/Azules', category: 'tenis-guayos', price: '$200.000', oldPrice: '$260.000', image: 'images/tenis3.png' },
-        { name: 'Tenis Amarillos Neón', category: 'tenis-guayos', price: '$180.000', oldPrice: '$240.000', image: 'images/tenis4.png' },
-        { name: 'Guayos Adidas Rosados', category: 'guayos', price: '$320.000', oldPrice: '$400.000', image: 'images/guayo1.png' },
-        { name: 'Guayos Adidas Blancos', category: 'guayos', price: '$350.000', oldPrice: '$450.000', image: 'images/guayo2.png' },
-        { name: 'Guayos Nike Negros/Dorados', category: 'guayos', price: '$300.000', oldPrice: '$380.000', image: 'images/guayo3.png' },
-        { name: 'Guayos Nike Aqua', category: 'guayos', price: '$340.000', oldPrice: '$420.000', image: 'images/guayo4.png' },
-        { name: 'Futsal Nike Blancos Multicolor', category: 'futsal', price: '$280.000', oldPrice: '$350.000', image: 'images/futsal1.png' },
-        { name: 'Futsal Morados Arcoíris', category: 'futsal', price: '$260.000', oldPrice: '$320.000', image: 'images/futsal2.png' },
-        { name: 'Futsal Nike Fucsia', category: 'futsal', price: '$270.000', oldPrice: '$340.000', image: 'images/futsal3.png' },
-        { name: 'Futsal Nike Total 90', category: 'futsal', price: '$290.000', oldPrice: '$380.000', image: 'images/futsal4.png' },
-        { name: 'Zapato Niños 1', category: 'ninos', price: '$120.000', oldPrice: '$180.000', image: 'images/ninos1.jpg' },
-        { name: 'Zapato Niños 2', category: 'ninos', price: '$130.000', oldPrice: '$190.000', image: 'images/ninos2.jpg' },
-        { name: 'Zapato Niños 3', category: 'ninos', price: '$125.000', oldPrice: '$185.000', image: 'images/ninos3.jpg' },
-        { name: 'Zapato Niños 4', category: 'ninos', price: '$115.000', oldPrice: '$175.000', image: 'images/ninos4.jpg' },
-        { name: 'Zapato Niños 5', category: 'ninos', price: '$120.000', oldPrice: '$180.000', image: 'images/ninos5.jpg' }
+        { name: 'Tenis Adidas Rosados', category: 'tenis-guayos', price: '$250.000', oldprice: '$320.000', image: 'images/tenis1.png' },
+        { name: 'Tenis Nike Morados', category: 'tenis-guayos', price: '$220.000', oldprice: '$280.000', image: 'images/tenis2.png' },
+        { name: 'Tenis Blancos/Azules', category: 'tenis-guayos', price: '$200.000', oldprice: '$260.000', image: 'images/tenis3.png' },
+        { name: 'Tenis Amarillos Neón', category: 'tenis-guayos', price: '$180.000', oldprice: '$240.000', image: 'images/tenis4.png' },
+        { name: 'Guayos Adidas Rosados', category: 'guayos', price: '$320.000', oldprice: '$400.000', image: 'images/guayo1.png' },
+        { name: 'Guayos Adidas Blancos', category: 'guayos', price: '$350.000', oldprice: '$450.000', image: 'images/guayo2.png' },
+        { name: 'Guayos Nike Negros/Dorados', category: 'guayos', price: '$300.000', oldprice: '$380.000', image: 'images/guayo3.png' },
+        { name: 'Guayos Nike Aqua', category: 'guayos', price: '$340.000', oldprice: '$420.000', image: 'images/guayo4.png' },
+        { name: 'Futsal Nike Blancos Multicolor', category: 'futsal', price: '$280.000', oldprice: '$350.000', image: 'images/futsal1.png' },
+        { name: 'Futsal Morados Arcoíris', category: 'futsal', price: '$260.000', oldprice: '$320.000', image: 'images/futsal2.png' },
+        { name: 'Futsal Nike Fucsia', category: 'futsal', price: '$270.000', oldprice: '$340.000', image: 'images/futsal3.png' },
+        { name: 'Futsal Nike Total 90', category: 'futsal', price: '$290.000', oldprice: '$380.000', image: 'images/futsal4.png' },
+        { name: 'Zapato Niños 1', category: 'ninos', price: '$120.000', oldprice: '$180.000', image: 'images/ninos1.jpg' },
+        { name: 'Zapato Niños 2', category: 'ninos', price: '$130.000', oldprice: '$190.000', image: 'images/ninos2.jpg' },
+        { name: 'Zapato Niños 3', category: 'ninos', price: '$125.000', oldprice: '$185.000', image: 'images/ninos3.jpg' },
+        { name: 'Zapato Niños 4', category: 'ninos', price: '$115.000', oldprice: '$175.000', image: 'images/ninos4.jpg' },
+        { name: 'Zapato Niños 5', category: 'ninos', price: '$120.000', oldprice: '$180.000', image: 'images/ninos5.jpg' }
     ];
 
     const { data, error } = await supabaseClient.from('products').insert(defaults).select();
@@ -183,7 +205,11 @@ function setupEventListeners() {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (adminPassword.value === ADMIN_PASS) {
-            sessionStorage.setItem('adminAuthed', 'true');
+            try {
+                sessionStorage.setItem('adminAuthed', 'true');
+            } catch (err) {
+                console.warn('No se pudo guardar la sesion en el almacenamiento:', err);
+            }
             showDashboard();
         } else {
             loginError.style.display = 'block';
@@ -204,7 +230,7 @@ function setupEventListeners() {
             name: document.getElementById('name').value,
             category: document.getElementById('category').value,
             price: document.getElementById('price').value,
-            oldPrice: document.getElementById('oldPrice').value,
+            oldprice: document.getElementById('oldPrice').value,
             image: imageInput.value || 'images/placeholder.png',
             sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
         };
@@ -307,12 +333,18 @@ async function loadOrders() {
 
 function renderOrders() {
     const searchTerm = searchOrdersInput.value.toLowerCase();
-    const filtered = orders.filter(o =>
-        o.customer_info.firstName.toLowerCase().includes(searchTerm) ||
-        o.customer_info.lastName.toLowerCase().includes(searchTerm) ||
-        o.customer_info.city.toLowerCase().includes(searchTerm) ||
-        o.payment_method.toLowerCase().includes(searchTerm)
-    );
+    const filtered = orders.filter(o => {
+        const info = o.customer_info || {};
+        const firstName = (info.firstName || '').toLowerCase();
+        const lastName = (info.lastName || '').toLowerCase();
+        const city = (info.city || '').toLowerCase();
+        const paymentMethod = (o.payment_method || '').toLowerCase();
+
+        return firstName.includes(searchTerm) ||
+            lastName.includes(searchTerm) ||
+            city.includes(searchTerm) ||
+            paymentMethod.includes(searchTerm);
+    });
 
     orderCountBadge.innerText = `${filtered.length} pedidos`;
 
@@ -403,8 +435,8 @@ function resetForm() {
 function renderAdminProducts() {
     const searchTerm = searchInput.value.toLowerCase();
     const filtered = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm) ||
-        p.category.toLowerCase().includes(searchTerm)
+        (p.name || '').toLowerCase().includes(searchTerm) ||
+        (p.category || '').toLowerCase().includes(searchTerm)
     );
 
     productCountBadge.innerText = `${filtered.length} productos`;
@@ -413,9 +445,9 @@ function renderAdminProducts() {
         <div class="admin-product-item">
             <img src="${product.image}" class="item-img" onerror="this.src='https://via.placeholder.com/60?text=Error'">
             <div class="item-info">
-                <h4>${escapeHTML(product.name)}</h4>
-                <p>${escapeHTML(product.category)} | ${product.price}</p>
-                <p class="item-sizes">${product.sizes ? product.sizes.map(s => escapeHTML(s.toString())).join(', ') : 'Sin tallas'}</p>
+                <h4>${escapeHTML(product.name || 'Sin Nombre')}</h4>
+                <p>${escapeHTML(product.category || 'Sin Categoría')} | ${escapeHTML(product.price || 'Sin Precio')}</p>
+                <p class="item-sizes">${Array.isArray(product.sizes) ? product.sizes.map(s => escapeHTML(s.toString())).join(', ') : 'Sin tallas'}</p>
             </div>
             <div class="item-actions">
                 <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
@@ -443,7 +475,7 @@ window.editProduct = (id) => {
     document.getElementById('name').value = product.name;
     document.getElementById('category').value = product.category;
     document.getElementById('price').value = product.price;
-    document.getElementById('oldPrice').value = product.oldPrice || '';
+    document.getElementById('oldPrice').value = product.oldprice || '';
     document.getElementById('image').value = product.image;
     let currentSizes = product.sizes || [];
     if (typeof currentSizes === 'string') {
