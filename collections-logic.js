@@ -693,7 +693,7 @@ function createProductCardHTML(product) {
                     ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
-                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
+                <!-- addi-widget removed from catalog items for performance -->
                 ${hasSizes ? `
                     <div class="size-selector-container">
                         <label for="size-${product.id}" class="size-label">Talla:</label>
