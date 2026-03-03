@@ -45,14 +45,18 @@ function setupHeroBackgroundSlider() {
     let currentSlide = 0;
     const intervalTime = 3000; // 3 seconds
 
+    // Lazy-load: load each slide's bg only when it's about to become active
+    function loadSlideBg(slide) {
+        const bg = slide.dataset.bg;
+        if (bg && !slide.style.backgroundImage) {
+            slide.style.backgroundImage = `url('${bg}')`;
+        }
+    }
+
     setInterval(() => {
-        // Remove active from current
         slides[currentSlide].classList.remove('active');
-
-        // Move to next
         currentSlide = (currentSlide + 1) % slides.length;
-
-        // Add active to next
+        loadSlideBg(slides[currentSlide]); // Load on demand
         slides[currentSlide].classList.add('active');
     }, intervalTime);
 }

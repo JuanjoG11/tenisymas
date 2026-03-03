@@ -124,14 +124,20 @@
                     const video = document.getElementById('introVideo');
                     const fallback = document.getElementById('introFallback');
 
-                    if (video) {
-                        // Watchdog: If video doesn't play within 3s, show fallback
+                    // On mobile/touch devices, skip video entirely for faster load
+                    const isMobile = window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window);
+
+                    if (isMobile || !video) {
+                        if (video) video.style.display = 'none';
+                        if (fallback) fallback.style.display = 'block';
+                    } else if (video) {
+                        // Desktop: Watchdog timeout reduced to 1.5s
                         const videoTimeout = setTimeout(() => {
                             if (video.paused || video.readyState < 2) {
                                 video.style.display = 'none';
                                 fallback.style.display = 'block';
                             }
-                        }, 3000);
+                        }, 1500);
 
                         video.addEventListener('playing', () => {
                             clearTimeout(videoTimeout);
@@ -144,7 +150,7 @@
                         });
 
                         video.play().catch(e => {
-                            // If autoplay is blocked, it will show fallback after timeout
+                            // If autoplay is blocked, show fallback after timeout
                         });
                     }
                 </script>
@@ -331,10 +337,10 @@
             <!-- Background Slider -->
             <div class="hero-bg-slider" id="heroBgSlider">
                 <div class="hero-slide active" style="background-image: url('images/store-bg-1.jpg')"></div>
-                <div class="hero-slide" style="background-image: url('images/store-bg-2.jpg')"></div>
-                <div class="hero-slide" style="background-image: url('images/store-bg-3.jpg')"></div>
-                <div class="hero-slide" style="background-image: url('images/store-bg-4.jpg')"></div>
-                <div class="hero-slide" style="background-image: url('images/store-bg-5.jpg')"></div>
+                <div class="hero-slide" data-bg="images/store-bg-2.jpg"></div>
+                <div class="hero-slide" data-bg="images/store-bg-3.jpg"></div>
+                <div class="hero-slide" data-bg="images/store-bg-4.jpg"></div>
+                <div class="hero-slide" data-bg="images/store-bg-5.jpg"></div>
             </div>
             <div class="hero-overlay"></div>
 
