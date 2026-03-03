@@ -141,23 +141,40 @@ async function seedInitialData() {
     if (!error) products = data;
 }
 
-// Helper for Space Optimization: Upload to Supabase Storage
+// Helper: Upload image to Supabase Storage (auto-creates bucket if missing)
+// Falls back to base64 if storage is unavailable
 async function uploadImage(file) {
     const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     const filePath = `products/${fileName}`;
 
-    const { data, error } = await supabaseClient.storage
+    // First attempt: upload directly
+    let uploadResult = await supabaseClient.storage
         .from('product-images')
-        .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+    // If bucket not found, try to create it first
+    if (uploadResult.error && uploadResult.error.message.toLowerCase().includes('bucket')) {
+        showToast('Creando almacenamiento de imágenes...', false);
+        const { error: bucketError } = await supabaseClient.storage.createBucket('product-images', {
+            public: true,
+            fileSizeLimit: 5242880 // 5MB
         });
 
-    if (error) {
-        if (error.message.includes('bucket not found')) {
-            throw new Error('El bucket "product-images" no existe en Supabase Storage. Por favor créalo.');
+        if (bucketError && !bucketError.message.includes('already exists')) {
+            console.warn('No se pudo crear el bucket, usando base64:', bucketError.message);
+            // Fallback: return base64 string saved directly in DB
+            return await fileToBase64(file);
         }
-        throw error;
+
+        // Retry upload after bucket creation
+        uploadResult = await supabaseClient.storage
+            .from('product-images')
+            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+    }
+
+    if (uploadResult.error) {
+        console.warn('Storage falló, usando base64:', uploadResult.error.message);
+        return await fileToBase64(file);
     }
 
     const { data: { publicUrl } } = supabaseClient.storage
@@ -165,6 +182,32 @@ async function uploadImage(file) {
         .getPublicUrl(filePath);
 
     return publicUrl;
+}
+
+// Fallback: convert file to base64 string for DB storage
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        // Resize/compress before storing as base64
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 600;
+                let w = img.width, h = img.height;
+                if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+                if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.75));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function saveProduct(productData, file) {
