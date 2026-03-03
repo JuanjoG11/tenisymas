@@ -2249,26 +2249,23 @@ body {
     animation: collageScrollDown 150s linear infinite;
 }
 
-/* ===== MOBILE PERFORMANCE: Disable heavy collage on mobile ===== */
+/* ===== MOBILE PERFORMANCE: Optimized collage on mobile ===== */
 @media (max-width: 1023px) {
-    .banner-collage {
+    .banner-slide {
         display: none !important;
     }
 
-    .banner-slide {
-        display: block !important;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        background-image: url('images/buritica1.png');
-        transform: none !important;
-        animation: none !important;
+    .banner-collage {
+        opacity: 0.8;
+        /* reduce paint cost */
+        filter: none;
+        /* remove any expensive filters */
     }
 
     .collage-col {
-        animation: none !important;
-        will-change: auto !important;
+        will-change: transform;
+        transform: translateZ(0);
+        /* Force Hardware Acceleration on Mobile */
     }
 }
 
