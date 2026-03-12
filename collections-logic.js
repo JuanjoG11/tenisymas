@@ -1,25 +1,27 @@
 // ==================== COLLECTIONS PAGE JAVASCRIPT (OPTIMIZED) ====================
 
 // Global variables
-let allProducts = [];
-let filteredProducts = [];
-let activeFilters = {
-    category: null,
-    brands: [],
-    prices: [],
-    sizes: [],
-    discount: false
-};
+if (typeof allProducts === 'undefined') { var allProducts = []; }
+if (typeof filteredProducts === 'undefined') { var filteredProducts = []; }
+if (typeof activeFilters === 'undefined') {
+    var activeFilters = {
+        category: null,
+        brands: [],
+        prices: [],
+        sizes: [],
+        discount: false
+    };
+}
 
 // Pagination / Infinite Scroll State
-let currentPage = 1;
-const itemsPerPage = 12;
-let observer = null;
-let isLoading = false;
+if (typeof currentPage === 'undefined') { var currentPage = 1; }
+if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 12; }
+if (typeof observer === 'undefined') { var observer = null; }
+if (typeof isLoading === 'undefined') { var isLoading = false; }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Collections page loaded (Logic V2)');
+    console.log('ðŸš€ Collections page loaded (Logic V2)');
 
     // 1. Get category immediately to ensure correct initial render
     const urlParams = new URLSearchParams(window.location.search);
@@ -75,123 +77,103 @@ function updateCategoryTitle(category) {
 // Load products - ULTRA-AGGRESSIVE CACHE-FIRST for marketplace speed
 async function loadProducts() {
     console.time('loadProducts');
-    try {
-        if (isLoading) return;
-        isLoading = true;
+    if (isLoading) return;
+    isLoading = true;
 
-        // 1. PHASE 1: Instant Cache Render (ZERO DELAY)
+    try {
+        // 1. PHASE 1: Instant Cache Render
         const cached = localStorage.getItem('productsCache_v3');
         let hasRenderedFromCache = false;
 
         if (cached) {
             try {
-                console.time('parseCache');
                 allProducts = JSON.parse(cached);
-                console.timeEnd('parseCache');
-
-                console.log('⚡ Instant render from cache');
-
-                // EMERGENCY: Ensure "Petos" and "Camisetas" collections exist
+                console.log('âš¡ Instant render from cache');
                 ensureEssentialCollections();
-
-                console.time('firstRender');
                 applyFilters();
                 populateBrandFilters();
                 populateSizeFilters();
                 hideSkeletonLoaders();
-                console.timeEnd('firstRender');
-
                 hasRenderedFromCache = true;
             } catch (e) {
                 console.warn('Cache corrupted');
             }
         }
-        // ... (rest of function) ...
 
-        function parsePrice(priceString) {
-            if (typeof priceString === 'number') return priceString;
-            if (!priceString) return 0;
-            if (typeof priceString === 'string') {
-                return parseInt(priceString.replace(/[^\d]/g, '')) || 0;
-            }
-            return 0;
-        }
-
-        // If no cache, show skeleton
         if (!hasRenderedFromCache) {
             showSkeletonLoaders();
             updateResultsCount(-1);
         }
 
-        // 2. PHASE 2: Background Update
-        // Use the global window.productsLoaded if available, otherwise fetch
-        try {
-            let data = null;
-            if (window.productsLoaded) {
-                data = await window.productsLoaded;
-            } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-                // Fallback to direct fetch if main script hasn't started sync
-                const { data: directData } = await supabaseClient
+        // 2. PHASE 2: Quick / Background Sync
+        const category = activeFilters.category;
+
+        // ULTRA-SPEED: If no cache, fetch current category first
+        if (!hasRenderedFromCache && category && typeof supabaseClient !== 'undefined') {
+            console.log('âš¡ Performing quick category fetch for:', category);
+            try {
+                const { data: quickData } = await supabaseClient
                     .from('products')
                     .select('*')
-                    .order('id', { ascending: true });
-                data = directData;
-            } else {
-                // No Supabase client available (CDN failed, etc) — use virtual products only
-                throw new Error('No Supabase client available');
-            }
-
-            if (data && data.length > 0) {
-                // Simplified comparison: length or first/last item check
-                const isDifferent = allProducts.length !== data.length ||
-                    (allProducts.length > 0 && (allProducts[0].id !== data[0].id));
-
-                if (isDifferent || !hasRenderedFromCache) {
-                    allProducts = data;
-
-                    // Cache it
-                    try {
-                        localStorage.setItem('productsCache_v3', JSON.stringify(data));
-                        localStorage.setItem('productsCache_Time', Date.now().toString());
-                    } catch (err) { }
-
-                    // EMERGENCY: Ensure "Petos" and "Camisetas" collections exist in allProducts
+                    .eq('category', category)
+                    .limit(50);
+                
+                if (quickData && quickData.length > 0) {
+                    allProducts = quickData;
                     ensureEssentialCollections();
-
                     applyFilters();
-                    populateBrandFilters();
-                    populateSizeFilters();
+                    console.log('âš¡ Quick render done');
+                    hideSkeletonLoaders();
                 }
-            } else if (!hasRenderedFromCache) {
-                // Supabase returned empty (402, quota exceeded, etc.) and no cache — show virtual products
-                console.warn('⚠️ Supabase returned empty data. Showing virtual products as fallback.');
-                ensureEssentialCollections();
-                applyFilters();
-                populateBrandFilters();
-                populateSizeFilters();
+            } catch (err) {
+                console.warn('Quick fetch failed:', err);
             }
-        } catch (e) {
-            console.warn('Silent sync failed:', e);
-            // If we have nothing at all, try one last direct fetch
-            if (allProducts.length === 0) {
-                await fetchAndCacheProducts();
+        }
+
+        // 3. PHASE 3: Background Full Sync (NON-BLOCKING)
+        const processBackgroundSync = (freshData) => {
+            if (freshData && freshData.length > 0) {
+                const isDifferent = allProducts.length !== freshData.length || 
+                                  (allProducts.length > 0 && freshData.length > 0 && allProducts[0].id !== freshData[0].id);
+                
+                if (isDifferent || !hasRenderedFromCache) {
+                    allProducts = freshData;
+                    ensureEssentialCollections();
+                    applyFilters();
+                    console.log('ðŸ”„ Background update applied');
+                    
+                    try {
+                        localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
+                        localStorage.setItem('productsCache_Time', Date.now().toString());
+                    } catch(e) {}
+                }
             }
-            // Regardless of network result: always inject essential collections and render
-            if (allProducts.length === 0) {
-                // Network completely failed — inject virtual products so page is never blank
-                ensureEssentialCollections();
-            }
-            applyFilters();
-            populateBrandFilters();
-            populateSizeFilters();
-        } finally {
             isLoading = false;
             hideSkeletonLoaders();
+        };
+
+        if (window.productsLoaded) {
+            window.productsLoaded.then(processBackgroundSync).catch(err => {
+                console.warn('Background sync failed:', err);
+                isLoading = false;
+                hideSkeletonLoaders();
+            });
+            
+            if (hasRenderedFromCache || allProducts.length > 0) {
+                console.timeEnd('loadProducts');
+                isLoading = false;
+                return; 
+            }
+        } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            const { data: fullData } = await supabaseClient
+                .from('products')
+                .select('*')
+                .order('id', { ascending: true });
+            processBackgroundSync(fullData);
         }
 
     } catch (error) {
-        console.error('Load error:', error);
-        // Even on hard failure, inject virtual products and render
+        console.error('Critical load error:', error);
         ensureEssentialCollections();
         applyFilters();
         hideSkeletonLoaders();
@@ -223,7 +205,7 @@ async function updateProductsInBackground() {
 
             // Only re-render if data actually changed
             if (allProducts.length !== previousCount) {
-                console.log('🔄 Fresh data applied silently');
+                console.log('ðŸ”„ Fresh data applied silently');
                 applyFilters();
             }
         }
@@ -241,7 +223,7 @@ async function fetchAndCacheProducts(isBackground = false) {
             return;
         }
 
-        console.log('📡 Fetching products directly from Supabase...');
+        console.log('ðŸ“¡ Fetching products directly from Supabase...');
         const { data, error } = await client
             .from('products')
             .select('*')
@@ -249,7 +231,7 @@ async function fetchAndCacheProducts(isBackground = false) {
 
         if (!error && data) {
             allProducts = data;
-            console.log('✅ Products fetched successfully:', data.length);
+            console.log('âœ… Products fetched successfully:', data.length);
 
             // Cache the data (clear old cache first to prevent quota issues)
             try {
@@ -260,9 +242,9 @@ async function fetchAndCacheProducts(isBackground = false) {
                 // Save new cache
                 localStorage.setItem('productsCache_v3', JSON.stringify(data));
                 localStorage.setItem('productsCache_Time', Date.now().toString());
-                console.log('💾 Cache saved successfully');
+                console.log('ðŸ’¾ Cache saved successfully');
             } catch (e) {
-                console.warn('⚠️ Could not save cache (quota exceeded):', e.message);
+                console.warn('âš ï¸ Could not save cache (quota exceeded):', e.message);
                 // Try to clear everything except cart and retry
                 try {
                     const cart = localStorage.getItem('tm_cart');
@@ -270,9 +252,9 @@ async function fetchAndCacheProducts(isBackground = false) {
                     if (cart) localStorage.setItem('tm_cart', cart);
                     localStorage.setItem('productsCache_v3', JSON.stringify(data));
                     localStorage.setItem('productsCache_Time', Date.now().toString());
-                    console.log('💾 Cache saved after cleanup');
+                    console.log('ðŸ’¾ Cache saved after cleanup');
                 } catch (e2) {
-                    console.error('❌ Cache save failed even after cleanup');
+                    console.error('âŒ Cache save failed even after cleanup');
                 }
             }
 
@@ -428,28 +410,31 @@ function setupFilters() {
 
 // ==================== CORE FILTER LOGIC ====================
 // Memoization for performance
-const normCache = new Map();
-const normalize = (str) => {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') {
-        // If it's an array, join it
-        if (Array.isArray(str)) return normalize(str.join(','));
-        // Otherwise convert to string
-        str = String(str);
-    }
-    const trimmed = str.trim();
-    if (!trimmed) return '';
-    if (normCache.has(trimmed)) return normCache.get(trimmed);
+if (typeof normCache === 'undefined') { var normCache = new Map(); }
+if (typeof normalize === 'undefined') {
+    var normalize = (str) => {
+        if (str === null || str === undefined) return '';
+        if (typeof str !== 'string') {
+            if (Array.isArray(str)) return normalize(str.join(','));
+            str = String(str);
+        }
+        const trimmed = str.trim();
+        if (!trimmed) return '';
+        if (normCache.has(trimmed)) return normCache.get(trimmed);
 
-    // Improved normalization: remove accents, lowercase, AND remove hyphens/spaces for comparison
-    const result = trimmed.toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[ -]/g, ""); // Remove spaces and hyphens
+        let result = trimmed.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[ -]/g, "");
 
-    normCache.set(trimmed, result);
-    return result;
-};
+        // Professional Mapping: 'teni guayo' -> 'tenis-guayos'
+        if (result === 'teniguayo') result = 'tenisguayos';
+        if (result === 'tenidiguayo') result = 'tenisguayos'; // Common typo
+
+        normCache.set(trimmed, result);
+        return result;
+    };
+}
 
 function applyFilters() {
     // 1. Reset Pagination
@@ -631,13 +616,19 @@ function createProductCardHTML(product) {
     // DEBUG: Check category logic
     const category = (product.category || product.categoria || '').toLowerCase().trim();
 
-    // Check if product has multiple images
-    const images = product.images && Array.isArray(product.images) && product.images.length > 0
-        ? product.images
-        : [product.image]; // Fallback to single image
-
+    // PORTADA (Cover) = always product.image (uploaded/main photo)
+    // GALERÍA (Gallery in modal) = product.image + extra links from product.images
+    const coverImage = product.image || 'images/placeholder.png';
+    
+    let extraImages = [];
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+        extraImages = product.images;
+    }
+    
+    // Full gallery: cover first, then extra photos (avoid duplicates)
+    const images = [coverImage, ...extraImages.filter(img => img !== coverImage)];
     const hasMultipleImages = images.length > 1;
-    const mainImage = images[0];
+    const mainImage = coverImage; // Cover is always the catalog thumbnail
 
     // Determine correct selector type (Chips vs Dropdown)
     const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala'].includes(category);
@@ -645,7 +636,7 @@ function createProductCardHTML(product) {
     return `
         <div class="product-card" data-id="${product.id}" data-category="${product.category}">
             ${product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : ''}
-            <div class="product-image-container" data-product-id="${product.id}">
+            <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
                 <img src="${mainImage}" 
                      alt="${product.name}" 
                       class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
@@ -665,7 +656,7 @@ function createProductCardHTML(product) {
                          height="300">
                 `).join('')}
                 <div class="product-actions">
-                    <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista Rápida">
+                    <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista RÃ¡pida">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
@@ -687,53 +678,263 @@ function createProductCardHTML(product) {
                     </div>
                 ` : ''}
             </div>
-            <div class="product-info">
+            <div class="product-info" onclick="openProductModal('${product.id}')" style="cursor: pointer;">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
                     ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
-                <!-- addi-widget removed from catalog items for performance -->
-                ${hasSizes ? `
-                    <div class="size-selector-container">
-                        <label for="size-${product.id}" class="size-label">Talla:</label>
-                        ${isFootwear
-                ? `
-                            <!-- Custom Chip Selector for Footwear -->
-                            <input type="hidden" id="size-${product.id}" value="">
-                            <div class="size-chips-grid" id="size-grid-${product.id}">
-                                ${currentSizes.map(size => `
-                                    <div class="size-chip" onclick="selectSize('${product.id}', '${size}', this)">${size}</div>
-                                `).join('')}
-                            </div>
-                            `
-                : `
-                            <!-- Standard Dropdown for other categories (Camisetas, Petos, etc) -->
-                            <select id="size-${product.id}" class="size-selector">
-                                <option value="">Selecciona una talla</option>
-                                ${currentSizes.map(size => `<option value="${size}">${size}</option>`).join('')}
-                            </select>
-                            `
-            }
-                    </div>
-                ` : ''}
-                ${hasColors ? `
-                    <div class="color-selector-container">
-                        <label for="color-${product.id}" class="color-label">Color:</label>
-                        <select id="color-${product.id}" class="color-selector">
-                            <option value="">Selecciona un color</option>
-                            ${(product.colors || product.colores).map(color => `<option value="${color}">${color}</option>`).join('')}
-                        </select>
-                    </div>
-                ` : ''}
-                <button class="product-btn" onclick="handleAddToCart('${product.id}', ${hasSizes}, ${hasColors}, this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <!-- Addi Installments Widget -->
+                <!-- Addi Installments Widget -->
+                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
+
+                <div class="view-details-tag">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
                     <span>Agregar al Carrito</span>
-                </button>
+                </div>
             </div>
         </div>
     `;
 }
+
+// ==================== PROFESSIONAL MODAL LOGIC (Virtual RPM Engine) ====================
+let currentMainModalImage = '';
+let selectedModalSize = null;
+let selectedModalColor = null;
+let modalQty = 1;
+
+async function openProductModal(productId) {
+    const product = allProducts.find(p => p.id == productId);
+    if (!product) return;
+
+    const modal = document.getElementById('productModal');
+    if (!modal) return;
+
+    // Reset state
+    selectedModalSize = null;
+    selectedModalColor = null;
+    modalQty = 1;
+    const qtyValueDisplay = document.getElementById('modalQtyValue');
+    if (qtyValueDisplay) qtyValueDisplay.textContent = '1';
+
+    // Set textual details
+    const titleEl = document.getElementById('modalTitle');
+    const categoryEl = document.getElementById('modalCategory');
+    const priceEl = document.getElementById('modalPrice');
+    
+    if (titleEl) titleEl.textContent = product.name;
+    if (categoryEl) categoryEl.textContent = product.category || product.categoria || 'Calzado';
+    if (priceEl) priceEl.textContent = formatDisplayPrice(product.price || product.precio);
+    
+    const oldPrice = product.oldPrice || product.oldprice || product.old_price || product.precio_anterior;
+    const oldPriceEl = document.getElementById('modalOldPrice');
+    if (oldPrice && oldPriceEl) {
+        oldPriceEl.textContent = formatDisplayPrice(oldPrice);
+        oldPriceEl.style.display = 'block';
+    } else if (oldPriceEl) {
+        oldPriceEl.style.display = 'none';
+    }
+
+    // Initialize Images
+    const modalThumbnails = document.getElementById('modalThumbnails');
+    const modalMainImgContainer = document.getElementById('modalMainImage');
+    modalThumbnails.innerHTML = '';
+    
+    // 1. Get initial images from product object: Portada first, then gallery
+    const coverImage = product.image || 'images/placeholder.png';
+    let extraImagesObj = [];
+    if (product.images && Array.isArray(product.images)) {
+        extraImagesObj = product.images;
+    }
+    
+    // Combine them, removing duplicates (if cover is inside the array)
+    let images = [coverImage, ...extraImagesObj.filter(img => img !== coverImage)];
+
+    // 2. MAGIC: Load additional images from Supabase Storage automatically if folder exists
+    if (product.folder && typeof window.getImagesFromFolder === 'function') {
+        const extraImages = await window.getImagesFromFolder(product.folder);
+        if (extraImages.length > 0) {
+            // Filter out duplicates if any
+            const existingUrls = new Set(images);
+            extraImages.forEach(url => {
+                if (!existingUrls.has(url)) images.push(url);
+            });
+        }
+    }
+
+    // Populate Thumbnails
+    images.forEach((imgUrl, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = `thumb-item ${idx === 0 ? 'active' : ''}`;
+        thumb.innerHTML = `<img src="${imgUrl}" alt="${product.name}">`;
+        thumb.onclick = () => {
+            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            document.getElementById('currentModalImg').src = imgUrl;
+            currentMainModalImage = imgUrl;
+        };
+        modalThumbnails.appendChild(thumb);
+    });
+
+    // Set main image
+    if (images.length > 0) {
+        document.getElementById('currentModalImg').src = images[0];
+        currentMainModalImage = images[0];
+    }
+
+    // Populate Colors (Pills)
+    const colorGroup = document.getElementById('modalColorGroup');
+    const colorPills = document.getElementById('modalColorPills');
+    const productColors = product.colors || product.colores || [];
+    
+    if (productColors.length > 0) {
+        colorGroup.style.display = 'block';
+        colorPills.innerHTML = productColors.map(color => `
+            <div class="pill" onclick="selectModalColor('${color}', this)">${color}</div>
+        `).join('');
+    } else {
+        colorGroup.style.display = 'none';
+    }
+
+    // Populate Sizes (Pills)
+    const sizeGroup = document.getElementById('modalSizeGroup');
+    const sizePills = document.getElementById('modalSizePills');
+    
+    let productSizes = [];
+    const rawSizes = product.sizes || product.tallas;
+    if (rawSizes) {
+        if (Array.isArray(rawSizes)) {
+            productSizes = rawSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+        } else if (typeof rawSizes === 'string') {
+            try {
+                productSizes = JSON.parse(rawSizes).map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+            } catch (e) {
+                productSizes = rawSizes.split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+    }
+
+    if (productSizes.length > 0) {
+        sizeGroup.style.display = 'block';
+        sizePills.innerHTML = productSizes.map(size => `
+            <div class="pill" onclick="selectModalSize('${size}', this)">${size}</div>
+        `).join('');
+    } else {
+        sizeGroup.style.display = 'none';
+    }
+
+    // Setup WhatsApp Button
+    const waBtn = document.getElementById('modalWaBtn');
+    const WHATSAPP_NUMBER = '573204961453';
+    
+    waBtn.onclick = (e) => {
+        e.preventDefault();
+        if (productSizes.length > 0 && !selectedModalSize) {
+            showNotification('Por favor selecciona una talla', 'error');
+            return;
+        }
+        if (productColors.length > 0 && !selectedModalColor) {
+            showNotification('Por favor selecciona un color', 'error');
+            return;
+        }
+
+        let message = `Hola! ðŸ‘‹ Me interesa este producto:\n\n`;
+        message += `ðŸ‘Ÿ *${product.name}*\n`;
+        message += `ðŸ’° *Precio:* ${formatDisplayPrice(product.price || product.precio)}\n`;
+        if (selectedModalSize) message += `ðŸ“ *Talla:* ${selectedModalSize}\n`;
+        if (selectedModalColor) message += `ðŸŽ¨ *Color:* ${selectedModalColor}\n`;
+        message += `\nÂ¿Tienen disponibilidad?`;
+
+        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
+    // Setup Add to Cart Button
+    const addToCartBtn = document.getElementById('modalAddToCartBtn');
+    addToCartBtn.onclick = () => {
+        if (productSizes.length > 0 && !selectedModalSize) {
+            showNotification('Por favor selecciona una talla', 'error');
+            return;
+        }
+        if (productColors.length > 0 && !selectedModalColor) {
+            showNotification('Por favor selecciona un color', 'error');
+            return;
+        }
+
+        if (typeof addToCart === 'function') {
+            addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
+            showNotification('âœ… Â¡Producto agregado al carrito!', 'success');
+            closeProductModal();
+        }
+    };
+
+    // Setup Buy Now Button (Pasarela)
+    const buyNowBtn = document.getElementById('modalBuyNowBtn');
+    buyNowBtn.onclick = () => {
+        if (productSizes.length > 0 && !selectedModalSize) {
+            showNotification('Por favor selecciona una talla', 'error');
+            return;
+        }
+        if (productColors.length > 0 && !selectedModalColor) {
+            showNotification('Por favor selecciona un color', 'error');
+            return;
+        }
+
+        if (typeof addToCart === 'function') {
+            addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
+            closeProductModal();
+            // Directly open the cart drawer for checkout flow
+            if (typeof openCart === 'function') openCart();
+        }
+    };
+
+    // Show Modal
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function selectModalSize(size, element) {
+    selectedModalSize = size;
+    element.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    element.classList.add('active');
+}
+
+function selectModalColor(color, element) {
+    selectedModalColor = color;
+    element.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    element.classList.add('active');
+}
+
+function closeProductModal() {
+    const modal = document.getElementById('productModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function updateModalQty(change) {
+    modalQty += change;
+    if (modalQty < 1) modalQty = 1;
+    const qtyDisplay = document.getElementById('modalQtyValue');
+    if (qtyDisplay) qtyDisplay.textContent = modalQty;
+}
+
+window.openProductModal = openProductModal;
+window.closeProductModal = closeProductModal;
+window.selectModalSize = selectModalSize;
+window.selectModalColor = selectModalColor;
+window.updateModalQty = updateModalQty;
+
+// Update original functions to link to modal
+function openQuickView(productId) {
+    openProductModal(productId);
+}
+
+// Global touch/swipe support for modal images? 
+// (Optional, can be added later)
 
 // ==================== IMAGE CAROUSEL FUNCTIONS ====================
 function changeProductImage(productId, direction) {
@@ -814,7 +1015,7 @@ function handleAddToCart(productId, requiresSize, requiresColor, btnElement) {
     // Get the product card context
     const productCard = btnElement ? btnElement.closest('.product-card') : document.getElementById(`size-${productId}`)?.closest('.product-card');
     if (!productCard) {
-        console.error("No se encontró el contenedor del producto");
+        console.error("No se encontrÃ³ el contenedor del producto");
         return;
     }
 
@@ -963,7 +1164,7 @@ function updateResultsCount(count = null) {
     if (!resultsCount) return;
 
     if (count === -1) {
-        resultsCount.innerHTML = '<span style="opacity: 0.7;">⏳ Cargando...</span>';
+        resultsCount.innerHTML = '<span style="opacity: 0.7;">â³ Cargando...</span>';
         return;
     }
 
@@ -1028,7 +1229,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Petos: Los Calidosos...');
             allProducts.push({
                 id: 'v-petos-1',
-                name: 'Colección Los Calidosos',
+                name: 'ColecciÃ³n Los Calidosos',
                 category: 'petos',
                 price: '$65.000',
                 image: 'images/uniformes-main.png',
@@ -1046,7 +1247,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Petos: La Pesada...');
             allProducts.push({
                 id: 'v-petos-2',
-                name: 'Colección La Pesada',
+                name: 'ColecciÃ³n La Pesada',
                 category: 'petos',
                 price: '$65.000',
                 image: 'images/petos2_portada.jpg.jpeg',
@@ -1071,7 +1272,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Camisetas: La Grasa...');
             allProducts.push({
                 id: 'v-camisetas-1',
-                name: 'Colección La Grasa',
+                name: 'ColecciÃ³n La Grasa',
                 category: 'camisetas',
                 price: '$75.000',
                 image: 'images/camisetas_portada.jpg.jpeg',
@@ -1101,4 +1302,39 @@ function hideSkeletonLoaders() {
 
 window.clearAllFilters = clearAllFilters;
 
-console.log('✅ Collections logic V2 ready');
+// CUSTOM NOTIFICATION SYSTEM
+if (typeof showNotification === 'undefined') {
+    var showNotification = (message, type = 'info') => {
+        let container = document.getElementById('tm-notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'tm-notification-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10001; pointer-events: none;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `tm-notification ${type}`;
+        
+        toast.innerHTML = '<span class="message">' + message + '</span>';
+        container.appendChild(toast);
+
+        // Slide in
+        setTimeout(() => toast.classList.add('active'), 100);
+
+        // Slide out and remove
+        setTimeout(() => {
+            toast.classList.remove('active');
+            setTimeout(() => toast.remove(), 500);
+        }, 3500);
+    };
+    window.showNotification = showNotification;
+}
+
+window.openSizeGuide = openSizeGuide;
+window.closeSizeGuide = closeSizeGuide;
+
+console.log('âœ… Collections logic V2 ready');
+
+
+

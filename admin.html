@@ -100,6 +100,20 @@
                                         <p class="help-text">Ej: images/tenis1.png</p>
                                     </div>
                                 </div>
+                                <!-- GALERÍA DE IMÁGENES -->
+                                <div class="form-group" style="margin-top:12px;">
+                                    <label>Fotos adicionales del producto (carrusel)</label>
+                                    <p style="font-size:0.8rem;color:#aaa;margin:4px 0 8px;">Sube varias fotos para el carrusel del producto. Se guardan como links automáticamente.</p>
+                                    <div class="image-upload-wrapper">
+                                        <input type="file" id="galleryFiles" accept="image/*" multiple class="file-input">
+                                        <button type="button" class="btn btn-secondary btn-full" onclick="document.getElementById('galleryFiles').click()">
+                                            📷 Agregar Fotos al Carrusel
+                                        </button>
+                                    </div>
+                                    <div id="galleryPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+                                    <!-- Hidden field to store the URLs -->
+                                    <textarea id="extraImages" style="display:none;"></textarea>
+                                </div>
                                 <div id="imagePreview" class="image-preview">
                                     <p>Previsualización de imagen</p>
                                     <img src="" alt="" style="display: none;">

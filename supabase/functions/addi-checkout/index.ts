@@ -13,19 +13,31 @@ serve(async (req) => {
 
     try {
         const { orderData } = await req.json()
-        const CLIENT_ID = Deno.env.get("ADDI_CLIENT_ID")
-        const CLIENT_SECRET = Deno.env.get("ADDI_CLIENT_SECRET")
+        // Credenciales específicas para tennisymasco-ecommerce (enviadas por soporte Addi)
+        const CLIENT_ID = Deno.env.get("ADDI_CLIENT_ID") || "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
+        const CLIENT_SECRET = Deno.env.get("ADDI_CLIENT_SECRET") || "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
         const ALLY_SLUG = "tennisymasco-ecommerce"
-        console.log("--- ADDI CHECKOUT V3.0.1 ---");
+        
+        const IS_SANDBOX = true;
+        // Staging Auth server: auth.addi-staging.com
+        // Staging Auth AUDIENCE: api.staging.addi.com (per auth swagger docs)
+        // Staging API server: api.addi-staging.com (per integration swagger docs)
+        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
+        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
+        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
 
-        // 1. Obtener Token Auth0
-        const authRes = await fetch("https://auth.addi.com/oauth/token", {
+        console.log(`--- ADDI STAGING V3.0.6 ---`);
+        console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
+        console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
+
+        // 1. Obtener Token OAuth (V3 usa /oauth/token)
+        const authRes = await fetch(`${BASE_AUTH_URL}/oauth/token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 client_id: CLIENT_ID,
                 client_secret: CLIENT_SECRET,
-                audience: "https://api.addi.com",
+                audience: AUDIENCE,
                 grant_type: "client_credentials",
             }),
         })
@@ -33,7 +45,7 @@ serve(async (req) => {
         if (!authRes.ok) {
             const error = await authRes.json()
             console.error("Error Auth0:", error)
-            throw new Error("Error autenticando con Addi")
+            throw new Error(`Error autenticando con Addi: ${JSON.stringify(error)}`)
         }
 
         const { access_token } = await authRes.json()
@@ -44,16 +56,20 @@ serve(async (req) => {
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
         };
 
-        // 2. Enviar Solicitud a Addi (API V3 Standard)
-        console.log(`[Addi] Enviando solicitud V3 para OrderID: ${orderData.orderId}`)
+        // 2. Enviar Solicitud a Addi (endpoint: /v1/online-applications)
+        console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
 
         const safeOrderId = String(orderData.orderId).replace(/[^a-zA-Z0-9-]/g, '');
+        // Siempre usar las URLs reales del dominio en producción para que Addi las acepte
+        const SITE_BASE = "https://tenisymas.com";
+        const successUrl = `${SITE_BASE}/success.html`;
+        const cancelUrl = `${SITE_BASE}/checkout.html`;
 
         const addiPayload = {
             allySlug: ALLY_SLUG,
-            totalAmount: Math.round(Number(orderData.totalAmount)),
-            currency: "COP",
             orderId: safeOrderId,
+            totalAmount: String(Math.round(Number(orderData.totalAmount))),
+            currency: "COP",
             client: {
                 idType: "CC",
                 idNumber: String(orderData.client.idNumber).trim(),
@@ -63,46 +79,52 @@ serve(async (req) => {
                 cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10).padStart(10, '0')
             },
             shippingAddress: {
-                line1: cleanStr(orderData.shippingAddress.line1),
+                lineOne: cleanStr(orderData.shippingAddress.line1),
                 city: cleanStr(orderData.shippingAddress.city),
-                administrativeDivision: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
+                state: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
                 country: "CO"
             },
-            redirectionUrls: {
-                success: orderData.redirectionUrls?.success || "https://tenisymas.com/success.html",
-                failure: orderData.redirectionUrls?.failure || "https://tenisymas.com/checkout.html",
-                cancel: orderData.redirectionUrls?.cancel || orderData.redirectionUrls?.failure || "https://tenisymas.com/checkout.html"
+            allyUrlRedirection: {
+                successUrl: "https://tenisymas.com/success.html",
+                cancelUrl: "https://tenisymas.com/checkout.html",
+                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback"
             },
             items: orderData.items.map((item: any) => ({
                 sku: String(item.sku || "REF001"),
                 name: cleanStr(item.name || "PRODUCTO").slice(0, 100),
-                quantity: Number(item.quantity || 1),
-                unitPrice: Math.round(Number(item.unitPrice))
+                quantity: String(item.quantity || 1),
+                unitPrice: String(Math.round(Number(item.unitPrice)))
             }))
         }
 
-        console.log("[Addi] Payload V3:", JSON.stringify(addiPayload, null, 2))
+        console.log("[Addi] Payload:", JSON.stringify(addiPayload, null, 2))
 
-        const addiUrl = `https://api.addi.com/v1/checkouts`
+        // La API responde con HTTP 301, necesitamos follow:false para capturar el Location header
+        const addiUrl = `${BASE_API_URL}/v1/online-applications`
 
         const response = await fetch(addiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${access_token}`,
-                "X-Ally-Slug": ALLY_SLUG
+                "Authorization": `Bearer ${access_token}`
             },
+            redirect: "manual",
             body: JSON.stringify(addiPayload)
         })
 
         const responseStatus = response.status
-        const responseText = await response.text()
-        console.log(`[Addi] Response V3 (${responseStatus}): ${responseText}`)
+        console.log(`[Addi] Response status: ${responseStatus}`)
 
-        if (response.ok) {
-            const data = JSON.parse(responseText)
+        // Addi API v1 responde con 301 y el header Location contiene la URL de redireccion
+        if (responseStatus === 301 || responseStatus === 302) {
+            const locationUrl = response.headers.get("Location")
+            console.log(`✅ [Addi] Redirect URL: ${locationUrl}`)
 
-            // Registrar el pedido en la tabla 'orders'
+            if (!locationUrl) {
+                throw new Error("Addi retornó 301 pero sin header Location")
+            }
+
+            // Registrar el pedido en Supabase
             try {
                 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
                 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -142,12 +164,13 @@ serve(async (req) => {
                 console.error("❌ Error registrando pedido Addi (no bloqueante):", dbErr)
             }
 
-            return new Response(JSON.stringify(data), {
+            return new Response(JSON.stringify({ redirectionUrl: locationUrl }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
             })
         }
         else {
+            const responseText = await response.text()
             let errorBody;
             try {
                 errorBody = JSON.parse(responseText);
@@ -172,7 +195,7 @@ serve(async (req) => {
 
     } catch (err: any) {
         console.error("Error Interno Edge Function:", err.message)
-        return new Response(JSON.stringify({ error: err.message }), {
+        return new Response(JSON.stringify({ error: err.message, status: 500, type: "InternalError" }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
         })

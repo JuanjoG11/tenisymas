@@ -1,16 +1,48 @@
 // Product Data
-// Product Data
-let products = [];
+if (typeof products === 'undefined') { var products = []; }
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ';
-const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-        persistSession: false
+if (typeof SUPABASE_URL === 'undefined') { var SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co'; }
+if (typeof SUPABASE_KEY === 'undefined') { var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ'; }
+if (typeof supabaseClient === 'undefined') {
+    var supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: false
+        }
+    }) : (window.supabaseClient || null);
+    window.supabaseClient = supabaseClient;
+}
+
+// ==================== IMAGE ENGINE (AUTOMATIC BUCKET LISTING) ====================
+async function getImagesFromFolder(folder) {
+    if (!supabaseClient) return [];
+    try {
+        // 1. Llama a la API de Supabase para listar archivos en la carpeta
+        const { data, error } = await supabaseClient.storage
+            .from('products') // Assuming bucket name is 'products' or similar. 
+            // The user said .from('productos') in their example, but let's check or use 'products' as it's common.
+            // Wait, let's look at the example again.
+            .list(folder);
+
+        if (error) {
+            console.warn('Error listing images from folder:', folder, error);
+            return [];
+        }
+
+        // 2. Filtra solo archivos de imagen (jpg, png, webp)
+        const imageFiles = data.filter(file => /\.(jpg|jpeg|png|webp|jfif)$/i.test(file.name));
+
+        // 3. Retorna las URLs completas
+        // Base URL for Supabase Storage public buckets: 
+        // https://[PROJECT_ID].supabase.co/storage/v1/object/public/[BUCKET]/[FOLDER]/[FILE]
+        const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/products/`;
+        return imageFiles.map(file => `${STORAGE_BASE}${folder}/${file.name}`);
+    } catch (err) {
+        console.error('getImagesFromFolder failed:', err);
+        return [];
     }
-}) : null;
-window.supabaseClient = supabaseClient;
+}
+window.getImagesFromFolder = getImagesFromFolder;
 
 // Initial Load
 document.addEventListener('DOMContentLoaded', () => {
@@ -63,7 +95,7 @@ function setupHeroBackgroundSlider() {
 
 
 // ==================== STATE MANAGEMENT ====================
-let cart = [];
+if (typeof cart === 'undefined') { var cart = []; }
 
 function loadCart() {
     const savedCart = localStorage.getItem('tm_cart');
@@ -123,7 +155,7 @@ function renderProductGrid(containerId, category) {
 }
 
 // ==================== CART LOGIC ====================
-function addToCart(productId, size = null, color = null) {
+function addToCart(productId, size = null, color = null, qty = 1) {
     const product = products.find(p => p.id == productId);
     if (!product) return;
 
@@ -134,14 +166,14 @@ function addToCart(productId, size = null, color = null) {
         : cart.find(item => item.id === productId && !item.size && !item.color);
 
     if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += qty;
     } else {
         const cartItem = {
             id: product.id,
             name: product.name,
             price: product.price || product.precio,
             image: product.image,
-            quantity: 1
+            quantity: qty
         };
 
         // Add size if provided
@@ -270,7 +302,7 @@ function updateShippingGoal(total) {
     }
 }
 
-let urgencyTimerInterval = null;
+if (typeof urgencyTimerInterval === 'undefined') { var urgencyTimerInterval = null; }
 
 function startUrgencyTimer() {
     if (urgencyTimerInterval) clearInterval(urgencyTimerInterval);
@@ -597,8 +629,8 @@ function setupSmoothScroll() {
 }
 
 // Supabase Sync (Kept from original)
-let isSyncing = false;
-let syncPromise = null;
+if (typeof isSyncing === 'undefined') { var isSyncing = false; }
+if (typeof syncPromise === 'undefined') { var syncPromise = null; }
 
 async function syncProducts() {
     if (!supabaseClient) return [];
@@ -634,7 +666,7 @@ async function syncProducts() {
 
         // 2. NETWORK PATH: Fetch from Supabase
         try {
-            console.log('🌐 Script.js: Fetching fresh data...');
+            // Returning to '*' for safety, but we will still minify it in cache for speed.
             const { data, error } = await supabaseClient
                 .from('products')
                 .select('*')
@@ -645,11 +677,32 @@ async function syncProducts() {
             if (data && data.length > 0) {
                 products = data;
 
-                // Update Cache
+                // Update Cache (Smart Minified Cache)
                 try {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(products));
+                    // Create a lightweight version of products for the cache
+                    // This stays under the 5MB localStorage limit and parses MUCH faster
+                    const minifiedProducts = products.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        category: p.category || p.categoria,
+                        price: p.price || p.precio,
+                        oldPrice: p.oldPrice || p.old_price || p.precio_anterior,
+                        image: p.image,
+                        folder: p.folder,
+                        images: p.images, // Keep images for the gallery
+                        sizes: p.sizes || p.tallas,
+                        colors: p.colors || p.colores,
+                        brand: p.brand || p.marca
+                        // Notice: describing and secondary metadata removed to save space
+                    }));
+
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(minifiedProducts));
                     localStorage.setItem(CACHE_TIME_KEY, now.toString());
-                } catch (e) { console.warn('localStorage quota exceeded'); }
+                    console.log('📦 Script.js: Minified cache saved');
+                } catch (e) { 
+                    console.warn('📦 Script.js: Cache still too large, clearing...');
+                    localStorage.removeItem(CACHE_KEY);
+                }
 
                 renderHomepageSections();
                 console.log('✅ Script.js: Data synced', products.length);

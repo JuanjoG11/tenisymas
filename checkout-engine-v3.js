@@ -149,6 +149,7 @@ async function handleAddiCheckout(customer) {
 
         const payload = {
             orderData: {
+                testMode: true,
                 allySlug: "tennisymasco-ecommerce",
                 orderId: "TM-" + Date.now(),
                 totalAmount: totalAmount,

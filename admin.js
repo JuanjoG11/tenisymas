@@ -269,12 +269,28 @@ function setupEventListeners() {
         e.preventDefault();
         const file = imageFile.files[0];
 
+        const extraImagesRaw = document.getElementById('extraImages').value;
+        let extraUrls = extraImagesRaw.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+
+        // Handle multi-image upload
+        const galleryFilesInput = document.getElementById('galleryFiles');
+        if (galleryFilesInput.files && galleryFilesInput.files.length > 0) {
+            submitBtn.disabled = true;
+            showToast(`Subiendo ${galleryFilesInput.files.length} fotos adicionales...`, false);
+            for (let i = 0; i < galleryFilesInput.files.length; i++) {
+                const url = await uploadImage(galleryFilesInput.files[i]);
+                if (url) extraUrls.push(url);
+            }
+            submitBtn.disabled = false;
+        }
+
         const productData = {
             name: document.getElementById('name').value,
             category: document.getElementById('category').value,
             price: document.getElementById('price').value,
             oldprice: document.getElementById('oldPrice').value,
             image: imageInput.value || 'images/placeholder.png',
+            images: extraUrls.length > 0 ? extraUrls : null,
             sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
         };
 
@@ -328,7 +344,47 @@ function setupEventListeners() {
 
     searchInput.addEventListener('input', renderAdminProducts);
     searchOrdersInput.addEventListener('input', renderOrders);
+
+    // Live preview for new gallery uploads
+    document.getElementById('galleryFiles').addEventListener('change', renderGalleryPreview);
 }
+
+function renderGalleryPreview() {
+    const preview = document.getElementById('galleryPreview');
+    const existingUrls = document.getElementById('extraImages').value.split('\n').filter(u => u.trim() !== '');
+    
+    let html = '';
+    
+    // Existing URLs (click X to remove)
+    existingUrls.forEach((url, idx) => {
+        html += `
+            <div style="position:relative; width: 60px; height: 60px;">
+                <img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #444;">
+                <button type="button" onclick="removeExistingImage(${idx})" style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+            </div>
+        `;
+    });
+    
+    // New files preview
+    const files = document.getElementById('galleryFiles').files;
+    Array.from(files).forEach((file) => {
+        const url = URL.createObjectURL(file);
+        html += `
+            <div style="position:relative; width: 60px; height: 60px; opacity: 0.8;">
+                <img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px dashed #ff3333;">
+            </div>
+        `;
+    });
+    
+    preview.innerHTML = html;
+}
+
+window.removeExistingImage = function(idx) {
+    const existingUrls = document.getElementById('extraImages').value.split('\n').filter(u => u.trim() !== '');
+    existingUrls.splice(idx, 1);
+    document.getElementById('extraImages').value = existingUrls.join('\n');
+    renderGalleryPreview();
+};
 
 // Tab Management
 window.switchTab = (tab) => {
@@ -473,6 +529,10 @@ function resetForm() {
     cancelBtn.style.display = 'none';
     imagePreview.style.display = 'none';
     imagePreviewText.style.display = 'block';
+    
+    document.getElementById('extraImages').value = '';
+    document.getElementById('galleryFiles').value = '';
+    renderGalleryPreview();
 }
 
 function renderAdminProducts() {
@@ -528,8 +588,23 @@ window.editProduct = (id) => {
         currentSizes = currentSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
     }
     document.getElementById('sizes').value = currentSizes.join(', ');
+    // Load extra images
+    const extraImages = product.images;
+    if (Array.isArray(extraImages) && extraImages.length > 0) {
+        document.getElementById('extraImages').value = extraImages.join('\n');
+    } else if (typeof extraImages === 'string') {
+        try {
+            const parsed = JSON.parse(extraImages);
+            document.getElementById('extraImages').value = Array.isArray(parsed) ? parsed.join('\n') : '';
+        } catch(e) {
+            document.getElementById('extraImages').value = '';
+        }
+    } else {
+        document.getElementById('extraImages').value = '';
+    }
+    document.getElementById('galleryFiles').value = '';
+    renderGalleryPreview();
 
-    imagePreview.src = product.image;
     imagePreview.style.display = 'block';
     imagePreviewText.style.display = 'none';
 
