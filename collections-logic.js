@@ -106,24 +106,22 @@ async function loadProducts() {
         }
 
         // 2. PHASE 2: Quick / Background Sync
+        // ULTRA-SPEED: If no cache, fetch ONLY initial page size (24 items) to instantly paint the screen
         const category = activeFilters.category;
-
-        // ULTRA-SPEED: If no cache, fetch current category first
-        if (!hasRenderedFromCache && category && typeof supabaseClient !== 'undefined') {
-            console.log('âš¡ Performing quick category fetch for:', category);
+        if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
+            console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
-                const { data: quickData } = await supabaseClient
-                    .from('products')
-                    .select('*')
-                    .eq('category', category)
-                    .limit(50);
+                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(24);
+                if (category) { query = query.eq('category', category); }
+                const { data: quickData } = await query;
                 
                 if (quickData && quickData.length > 0) {
                     allProducts = quickData;
                     ensureEssentialCollections();
                     applyFilters();
-                    console.log('âš¡ Quick render done');
+                    console.log('⚡ Quick INITIAL render done. Showing 24 products.');
                     hideSkeletonLoaders();
+                    hasRenderedFromCache = true; // Prevents loader logic from glitching next phase
                 }
             } catch (err) {
                 console.warn('Quick fetch failed:', err);
@@ -152,8 +150,10 @@ async function loadProducts() {
             hideSkeletonLoaders();
         };
 
-        if (window.productsLoaded) {
-            window.productsLoaded.then(processBackgroundSync).catch(err => {
+        const syncPromise = window.productsLoaded || (typeof syncProducts === 'function' ? syncProducts() : null);
+
+        if (syncPromise) {
+            syncPromise.then(processBackgroundSync).catch(err => {
                 console.warn('Background sync failed:', err);
                 isLoading = false;
                 hideSkeletonLoaders();
@@ -647,7 +647,7 @@ function createProductCardHTML(product) {
                       height="300"
                 >
                 ${images.map((img, idx) => `
-                    <img src="${img}" 
+                    <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
                          class="product-image ${idx === 0 ? 'active' : ''} ${idx === 1 ? 'hover-img' : ''}" 
                          loading="${idx === 0 ? 'eager' : 'lazy'}"
@@ -942,19 +942,33 @@ function changeProductImage(productId, direction) {
     if (!container) return;
 
     const images = container.querySelectorAll('.product-image');
+    if (images.length === 0) return;
     const dots = container.querySelectorAll('.carousel-dot');
-    const currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+    
+    // Find active index
+    let currentIndex = -1;
+    images.forEach((img, index) => {
+        if (img.classList.contains('active')) currentIndex = index;
+    });
+    if (currentIndex === -1) currentIndex = 0; // fallback
 
     let newIndex = currentIndex + direction;
     if (newIndex < 0) newIndex = images.length - 1;
     if (newIndex >= images.length) newIndex = 0;
 
+    // Load lazy image if needed
+    const newImg = images[newIndex];
+    if (newImg.getAttribute('data-lazy') && (newImg.getAttribute('src') === '' || newImg.getAttribute('src').startsWith('data:'))) {
+        newImg.setAttribute('src', newImg.getAttribute('data-lazy'));
+        newImg.removeAttribute('data-lazy');
+    }
+
     images[currentIndex].classList.remove('active');
-    images[newIndex].classList.add('active');
+    newImg.classList.add('active');
 
     if (dots.length > 0) {
-        dots[currentIndex].classList.remove('active');
-        dots[newIndex].classList.add('active');
+        if (dots[currentIndex]) dots[currentIndex].classList.remove('active');
+        if (dots[newIndex]) dots[newIndex].classList.add('active');
     }
 }
 
@@ -963,16 +977,29 @@ function goToProductImage(productId, index) {
     if (!container) return;
 
     const images = container.querySelectorAll('.product-image');
+    if (images.length === 0 || index >= images.length) return;
     const dots = container.querySelectorAll('.carousel-dot');
-    const currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+    
+    let currentIndex = -1;
+    images.forEach((img, idx) => {
+        if (img.classList.contains('active')) currentIndex = idx;
+    });
+    if (currentIndex === -1) currentIndex = 0;
 
     if (currentIndex !== index) {
+        // Load lazy image if needed
+        const newImg = images[index];
+        if (newImg.getAttribute('data-lazy') && (newImg.getAttribute('src') === '' || newImg.getAttribute('src').startsWith('data:'))) {
+            newImg.setAttribute('src', newImg.getAttribute('data-lazy'));
+            newImg.removeAttribute('data-lazy');
+        }
+
         images[currentIndex].classList.remove('active');
-        images[index].classList.add('active');
+        newImg.classList.add('active');
 
         if (dots.length > 0) {
-            dots[currentIndex].classList.remove('active');
-            dots[index].classList.add('active');
+            if (dots[currentIndex]) dots[currentIndex].classList.remove('active');
+            if (dots[index]) dots[index].classList.add('active');
         }
     }
 }
@@ -1333,6 +1360,59 @@ if (typeof showNotification === 'undefined') {
 
 window.openSizeGuide = openSizeGuide;
 window.closeSizeGuide = closeSizeGuide;
+
+// SPA Routing for Category Links within collections.html
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    
+    // Check if link goes to collections.html with a category
+    const href = link.getAttribute('href');
+    if (href && href.includes('collections.html?category=')) {
+        // Intercept it!
+        e.preventDefault();
+        
+        let newCategory = '';
+        try {
+            const urlParams = new URLSearchParams(href.split('?')[1]);
+            newCategory = urlParams.get('category') || '';
+        } catch(err) { return; }
+        
+        // Update URL
+        window.history.pushState({ category: newCategory }, '', href);
+        
+        // Update State
+        activeFilters.category = newCategory;
+        updateCategoryTitle(newCategory);
+        
+        // Reset subfilters if transitioning to new main category
+        activeFilters.brands = [];
+        activeFilters.sizes = [];
+        document.querySelectorAll('input[data-filter="size"], input[data-filter="brand"]').forEach(cb => cb.checked = false);
+        
+        // Filter Memory Array
+        applyFilters();
+        
+        // Close Mobile Menu if open
+        const navMenu = document.getElementById('navMenu');
+        const menuToggle = document.getElementById('menuToggle');
+        if (navMenu && navMenu.classList.contains('active')) {
+            navMenu.classList.remove('active');
+            if (menuToggle) menuToggle.classList.remove('active');
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+
+// Also handle Browser Back Button
+window.addEventListener('popstate', (e) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    activeFilters.category = urlParams.get('category');
+    updateCategoryTitle(activeFilters.category);
+    applyFilters();
+});
+
 
 console.log('âœ… Collections logic V2 ready');
 
