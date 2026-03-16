@@ -138,27 +138,17 @@ async function loadProducts() {
         if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
             console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
-                // HIGH SPEED: Select only essential columns to reduce payload by 70-80%
-                const columns = 'id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta';
-                let query = supabaseClient.from('products').select(columns).order('id', { ascending: true }).limit(18);
+                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(18);
                 if (category) { query = query.eq('category', category); }
                 let { data: quickData, error: quickError } = await query;
                 
-                if (quickError) {
-                    // Fallback if schema changed
-                    console.log('⚡ Optimized INITIAL fetch failed, trying *');
-                    let fallbackQuery = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(18);
-                    if (category) { fallbackQuery = fallbackQuery.eq('category', category); }
-                    const { data: fData, error: fError } = await fallbackQuery;
-                    if (fError) throw fError;
-                    quickData = fData;
-                }
+                if (quickError) throw quickError;
 
                 if (quickData && quickData.length > 0) {
                     allProducts = quickData;
                     ensureEssentialCollections();
                     applyFilters();
-                    console.log('⚡ Quick INITIAL render done. Showing 24 products.');
+                    console.log('⚡ Quick INITIAL render done. Showing 18 products.');
                     hideSkeletonLoaders();
                     hasRenderedFromCache = true; // Prevents loader logic from glitching next phase
                 }
@@ -364,7 +354,7 @@ function populateSizeFilters() {
 
     // Feature: Clean up sizes for footwear context
     const urlParams = new URLSearchParams(window.location.search);
-    let category = urlParams.get('category')?.toLowerCase() || '';
+    let category = (urlParams.get('category') ? urlParams.get('category').toLowerCase() : '');
 
     // If no category in URL, try to guess from products being displayed
     if (!category && allProducts.length > 0) {
@@ -383,7 +373,9 @@ function populateSizeFilters() {
             .filter(s => ["S", "M", "L", "XL", "XXL", "XS"].includes(s.toUpperCase()))
             .sort((a, b) => {
                 const order = { "XS": 0, "S": 1, "M": 2, "L": 3, "XL": 4, "XXL": 5 };
-                return (order[a.toUpperCase()] ?? 99) - (order[b.toUpperCase()] ?? 99);
+                const orderA = order[a.toUpperCase()] !== undefined ? order[a.toUpperCase()] : 99;
+                const orderB = order[b.toUpperCase()] !== undefined ? order[b.toUpperCase()] : 99;
+                return orderA - orderB;
             });
     } else if (isFootwearCategory) {
         // ONLY show numerical sizes for footwear
