@@ -699,7 +699,7 @@ async function syncProducts() {
             // FETCH ONLY ESSENTIAL COLUMNS (Saves bandwidth and parse time)
             const { data, error } = await supabaseClient
                 .from('products')
-                .select('id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta')
+                .select('*')
                 .order('id', { ascending: true });
 
             if (error) throw error;

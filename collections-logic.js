@@ -111,10 +111,12 @@ async function loadProducts() {
         if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
             console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
-                let query = supabaseClient.from('products').select('id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta').order('id', { ascending: true }).limit(24);
+                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(24);
                 if (category) { query = query.eq('category', category); }
-                const { data: quickData } = await query;
+                const { data: quickData, error: quickError } = await query;
                 
+                if (quickError) throw quickError;
+
                 if (quickData && quickData.length > 0) {
                     allProducts = quickData;
                     ensureEssentialCollections();
@@ -125,6 +127,7 @@ async function loadProducts() {
                 }
             } catch (err) {
                 console.warn('Quick fetch failed:', err);
+                hideSkeletonLoaders(); // Don't get stuck forever
             }
         }
 
