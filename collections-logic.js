@@ -1,5 +1,32 @@
 // ==================== COLLECTIONS PAGE JAVASCRIPT (OPTIMIZED) ====================
 
+// Memoization and Normalization Utilities
+if (typeof normCache === 'undefined') { var normCache = new Map(); }
+if (typeof normalize === 'undefined') {
+    var normalize = (str) => {
+        if (str === null || str === undefined) return '';
+        if (typeof str !== 'string') {
+            if (Array.isArray(str)) return normalize(str.join(','));
+            str = String(str);
+        }
+        const trimmed = str.trim();
+        if (!trimmed) return '';
+        if (normCache.has(trimmed)) return normCache.get(trimmed);
+
+        let result = trimmed.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[ -]/g, "");
+
+        // Professional Mapping: 'teni guayo' -> 'tenis-guayos'
+        if (result === 'teniguayo') result = 'tenisguayos';
+        if (result === 'tenidiguayo') result = 'tenisguayos'; 
+
+        normCache.set(trimmed, result);
+        return result;
+    };
+}
+
 // Global variables
 if (typeof allProducts === 'undefined') { var allProducts = []; }
 if (typeof filteredProducts === 'undefined') { var filteredProducts = []; }
@@ -420,33 +447,8 @@ function setupFilters() {
     if (clearBtn) clearBtn.addEventListener('click', clearAllFilters);
 }
 
-// ==================== CORE FILTER LOGIC ====================
-// Memoization for performance
-if (typeof normCache === 'undefined') { var normCache = new Map(); }
-if (typeof normalize === 'undefined') {
-    var normalize = (str) => {
-        if (str === null || str === undefined) return '';
-        if (typeof str !== 'string') {
-            if (Array.isArray(str)) return normalize(str.join(','));
-            str = String(str);
-        }
-        const trimmed = str.trim();
-        if (!trimmed) return '';
-        if (normCache.has(trimmed)) return normCache.get(trimmed);
+// Utility definitions moved to top for safety
 
-        let result = trimmed.toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[ -]/g, "");
-
-        // Professional Mapping: 'teni guayo' -> 'tenis-guayos'
-        if (result === 'teniguayo') result = 'tenisguayos';
-        if (result === 'tenidiguayo') result = 'tenisguayos'; // Common typo
-
-        normCache.set(trimmed, result);
-        return result;
-    };
-}
 
 function applyFilters() {
     // 1. Reset Pagination
