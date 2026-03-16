@@ -168,11 +168,15 @@ async function loadProducts() {
                 return; 
             }
         } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            const { data: fullData } = await supabaseClient
+            const { data: fullData, error: fullError } = await supabaseClient
                 .from('products')
                 .select('*')
                 .order('id', { ascending: true });
-            processBackgroundSync(fullData);
+            
+            if (fullError) {
+                console.error('[DATABASE] Full fetch failed:', fullError);
+            }
+            processBackgroundSync(fullData || []);
         }
 
     } catch (error) {
@@ -334,6 +338,8 @@ function populateSizeFilters() {
     const isClothesCategory = category.includes('petos') || category.includes('camisetas') || ['clothes', 'ropa'].includes(category);
     const isFootwearCategory = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'shoes', 'calzado'].includes(category);
 
+    let sizesArray = [];
+
     if (isClothesCategory) {
         // ONLY show S, M, L, XL for clothes, STRICTLY removing any numbers
         sizesArray = Array.from(allSizes)
@@ -450,6 +456,11 @@ function applyFilters() {
     const fCat = activeFilters.category ? normalize(activeFilters.category) : '';
     const isSpecialCat = fCat === 'todas-las-referencias';
     const allowedCats = fCat.split(',').map(c => c.trim()).filter(c => c);
+
+    if (!Array.isArray(allProducts)) {
+        console.warn('[FILTER] AllProducts is not an array, resetting to empty.');
+        allProducts = [];
+    }
 
     filteredProducts = allProducts.filter(product => {
         // Category
