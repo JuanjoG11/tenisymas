@@ -1039,7 +1039,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter: blur(10px); */
 }
 
 .product-modal.active {
@@ -1482,7 +1482,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    backdrop-filter: blur(12px);
+    /* backdrop-filter: blur(12px); */
 }
 .size-guide-modal.active {
     display: flex;

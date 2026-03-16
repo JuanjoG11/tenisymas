@@ -15,7 +15,7 @@ if (typeof activeFilters === 'undefined') {
 
 // Pagination / Infinite Scroll State
 if (typeof currentPage === 'undefined') { var currentPage = 1; }
-if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
+if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 12; }
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
 
@@ -383,6 +383,14 @@ function setupFilters() {
         sidebar.addEventListener('change', (e) => {
             const el = e.target;
             const filterType = el.getAttribute('data-filter');
+            
+            // Handle discount filter even if it has no data-filter
+            if (el.id === 'discountFilter') {
+                activeFilters.discount = el.checked;
+                applyFilters();
+                return;
+            }
+
             if (!filterType) return;
 
             const val = el.value;
@@ -1156,7 +1164,7 @@ function selectSize(productId, size, element) {
 function setupIntersectionObserver() {
     const options = {
         root: null,
-        rootMargin: '200px', // Pre-load before user hits bottom
+        rootMargin: '50px', // Pre-load before user hits bottom
         threshold: 0.1
     };
 
