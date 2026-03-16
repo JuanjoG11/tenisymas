@@ -98,11 +98,17 @@ function setupHeroBackgroundSlider() {
 if (typeof cart === 'undefined') { var cart = []; }
 
 function loadCart() {
-    const savedCart = localStorage.getItem('tm_cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        updateCartUI();
+    try {
+        const savedCart = localStorage.getItem('tm_cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+            if (!Array.isArray(cart)) cart = [];
+        }
+    } catch (e) {
+        console.error('Error loading cart:', e);
+        cart = [];
     }
+    updateCartUI();
 }
 
 function saveCart() {
@@ -156,8 +162,17 @@ function renderProductGrid(containerId, category) {
 
 // ==================== CART LOGIC ====================
 function addToCart(productId, size = null, color = null, qty = 1) {
-    const product = products.find(p => p.id == productId);
-    if (!product) return;
+    // Robust detection: Check both 'products' (Home) and 'allProducts' (Collections)
+    let product = products.find(p => p.id == productId);
+    
+    if (!product && typeof allProducts !== 'undefined') {
+        product = allProducts.find(p => p.id == productId);
+    }
+    
+    if (!product) {
+        console.warn('Product not found for addToCart:', productId);
+        return;
+    }
 
     // For products with sizes/colors, find existing item with same size AND color
     // For products without, find by ID only
