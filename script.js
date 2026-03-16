@@ -695,14 +695,23 @@ async function syncProducts() {
 
         // 2. NETWORK PATH: Fetch from Supabase
         try {
-            // Returning to '*' for safety, but we will still minify it in cache for speed.
-            // FETCH ONLY ESSENTIAL COLUMNS (Saves bandwidth and parse time)
-            const { data, error } = await supabaseClient
+            // ULTRA-SPEED: Prioritize specific columns with a fallback to '*'
+            const columns = 'id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta';
+            
+            let { data, error } = await supabaseClient
                 .from('products')
-                .select('*')
+                .select(columns)
                 .order('id', { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                console.warn('⚡ Script.js: Optimized fetch failed, falling back to *');
+                const fallback = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('id', { ascending: true });
+                if (fallback.error) throw fallback.error;
+                data = fallback.data;
+            }
 
             if (data && data.length > 0) {
                 products = data;

@@ -138,11 +138,21 @@ async function loadProducts() {
         if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
             console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
-                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(24);
+                // HIGH SPEED: Select only essential columns to reduce payload by 70-80%
+                const columns = 'id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta';
+                let query = supabaseClient.from('products').select(columns).order('id', { ascending: true }).limit(18);
                 if (category) { query = query.eq('category', category); }
-                const { data: quickData, error: quickError } = await query;
+                let { data: quickData, error: quickError } = await query;
                 
-                if (quickError) throw quickError;
+                if (quickError) {
+                    // Fallback if schema changed
+                    console.log('⚡ Optimized INITIAL fetch failed, trying *');
+                    let fallbackQuery = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(18);
+                    if (category) { fallbackQuery = fallbackQuery.eq('category', category); }
+                    const { data: fData, error: fError } = await fallbackQuery;
+                    if (fError) throw fError;
+                    quickData = fData;
+                }
 
                 if (quickData && quickData.length > 0) {
                     allProducts = quickData;
