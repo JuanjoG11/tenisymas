@@ -15,7 +15,7 @@ if (typeof activeFilters === 'undefined') {
 
 // Pagination / Infinite Scroll State
 if (typeof currentPage === 'undefined') { var currentPage = 1; }
-if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 12; }
+if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
 
@@ -111,7 +111,7 @@ async function loadProducts() {
         if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
             console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
-                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(24);
+                let query = supabaseClient.from('products').select('id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta').order('id', { ascending: true }).limit(24);
                 if (category) { query = query.eq('category', category); }
                 const { data: quickData } = await query;
                 
@@ -835,11 +835,11 @@ async function openProductModal(productId) {
     if (addToCartBtn) {
         addToCartBtn.onclick = () => {
             if (productSizes.length > 0 && !selectedModalSize) {
-                showNotification('Por favor selecciona una talla', 'error');
+                showNotification('Por favor selecciona una talla 👟', 'error');
                 return;
             }
             if (productColors.length > 0 && !selectedModalColor) {
-                showNotification('Por favor selecciona un color', 'error');
+                showNotification('Por favor selecciona un color 🎨', 'error');
                 return;
             }
 
@@ -853,23 +853,42 @@ async function openProductModal(productId) {
 
     // Setup Buy Now Button (Pasarela)
     const buyNowBtn = document.getElementById('modalBuyNowBtn');
-    buyNowBtn.onclick = () => {
-        if (productSizes.length > 0 && !selectedModalSize) {
-            showNotification('Por favor selecciona una talla', 'error');
-            return;
-        }
-        if (productColors.length > 0 && !selectedModalColor) {
-            showNotification('Por favor selecciona un color', 'error');
-            return;
-        }
+    if (buyNowBtn) {
+        // Update text as requested
+        buyNowBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            VERIFICAR TALLA Y COMPRAR
+        `;
+        
+        buyNowBtn.onclick = (e) => {
+            if (e) e.preventDefault();
+            
+            if (productSizes.length > 0 && !selectedModalSize) {
+                showNotification('⚠️ Por favor selecciona tu Talla primero', 'error');
+                // Highlight size group
+                const sizeGroup = document.getElementById('modalSizeGroup');
+                if (sizeGroup) {
+                    sizeGroup.style.background = 'rgba(255, 51, 51, 0.1)';
+                    setTimeout(() => sizeGroup.style.background = '', 1000);
+                }
+                return;
+            }
+            if (productColors.length > 0 && !selectedModalColor) {
+                showNotification('⚠️ Por favor selecciona un Color', 'error');
+                return;
+            }
 
-        if (typeof addToCart === 'function') {
-            addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
-            closeProductModal();
-            // Directly open the cart drawer for checkout flow
-            if (typeof openCart === 'function') openCart();
-        }
-    };
+            if (typeof addToCart === 'function') {
+                console.log('[DEBUG] Adding to cart from modal:', product.id, selectedModalSize);
+                addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
+                closeProductModal();
+                // Ensure cart opens
+                setTimeout(() => {
+                    if (typeof openCart === 'function') openCart();
+                }, 100);
+            }
+        };
+    }
 
     // Show Modal
     modal.classList.add('active');

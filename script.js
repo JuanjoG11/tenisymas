@@ -162,17 +162,27 @@ function renderProductGrid(containerId, category) {
 
 // ==================== CART LOGIC ====================
 function addToCart(productId, size = null, color = null, qty = 1) {
-    // Robust detection: Check both 'products' (Home) and 'allProducts' (Collections)
-    let product = products.find(p => p.id == productId);
+    // Check local 'products' array
+    let product = products.find(p => String(p.id) === String(productId));
     
+    // Check 'allProducts' array (Collections page)
+    if (!product && typeof window.allProducts !== 'undefined') {
+        product = window.allProducts.find(p => String(p.id) === String(productId));
+    }
+    // Check specific collections global if available
     if (!product && typeof allProducts !== 'undefined') {
-        product = allProducts.find(p => p.id == productId);
+        product = allProducts.find(p => String(p.id) === String(productId));
     }
     
     if (!product) {
-        console.warn('Product not found for addToCart:', productId);
+        console.warn('[CART] Product not found:', productId);
+        if (typeof showNotification === 'function') {
+            showNotification('Error al agregar: Producto no encontrado ❌', 'error');
+        }
         return;
     }
+
+    console.log('[CART] Adding:', product.name, 'Size:', size, 'Qty:', qty);
 
     // For products with sizes/colors, find existing item with same size AND color
     // For products without, find by ID only
@@ -205,7 +215,11 @@ function addToCart(productId, size = null, color = null, qty = 1) {
     }
 
     saveCart();
-    openCart(); // Auto open cart to show feedback
+    
+    // Auto open cart with a tiny delay to ensure everything rendered
+    setTimeout(() => {
+        if (typeof openCart === 'function') openCart();
+    }, 50);
 }
 
 function removeFromCart(index) {
