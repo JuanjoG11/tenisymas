@@ -640,8 +640,8 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v3';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        // 10 minutes cache to keep it somewhat fresh but fast
-        const CACHE_DURATION = 10 * 60 * 1000;
+        // 24 hours cache for ultra-speed, background sync will handle updates
+        const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
         const cachedData = localStorage.getItem(CACHE_KEY);
         const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
@@ -667,9 +667,10 @@ async function syncProducts() {
         // 2. NETWORK PATH: Fetch from Supabase
         try {
             // Returning to '*' for safety, but we will still minify it in cache for speed.
+            // FETCH ONLY ESSENTIAL COLUMNS (Saves bandwidth and parse time)
             const { data, error } = await supabaseClient
                 .from('products')
-                .select('*')
+                .select('id, name, category, categoria, price, precio, oldPrice, old_price, precio_anterior, image, folder, images, sizes, tallas, colors, colores, brand, marca, badge, etiqueta')
                 .order('id', { ascending: true });
 
             if (error) throw error;

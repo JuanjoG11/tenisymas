@@ -15,13 +15,13 @@ if (typeof activeFilters === 'undefined') {
 
 // Pagination / Infinite Scroll State
 if (typeof currentPage === 'undefined') { var currentPage = 1; }
-if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 12; }
+if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('ðŸš€ Collections page loaded (Logic V2)');
+    console.log('🚀 Collections page loaded (Logic V2)');
 
     // 1. Get category immediately to ensure correct initial render
     const urlParams = new URLSearchParams(window.location.search);
@@ -88,7 +88,7 @@ async function loadProducts() {
         if (cached) {
             try {
                 allProducts = JSON.parse(cached);
-                console.log('âš¡ Instant render from cache');
+                console.log('⚡ Instant render from cache');
                 ensureEssentialCollections();
                 applyFilters();
                 populateBrandFilters();
@@ -138,12 +138,12 @@ async function loadProducts() {
                     allProducts = freshData;
                     ensureEssentialCollections();
                     applyFilters();
-                    console.log('ðŸ”„ Background update applied');
+                    console.log('🔄 AllProducts updated natively');
                     
                     try {
                         localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
                         localStorage.setItem('productsCache_Time', Date.now().toString());
-                    } catch(e) {}
+                    } catch(e) { console.warn('Cache update failed', e); }
                 }
             }
             isLoading = false;
@@ -205,7 +205,7 @@ async function updateProductsInBackground() {
 
             // Only re-render if data actually changed
             if (allProducts.length !== previousCount) {
-                console.log('ðŸ”„ Fresh data applied silently');
+                console.log('🔄 Fresh data applied silently');
                 applyFilters();
             }
         }
@@ -223,7 +223,7 @@ async function fetchAndCacheProducts(isBackground = false) {
             return;
         }
 
-        console.log('ðŸ“¡ Fetching products directly from Supabase...');
+        console.log('📡 Fetching products directly from Supabase...');
         const { data, error } = await client
             .from('products')
             .select('*')
@@ -231,7 +231,7 @@ async function fetchAndCacheProducts(isBackground = false) {
 
         if (!error && data) {
             allProducts = data;
-            console.log('âœ… Products fetched successfully:', data.length);
+            console.log('✅ Products fetched successfully:', data.length);
 
             // Cache the data (clear old cache first to prevent quota issues)
             try {
@@ -242,7 +242,7 @@ async function fetchAndCacheProducts(isBackground = false) {
                 // Save new cache
                 localStorage.setItem('productsCache_v3', JSON.stringify(data));
                 localStorage.setItem('productsCache_Time', Date.now().toString());
-                console.log('ðŸ’¾ Cache saved successfully');
+                console.log('💾 Cache saved successfully');
             } catch (e) {
                 console.warn('âš ï¸ Could not save cache (quota exceeded):', e.message);
                 // Try to clear everything except cart and retry
@@ -252,7 +252,7 @@ async function fetchAndCacheProducts(isBackground = false) {
                     if (cart) localStorage.setItem('tm_cart', cart);
                     localStorage.setItem('productsCache_v3', JSON.stringify(data));
                     localStorage.setItem('productsCache_Time', Date.now().toString());
-                    console.log('ðŸ’¾ Cache saved after cleanup');
+                    console.log('💾 Cache saved after cleanup');
                 } catch (e2) {
                     console.error('âŒ Cache save failed even after cleanup');
                 }
@@ -372,34 +372,29 @@ function populateSizeFilters() {
 }
 
 function attachFilterListeners() {
-    // Helper to re-attach listeners after dynamic population
-    document.querySelectorAll('[data-filter="brand"]').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-            e.target.checked ? activeFilters.brands.push(e.target.value) : activeFilters.brands = activeFilters.brands.filter(b => b !== e.target.value);
-            applyFilters();
-        });
-    });
-    document.querySelectorAll('[data-filter="size"]').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-            e.target.checked ? activeFilters.sizes.push(e.target.value) : activeFilters.sizes = activeFilters.sizes.filter(s => s !== e.target.value);
-            applyFilters();
-        });
-    });
+    // 1. Remove old listeners (if they were attached directly)
+    // Actually, better: Use Event Delegation.
 }
 
 function setupFilters() {
-    // Only static filters like Price need setup here, dynamic ones handled in populate*
-    document.querySelectorAll('[data-filter="price"]').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-            e.target.checked ? activeFilters.prices.push(e.target.value) : activeFilters.prices = activeFilters.prices.filter(p => p !== e.target.value);
-            applyFilters();
-        });
-    });
+    // Use Event Delegation for better performance and to avoid listener leaks
+    const sidebar = document.getElementById('filtersSidebar');
+    if (sidebar) {
+        sidebar.addEventListener('change', (e) => {
+            const el = e.target;
+            const filterType = el.getAttribute('data-filter');
+            if (!filterType) return;
 
-    const discountFilter = document.getElementById('discountFilter');
-    if (discountFilter) {
-        discountFilter.addEventListener('change', (e) => {
-            activeFilters.discount = e.target.checked;
+            const val = el.value;
+            if (filterType === 'brand') {
+                el.checked ? activeFilters.brands.push(val) : activeFilters.brands = activeFilters.brands.filter(b => b !== val);
+            } else if (filterType === 'size') {
+                el.checked ? activeFilters.sizes.push(val) : activeFilters.sizes = activeFilters.sizes.filter(s => s !== val);
+            } else if (filterType === 'price') {
+                el.checked ? activeFilters.prices.push(val) : activeFilters.prices = activeFilters.prices.filter(p => p !== val);
+            } else if (el.id === 'discountFilter') {
+                activeFilters.discount = el.checked;
+            }
             applyFilters();
         });
     }
@@ -656,7 +651,7 @@ function createProductCardHTML(product) {
                          height="300">
                 `).join('')}
                 <div class="product-actions">
-                    <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista RÃ¡pida">
+                    <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista Rápida">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
@@ -827,50 +822,26 @@ async function openProductModal(productId) {
         sizeGroup.style.display = 'none';
     }
 
-    // Setup WhatsApp Button
-    const waBtn = document.getElementById('modalWaBtn');
-    const WHATSAPP_NUMBER = '573204961453';
-    
-    waBtn.onclick = (e) => {
-        e.preventDefault();
-        if (productSizes.length > 0 && !selectedModalSize) {
-            showNotification('Por favor selecciona una talla', 'error');
-            return;
-        }
-        if (productColors.length > 0 && !selectedModalColor) {
-            showNotification('Por favor selecciona un color', 'error');
-            return;
-        }
-
-        let message = `Hola! ðŸ‘‹ Me interesa este producto:\n\n`;
-        message += `ðŸ‘Ÿ *${product.name}*\n`;
-        message += `ðŸ’° *Precio:* ${formatDisplayPrice(product.price || product.precio)}\n`;
-        if (selectedModalSize) message += `ðŸ“ *Talla:* ${selectedModalSize}\n`;
-        if (selectedModalColor) message += `ðŸŽ¨ *Color:* ${selectedModalColor}\n`;
-        message += `\nÂ¿Tienen disponibilidad?`;
-
-        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-    };
-
     // Setup Add to Cart Button
     const addToCartBtn = document.getElementById('modalAddToCartBtn');
-    addToCartBtn.onclick = () => {
-        if (productSizes.length > 0 && !selectedModalSize) {
-            showNotification('Por favor selecciona una talla', 'error');
-            return;
-        }
-        if (productColors.length > 0 && !selectedModalColor) {
-            showNotification('Por favor selecciona un color', 'error');
-            return;
-        }
+    if (addToCartBtn) {
+        addToCartBtn.onclick = () => {
+            if (productSizes.length > 0 && !selectedModalSize) {
+                showNotification('Por favor selecciona una talla', 'error');
+                return;
+            }
+            if (productColors.length > 0 && !selectedModalColor) {
+                showNotification('Por favor selecciona un color', 'error');
+                return;
+            }
 
-        if (typeof addToCart === 'function') {
-            addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
-            showNotification('âœ… Â¡Producto agregado al carrito!', 'success');
-            closeProductModal();
-        }
-    };
+            if (typeof addToCart === 'function') {
+                addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
+                showNotification('✅ ¡Producto agregado al carrito!', 'success');
+                closeProductModal();
+            }
+        };
+    }
 
     // Setup Buy Now Button (Pasarela)
     const buyNowBtn = document.getElementById('modalBuyNowBtn');
@@ -914,6 +885,25 @@ function closeProductModal() {
     if (modal) modal.classList.remove('active');
     document.body.style.overflow = '';
 }
+
+function openSizeGuide() {
+    const modal = document.getElementById('sizeGuideModal');
+    if (modal) modal.classList.add('active');
+    // Ensure body overflow is hidden to prevent scroll behind
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSizeGuide() {
+    const modal = document.getElementById('sizeGuideModal');
+    if (modal) modal.classList.remove('active');
+    
+    // Only restore body scroll if the product modal is also closed
+    const productModal = document.getElementById('productModal');
+    if (productModal && !productModal.classList.contains('active')) {
+        document.body.style.overflow = '';
+    }
+}
+
 
 function updateModalQty(change) {
     modalQty += change;
@@ -1042,7 +1032,7 @@ function handleAddToCart(productId, requiresSize, requiresColor, btnElement) {
     // Get the product card context
     const productCard = btnElement ? btnElement.closest('.product-card') : document.getElementById(`size-${productId}`)?.closest('.product-card');
     if (!productCard) {
-        console.error("No se encontrÃ³ el contenedor del producto");
+        console.error("No se encontrí³ el contenedor del producto");
         return;
     }
 
@@ -1191,7 +1181,7 @@ function updateResultsCount(count = null) {
     if (!resultsCount) return;
 
     if (count === -1) {
-        resultsCount.innerHTML = '<span style="opacity: 0.7;">â³ Cargando...</span>';
+        resultsCount.innerHTML = '<span style="opacity: 0.7;">⌛ Cargando...</span>';
         return;
     }
 
@@ -1256,7 +1246,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Petos: Los Calidosos...');
             allProducts.push({
                 id: 'v-petos-1',
-                name: 'ColecciÃ³n Los Calidosos',
+                name: 'Colección Los Calidosos',
                 category: 'petos',
                 price: '$65.000',
                 image: 'images/uniformes-main.png',
@@ -1274,7 +1264,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Petos: La Pesada...');
             allProducts.push({
                 id: 'v-petos-2',
-                name: 'ColecciÃ³n La Pesada',
+                name: 'Colección La Pesada',
                 category: 'petos',
                 price: '$65.000',
                 image: 'images/petos2_portada.jpg.jpeg',
@@ -1299,7 +1289,7 @@ function ensureEssentialCollections() {
             console.log('[DEBUG] Injecting virtual Camisetas: La Grasa...');
             allProducts.push({
                 id: 'v-camisetas-1',
-                name: 'ColecciÃ³n La Grasa',
+                name: 'Colección La Grasa',
                 category: 'camisetas',
                 price: '$75.000',
                 image: 'images/camisetas_portada.jpg.jpeg',
@@ -1414,7 +1404,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 
-console.log('âœ… Collections logic V2 ready');
+console.log('✅ Collections logic V2 ready');
 
 
 
