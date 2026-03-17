@@ -1032,14 +1032,17 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 3000;
-    display: none; /* Hidden by default */
+    display: none;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
-    /* backdrop-filter: blur(10px); */
+    transition: opacity 0.25s ease;
+    /* iOS scroll lock helper */
+    -webkit-overflow-scrolling: touch;
 }
 
 .product-modal.active {
@@ -1621,5 +1624,103 @@
         font-size: 0.8rem;
     }
 }
+/* ==================== MOBILE MODAL ==================== */
+@media (max-width: 768px) {
+    .product-modal {
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(0,0,0,0.7);
+    }
 
+    .modal-content-container {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 24px 24px 0 0 !important;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        /* Slide up from bottom */
+        animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
 
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+
+    .modal-gallery {
+        height: 260px;
+        min-height: unset;
+        flex-shrink: 0;
+        border-right: none;
+        border-bottom: 1px solid #1a1a1a;
+    }
+
+    .modal-main-image {
+        min-height: unset;
+        height: 200px;
+        padding: 10px;
+    }
+
+    .modal-main-image img {
+        max-height: 180px;
+    }
+
+    .modal-thumbnails {
+        height: 60px;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .thumb-item {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+    }
+
+    .modal-info {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px 20px 24px;
+        border-left: none;
+    }
+
+    .modal-title {
+        font-size: 1.3rem;
+    }
+
+    .modal-price {
+        font-size: 1.8rem;
+    }
+
+    .modal-close {
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        font-size: 1.2rem;
+        z-index: 200;
+    }
+
+    .modal-action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-action-buttons .btn {
+        width: 100%;
+        padding: 14px;
+        font-size: 1rem;
+    }
+}
+
+/* Body scroll lock when modal open (works on iOS) */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}

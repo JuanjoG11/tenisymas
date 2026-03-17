@@ -893,9 +893,12 @@ async function openProductModal(productId) {
         };
     }
 
-    // Show Modal
+    // Show Modal — iOS-safe scroll lock
+    const scrollY = window.scrollY || window.pageYOffset;
+    document.body.dataset.scrollY = scrollY;
+    document.body.style.top = '-' + scrollY + 'px';
+    document.body.classList.add('modal-open');
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
 }
 
 function renderModalThumbnails(images, productName) {
@@ -948,7 +951,11 @@ function selectModalColor(color, element) {
 function closeProductModal() {
     const modal = document.getElementById('productModal');
     if (modal) modal.classList.remove('active');
-    document.body.style.overflow = '';
+    // iOS-safe scroll unlock: restore position
+    const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollY);
 }
 
 function openSizeGuide() {
