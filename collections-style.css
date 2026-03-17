@@ -523,11 +523,18 @@
     display: none;
 }
 
-/* Empty State */
+/* Empty State: delay prevents flash of empty state during loading */
+@keyframes delayedShow {
+    0%, 98% { opacity: 0; pointer-events: none; }
+    100%     { opacity: 1; pointer-events: auto; }
+}
+
 .empty-state {
     text-align: center;
     padding: 80px 20px;
     grid-column: 1 / -1;
+    /* Safety net: never show for first 5s, no matter what JS does */
+    animation: delayedShow 5s ease forwards;
 }
 
 .empty-icon {

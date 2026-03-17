@@ -220,7 +220,10 @@ async function saveProduct(productData, file) {
             finalImageUrl = await uploadImage(file);
         }
 
-        const dataToSave = { ...productData, image: finalImageUrl };
+        // Build payload and ALWAYS strip auto-managed columns to avoid
+        // "duplicate key value violates unique constraint 'products_pkey'"
+        const { id, created_at, ...rest } = { ...productData, image: finalImageUrl };
+        const dataToSave = rest;
 
         if (editingId) {
             const { error } = await supabaseClient
@@ -228,13 +231,13 @@ async function saveProduct(productData, file) {
                 .update(dataToSave)
                 .eq('id', editingId);
             if (error) throw error;
-            showToast('Producto actualizado');
+            showToast('Producto actualizado ✓');
         } else {
             const { error } = await supabaseClient
                 .from('products')
                 .insert([dataToSave]);
             if (error) throw error;
-            showToast('Producto agregado');
+            showToast('Producto agregado ✓');
         }
         await loadProducts();
         resetForm();
@@ -267,34 +270,42 @@ function setupEventListeners() {
 
     productForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const file = imageFile.files[0];
 
-        const extraImagesRaw = document.getElementById('extraImages').value;
-        let extraUrls = extraImagesRaw.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+        // Prevent double-submit
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
 
-        // Handle multi-image upload
-        const galleryFilesInput = document.getElementById('galleryFiles');
-        if (galleryFilesInput.files && galleryFilesInput.files.length > 0) {
-            submitBtn.disabled = true;
-            showToast(`Subiendo ${galleryFilesInput.files.length} fotos adicionales...`, false);
-            for (let i = 0; i < galleryFilesInput.files.length; i++) {
-                const url = await uploadImage(galleryFilesInput.files[i]);
-                if (url) extraUrls.push(url);
+        try {
+            const file = imageFile.files[0];
+
+            const extraImagesRaw = document.getElementById('extraImages').value;
+            let extraUrls = extraImagesRaw.split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+
+            // Handle multi-image upload
+            const galleryFilesInput = document.getElementById('galleryFiles');
+            if (galleryFilesInput.files && galleryFilesInput.files.length > 0) {
+                showToast(`Subiendo ${galleryFilesInput.files.length} fotos adicionales...`, false);
+                for (let i = 0; i < galleryFilesInput.files.length; i++) {
+                    const url = await uploadImage(galleryFilesInput.files[i]);
+                    if (url) extraUrls.push(url);
+                }
             }
+
+            const productData = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                price: document.getElementById('price').value,
+                oldprice: document.getElementById('oldPrice').value,
+                image: imageInput.value || 'images/placeholder.png',
+                images: extraUrls.length > 0 ? extraUrls : null,
+                sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
+            };
+
+            await saveProduct(productData, file);
+        } finally {
+            // Always re-enable the button (resetForm also resets it, but just in case)
             submitBtn.disabled = false;
         }
-
-        const productData = {
-            name: document.getElementById('name').value,
-            category: document.getElementById('category').value,
-            price: document.getElementById('price').value,
-            oldprice: document.getElementById('oldPrice').value,
-            image: imageInput.value || 'images/placeholder.png',
-            images: extraUrls.length > 0 ? extraUrls : null,
-            sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
-        };
-
-        await saveProduct(productData, file);
     });
 
     cancelBtn.addEventListener('click', resetForm);

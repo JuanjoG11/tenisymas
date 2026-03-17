@@ -66,6 +66,20 @@ window.onerror = function(msg, url, line) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache version bump: clear old cache if it's missing the 'oldprice' field
+    // This forces a fresh fetch so users see correct data after this update
+    try {
+        const cached = localStorage.getItem('productsCache_v3');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0 && !('oldprice' in parsed[0])) {
+                console.log('⚠️ Stale cache detected (missing oldprice), clearing for fresh fetch...');
+                localStorage.removeItem('productsCache_v3');
+                localStorage.removeItem('productsCache_Time');
+            }
+        }
+    } catch(e) { /* ignore */ }
+
     try {
         console.log('🚀 Collections page loaded (Logic V3)');
         setupCollections();
@@ -139,61 +153,90 @@ async function loadProducts() {
     // Show initial loading state
     updateResultsCount(-1);
 
-    // STEP 1: Immediate First Paint (Virtual + Cache)
-    // We show this in <100ms
+    // STEP 1: Immediate First Paint — serve from cache in <50ms
     try {
         console.time('🚀 InstantPaint');
-        
-        // Ensure we at least have the virtual collections right away
-        ensureEssentialCollections(); 
-        
+
+        ensureEssentialCollections();
+
         const cached = localStorage.getItem('productsCache_v3');
         if (cached) {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                allProducts = parsed;
-                ensureEssentialCollections(); // Re-ensure in case cache didn't have them
-                console.log('LOAD: Cache hit');
+            try {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    allProducts = parsed;
+                    ensureEssentialCollections();
+                    console.log('LOAD: Cache hit -', allProducts.length, 'products');
+                }
+            } catch(e) {
+                console.warn('Cache parse failed, clearing:', e);
+                localStorage.removeItem('productsCache_v3');
             }
         }
-        
-        // INITIAL RENDER (Cache or just Virtual)
-        applyFilters(); 
-        if (filteredProducts.length > 0) {
-            hideSkeletonLoaders();
+
+        // Render immediately if we have data from cache
+        if (allProducts.length > 0) {
+            applyFilters();
+            
+            // Only hide skeletons if we actually have matches for the current category/filters
+            if (filteredProducts.length > 0) {
+                hideSkeletonLoaders();
+            } else {
+                // If cache has products but none for THIS category, stay in skeleton mode
+                showSkeletonLoaders();
+            }
+        } else {
+            // No cache at all: definitely show skeletons
+            showSkeletonLoaders();
         }
         console.timeEnd('🚀 InstantPaint');
     } catch(e) { console.warn('Instant paint issue:', e); }
 
-    // STEP 2: Background Sync (Wait for the data already being fetched by script.js)
+    // Safety: hide skeletons after 8s max (but never show empty state — only network response can do that)
+    const skeletonTimeout = setTimeout(() => {
+        hideSkeletonLoaders();
+        // Do NOT set firstLoadComplete here — empty state only after real network response
+    }, 8000);
+
+    // STEP 2: Background Sync — wait for network data WITHOUT blocking the UI
     try {
         let freshData = null;
-        
-        // script.js creates window.productsLoaded as a Singleton Promise
+
         if (window.productsLoaded) {
-            console.log('LOAD: Waiting for existing fetch from script.js...');
-            freshData = await window.productsLoaded;
+            // Race between network promise and a 6-second timeout
+            freshData = await Promise.race([
+                window.productsLoaded,
+                new Promise(resolve => setTimeout(() => resolve(null), 6000))
+            ]);
         } else {
-            // Fallback if script.js didn't start the fetch
             const client = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null;
             if (client) {
                 console.log('LOAD: Manual fetch trigger...');
-                const { data } = await client.from('products').select('*').order('id', { ascending: true });
+                const { data } = await client
+                    .from('products')
+                    .select('*')
+                    .order('id', { ascending: true });
                 freshData = data;
             }
         }
 
         if (freshData && freshData.length > 0) {
+            // Normalize oldprice alias
+            freshData = freshData.map(p => ({
+                ...p,
+                oldPrice: p.oldPrice || p.oldprice || null
+            }));
+
             const hasChanged = allProducts.length !== freshData.length;
             allProducts = freshData;
             ensureEssentialCollections();
-            
-            if (hasChanged) {
-                console.log('LOAD: UI Updated with fresh data');
+
+            if (hasChanged || !firstLoadComplete) {
+                console.log('LOAD: UI Updated with fresh data -', freshData.length, 'products');
                 applyFilters();
             }
-            
-            // Save to cache quietly
+
+            // Refresh cache
             try {
                 localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
@@ -202,9 +245,17 @@ async function loadProducts() {
     } catch(err) {
         console.error('LOAD: Sync failed:', err);
     } finally {
+        clearTimeout(skeletonTimeout);
         isLoading = false;
-        firstLoadComplete = true; // Background sync or fallback finished, we can now show empty state if needed
+        firstLoadComplete = true;  // Network responded (success or fail) — safe to show empty state now
         hideSkeletonLoaders();
+        if (allProducts.length > 0) {
+            applyFilters(); // Re-render in case we hadn't yet
+        } else {
+            // Truly no products after network check
+            renderProducts(true, false);
+            updateResultsCount(0);
+        }
     }
 }
 
@@ -484,14 +535,16 @@ function renderProducts(reset = true, shouldScroll = false) {
     }
 
     if (filteredProducts.length === 0) {
-        // Only show empty state if first network fetch is done
+        // Only show empty state if first network fetch is finished AND we still have 0 results
         if (firstLoadComplete) {
             productsGrid.style.display = 'none';
             emptyState.style.display = 'block';
+            hideSkeletonLoaders(); // Final state, hide loaders
         } else {
-            // Keep grid (it's empty but skeletons might be showing)
-            productsGrid.style.display = 'grid';
+            // Still loading or trying cache: keep grid hidden if empty, show skeletons
+            productsGrid.style.display = 'none';
             emptyState.style.display = 'none';
+            showSkeletonLoaders();
         }
         isRendering = false;
         return;

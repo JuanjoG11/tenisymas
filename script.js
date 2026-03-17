@@ -667,31 +667,34 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v3';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        // 24 hours cache for ultra-speed, background sync will handle updates
-        const CACHE_DURATION = 24 * 60 * 60 * 1000;
+        // Background refresh every 5 minutes, but always serve cache immediately (stale-while-revalidate)
+        const BG_REFRESH_INTERVAL = 5 * 60 * 1000;
 
         const cachedData = localStorage.getItem(CACHE_KEY);
-        const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
+        const lastFetch = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0');
         const now = Date.now();
+        const cacheIsFresh = lastFetch && (now - lastFetch < BG_REFRESH_INTERVAL);
 
-        // 1. FAST PATH: Return cache immediately if available
+        // 1. FAST PATH: Serve cache immediately (always, if available)
         if (cachedData) {
             try {
                 products = JSON.parse(cachedData);
                 console.log('⚡ Script.js: Loaded from cache', products.length);
-                renderHomepageSections(); // If needed
+                renderHomepageSections();
 
-                // If cache is fresh, stop here
-                if (lastFetch && (now - lastFetch < CACHE_DURATION)) {
+                // If cache is very fresh, skip network fetch entirely and resolve now
+                if (cacheIsFresh) {
                     isSyncing = false;
                     return products;
                 }
+                // Otherwise: resolve the promise NOW with cache data so UI unblocks,
+                // then do a background network refresh below
             } catch (e) {
                 console.error('Cache parse failed', e);
             }
         }
 
-        // 2. NETWORK PATH: Fetch from Supabase
+        // 2. NETWORK PATH: Fetch from Supabase (background if we already had cache)
         try {
             let { data, error } = await supabaseClient
                 .from('products')
@@ -701,41 +704,26 @@ async function syncProducts() {
             if (error) throw error;
 
             if (data && data.length > 0) {
-                // Dedup logic: Ensure unique IDs
-                const uniqueData = [];
-                const seenIds = new Set();
-                data.forEach(p => {
-                    if (!seenIds.has(p.id)) {
-                        seenIds.add(p.id);
-                        uniqueData.push(p);
-                    }
+                // Dedup: Ensure unique IDs
+                const seen = new Set();
+                const uniqueData = data.filter(p => {
+                    if (seen.has(p.id)) return false;
+                    seen.add(p.id);
+                    return true;
                 });
                 products = uniqueData;
 
-                // Update Cache (Smart Minified Cache)
+                // Save cache — store all fields plus oldPrice alias for compatibility
                 try {
-                    // Create a lightweight version of products for the cache
-                    // This stays under the 5MB localStorage limit and parses MUCH faster
-                    const minifiedProducts = products.map(p => ({
-                        id: p.id,
-                        name: p.name,
-                        category: p.category || p.categoria,
-                        price: p.price || p.precio,
-                        oldPrice: p.oldPrice || p.old_price || p.precio_anterior,
-                        image: p.image,
-                        folder: p.folder,
-                        images: p.images, // Keep images for the gallery
-                        sizes: p.sizes || p.tallas,
-                        colors: p.colors || p.colores,
-                        brand: p.brand || p.marca
-                        // Notice: describing and secondary metadata removed to save space
+                    const minified = products.map(p => ({
+                        ...p,
+                        oldPrice: p.oldPrice || p.oldprice || null // alias for templates
                     }));
-
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(minifiedProducts));
-                    localStorage.setItem(CACHE_TIME_KEY, now.toString());
-                    console.log('📦 Script.js: Minified cache saved');
-                } catch (e) { 
-                    console.warn('📦 Script.js: Cache still too large, clearing...');
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(minified));
+                    localStorage.setItem(CACHE_TIME_KEY, String(now));
+                    console.log('📦 Script.js: Cache refreshed (' + minified.length + ' products)');
+                } catch (e) {
+                    console.warn('Cache save failed:', e.message);
                     localStorage.removeItem(CACHE_KEY);
                 }
 
