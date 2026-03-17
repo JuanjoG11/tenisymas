@@ -19,9 +19,7 @@ async function getImagesFromFolder(folder) {
     try {
         // 1. Llama a la API de Supabase para listar archivos en la carpeta
         const { data, error } = await supabaseClient.storage
-            .from('products') // Assuming bucket name is 'products' or similar. 
-            // The user said .from('productos') in their example, but let's check or use 'products' as it's common.
-            // Wait, let's look at the example again.
+            .from('product-images') 
             .list(folder);
 
         if (error) {
@@ -35,7 +33,7 @@ async function getImagesFromFolder(folder) {
         // 3. Retorna las URLs completas
         // Base URL for Supabase Storage public buckets: 
         // https://[PROJECT_ID].supabase.co/storage/v1/object/public/[BUCKET]/[FOLDER]/[FILE]
-        const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/products/`;
+        const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/product-images/`;
         return imageFiles.map(file => `${STORAGE_BASE}${folder}/${file.name}`);
     } catch (err) {
         console.error('getImagesFromFolder failed:', err);

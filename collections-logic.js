@@ -45,6 +45,16 @@ if (typeof currentPage === 'undefined') { var currentPage = 1; }
 if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
+if (typeof isRendering === 'undefined') { var isRendering = false; }
+
+// Addi Configuration Fallback
+window.addiAllySlug = window.addiAllySlug || "tennisymasco-ecommerce";
+
+// Modal state
+window.selectedModalSize = window.selectedModalSize || null;
+window.selectedModalColor = window.selectedModalColor || null;
+window.modalQty = window.modalQty || 1;
+window.currentMainModalImage = window.currentMainModalImage || '';
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -173,7 +183,10 @@ async function loadProducts() {
                     try {
                         localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
                         localStorage.setItem('productsCache_Time', Date.now().toString());
-                    } catch(e) { console.warn('Cache update failed', e); }
+                    } catch(e) { 
+                        console.warn('Cache update failed (Quota likely full):', e.name); 
+                        // If quota is full, we just continue without updating cache
+                    }
                 }
             }
             isLoading = false;
@@ -273,9 +286,12 @@ async function fetchAndCacheProducts(isBackground = false) {
                 localStorage.removeItem('productsCache');
                 localStorage.removeItem('productsCache_v1');
 
-                // Save new cache
-                localStorage.setItem('productsCache_v3', JSON.stringify(data));
-                localStorage.setItem('productsCache_Time', Date.now().toString());
+                if (allProducts && allProducts.length > 0) {
+                    try {
+                        localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
+                        localStorage.setItem('productsCache_Time', Date.now().toString());
+                    } catch(e) { console.warn('Initial cache save failed:', e.name); }
+                }
                 console.log('💾 Cache saved successfully');
             } catch (e) {
                 console.warn('âš ï¸ Could not save cache (quota exceeded):', e.message);
@@ -399,13 +415,19 @@ function populateSizeFilters() {
 
     const container = document.getElementById('sizeFilters');
     if (container) {
-        container.innerHTML = sizesArray.map(size => `
+        const newHTML = sizesArray.map(size => `
             <label class="filter-checkbox">
-                <input type="checkbox" value="${size}" data-filter="size">
+                <input type="checkbox" value="${size}" data-filter="size" ${activeFilters.sizes.includes(size) ? 'checked' : ''}>
                 <span>${size}</span>
             </label>
         `).join('');
-        attachFilterListeners(); // Re-attach
+        
+        // Only update DOM if content actually changed to avoid layout thrashing
+        if (container.getAttribute('data-last-html') !== newHTML) {
+            container.innerHTML = newHTML;
+            container.setAttribute('data-last-html', newHTML);
+            attachFilterListeners();
+        }
     }
 }
 
@@ -425,23 +447,21 @@ function setupFilters() {
             // Handle discount filter even if it has no data-filter
             if (el.id === 'discountFilter') {
                 activeFilters.discount = el.checked;
-                applyFilters();
+                applyFilters(true); // User action: Scroll to top
                 return;
             }
 
             if (!filterType) return;
 
-            const val = el.value;
+            const val = String(el.value); // Always stringify
             if (filterType === 'brand') {
                 el.checked ? activeFilters.brands.push(val) : activeFilters.brands = activeFilters.brands.filter(b => b !== val);
             } else if (filterType === 'size') {
-                el.checked ? activeFilters.sizes.push(val) : activeFilters.sizes = activeFilters.sizes.filter(s => s !== val);
+                el.checked ? activeFilters.sizes.push(val) : activeFilters.sizes = activeFilters.sizes.filter(s => String(s) !== val);
             } else if (filterType === 'price') {
                 el.checked ? activeFilters.prices.push(val) : activeFilters.prices = activeFilters.prices.filter(p => p !== val);
-            } else if (el.id === 'discountFilter') {
-                activeFilters.discount = el.checked;
             }
-            applyFilters();
+            applyFilters(true); // User action: Scroll to top
         });
     }
 
@@ -452,7 +472,16 @@ function setupFilters() {
 // Utility definitions moved to top for safety
 
 
-function applyFilters() {
+let applyFiltersTimeout = null;
+function applyFilters(shouldScroll = false) {
+    if (applyFiltersTimeout) clearTimeout(applyFiltersTimeout);
+    
+    applyFiltersTimeout = setTimeout(() => {
+        executeApplyFilters(shouldScroll);
+    }, 10); // Batch rapid changes
+}
+
+function executeApplyFilters(shouldScroll = false) {
     // 1. Reset Pagination
     currentPage = 1;
 
@@ -508,10 +537,11 @@ function applyFilters() {
             const rawSizes = product.sizes || product.tallas || [];
             let pSizes = [];
             if (Array.isArray(rawSizes)) {
-                pSizes = rawSizes.map(String);
+                pSizes = rawSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim());
             } else if (typeof rawSizes === 'string') {
                 pSizes = rawSizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim());
             }
+            // Strict equality check after stringification
             if (!activeFilters.sizes.some(s => pSizes.includes(String(s)))) return false;
         }
 
@@ -535,7 +565,7 @@ function applyFilters() {
     if (sizeContainer) populateSizeFilters();
 
     // 4. Render First Page
-    renderProducts(true);
+    renderProducts(true, shouldScroll);
     updateResultsCount();
 }
 
@@ -560,7 +590,10 @@ function formatDisplayPrice(price) {
 }
 
 // ==================== RENDERING (CHUNKED) ====================
-function renderProducts(reset = true) {
+function renderProducts(reset = true, shouldScroll = false) {
+    if (isRendering) return;
+    isRendering = true;
+
     const productsGrid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
     const sentinels = document.querySelectorAll('.scroll-sentinel');
@@ -569,21 +602,17 @@ function renderProducts(reset = true) {
     if (filteredProducts.length === 0) {
         productsGrid.style.display = 'none';
         emptyState.style.display = 'block';
+        isRendering = false;
         return;
     }
 
     productsGrid.style.display = 'grid';
     emptyState.style.display = 'none';
 
-    // Calculate Slice
-    // If reset, we start from 0 to itemsPerPage
-    // If appending, we just add the ONE next chunk
-
-    // Actually, simpler logic:
     // If reset, clear innerHTML. Then append chunk 1.
     if (reset) {
         productsGrid.innerHTML = '';
-        window.scrollTo(0, 0);
+        if (shouldScroll) window.scrollTo(0, 0);
     }
 
     const start = (currentPage - 1) * itemsPerPage;
@@ -611,6 +640,8 @@ function renderProducts(reset = true) {
         // Observe it
         if (observer) observer.observe(sentinel);
     }
+    
+    isRendering = false;
 }
 
 
@@ -647,7 +678,12 @@ function createProductCardHTML(product) {
 
     // PORTADA (Cover) = always product.image (uploaded/main photo)
     // GALERÍA (Gallery in modal) = product.image + extra links from product.images
-    const coverImage = product.image || 'images/placeholder.png';
+    let coverImage = product.image || 'images/logo-tm.png';
+    
+    // Normalize Supabase URL if old bucket name is present
+    if (typeof coverImage === 'string' && coverImage.includes('/public/products/')) {
+        coverImage = coverImage.replace('/public/products/', '/public/product-images/');
+    }
     
     let extraImages = [];
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
@@ -717,7 +753,6 @@ function createProductCardHTML(product) {
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
                 <!-- Addi Installments Widget -->
-                <!-- Addi Installments Widget -->
                 <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
 
                 <div class="view-details-tag">
@@ -734,11 +769,6 @@ function createProductCardHTML(product) {
 }
 
 // ==================== PROFESSIONAL MODAL LOGIC (Virtual RPM Engine) ====================
-let currentMainModalImage = '';
-let selectedModalSize = null;
-let selectedModalColor = null;
-let modalQty = 1;
-
 async function openProductModal(productId) {
     const product = allProducts.find(p => p.id == productId);
     if (!product) return;
@@ -753,6 +783,14 @@ async function openProductModal(productId) {
     const qtyValueDisplay = document.getElementById('modalQtyValue');
     if (qtyValueDisplay) qtyValueDisplay.textContent = '1';
 
+    // Reset main image immediately to avoid showing previous product
+    const mainImg = document.getElementById('currentModalImg');
+    if (mainImg) {
+        mainImg.src = 'images/logo-tm.png';
+        mainImg.alt = 'Cargando...';
+    }
+    currentMainModalImage = '';
+
     // Set textual details
     const titleEl = document.getElementById('modalTitle');
     const categoryEl = document.getElementById('modalCategory');
@@ -761,6 +799,15 @@ async function openProductModal(productId) {
     if (titleEl) titleEl.textContent = product.name;
     if (categoryEl) categoryEl.textContent = product.category || product.categoria || 'Calzado';
     if (priceEl) priceEl.textContent = formatDisplayPrice(product.price || product.precio);
+
+    if (mainImg) {
+        mainImg.onerror = () => {
+            console.warn('[MODAL] Image failed to load, using logo as fallback');
+            if (mainImg.src !== 'images/logo-tm.png') {
+                mainImg.src = 'images/logo-tm.png';
+            }
+        };
+    }
     
     const oldPrice = product.oldPrice || product.oldprice || product.old_price || product.precio_anterior;
     const oldPriceEl = document.getElementById('modalOldPrice');
@@ -777,59 +824,63 @@ async function openProductModal(productId) {
     modalThumbnails.innerHTML = '';
     
     // 1. Get initial images from product object: Portada first, then gallery
-    const coverImage = product.image || 'images/placeholder.png';
-    let extraImagesObj = [];
-    if (product.images && Array.isArray(product.images)) {
-        extraImagesObj = product.images;
-    }
+    let coverSrc = product.image || 'images/logo-tm.png';
+    let extraSrcs = Array.isArray(product.images) ? product.images : [];
     
-    // Combine them, removing duplicates (if cover is inside the array)
-    let images = [coverImage, ...extraImagesObj.filter(img => img !== coverImage)];
+    // Normalize and Filter
+    let images = [coverSrc, ...extraSrcs]
+        .filter(img => img && typeof img === 'string')
+        .map(img => img.includes('/public/products/') ? img.replace('/public/products/', '/public/product-images/') : img);
+    
+    // Dedup
+    images = [...new Set(images)];
 
-    // 2. MAGIC: Load additional images from Supabase Storage automatically if folder exists
-    if (product.folder && typeof window.getImagesFromFolder === 'function') {
-        const extraImages = await window.getImagesFromFolder(product.folder);
-        if (extraImages.length > 0) {
-            // Filter out duplicates if any
-            const existingUrls = new Set(images);
-            extraImages.forEach(url => {
-                if (!existingUrls.has(url)) images.push(url);
-            });
-        }
-    }
-
-    // Populate Thumbnails
-    images.forEach((imgUrl, idx) => {
-        const thumb = document.createElement('div');
-        thumb.className = `thumb-item ${idx === 0 ? 'active' : ''}`;
-        thumb.innerHTML = `<img src="${imgUrl}" alt="${product.name}">`;
-        thumb.onclick = () => {
-            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
-            thumb.classList.add('active');
-            document.getElementById('currentModalImg').src = imgUrl;
-            currentMainModalImage = imgUrl;
-        };
-        modalThumbnails.appendChild(thumb);
-    });
-
-    // Set main image
-    if (images.length > 0) {
-        document.getElementById('currentModalImg').src = images[0];
+    // Set main image immediately
+    if (mainImg) {
+        mainImg.src = images[0];
+        mainImg.alt = product.name;
         currentMainModalImage = images[0];
     }
 
+    // 2. MAGIC: Load additional images from Supabase Storage automatically if folder exists
+    if (product.folder && typeof window.getImagesFromFolder === 'function') {
+        try {
+            const extraImages = await window.getImagesFromFolder(product.folder);
+            if (extraImages.length > 0) {
+                // Filter out duplicates if any
+                const existingUrls = new Set(images);
+                extraImages.forEach(url => {
+                    if (!existingUrls.has(url)) images.push(url);
+                });
+                
+                // Safety guard: if modal was closed while images were fetching, stop
+                if (!modal.classList.contains('active')) return;
+
+                // Re-render thumbnails if more images were found
+                renderModalThumbnails(images, product.name);
+            }
+        } catch (err) {
+            console.warn('Background image fetch failed:', err);
+        }
+    }
+
+    renderModalThumbnails(images, product.name);
+
+    // Continue modal initialization...
     // Populate Colors (Pills)
     const colorGroup = document.getElementById('modalColorGroup');
     const colorPills = document.getElementById('modalColorPills');
     const productColors = product.colors || product.colores || [];
     
-    if (productColors.length > 0) {
-        colorGroup.style.display = 'block';
-        colorPills.innerHTML = productColors.map(color => `
-            <div class="pill" onclick="selectModalColor('${color}', this)">${color}</div>
-        `).join('');
-    } else {
-        colorGroup.style.display = 'none';
+    if (colorGroup && colorPills) {
+        if (productColors.length > 0) {
+            colorGroup.style.display = 'block';
+            colorPills.innerHTML = productColors.map(color => `
+                <div class="pill" onclick="selectModalColor('${color}', this)">${color}</div>
+            `).join('');
+        } else {
+            colorGroup.style.display = 'none';
+        }
     }
 
     // Populate Sizes (Pills)
@@ -850,14 +901,18 @@ async function openProductModal(productId) {
         }
     }
 
-    if (productSizes.length > 0) {
-        sizeGroup.style.display = 'block';
-        sizePills.innerHTML = productSizes.map(size => `
-            <div class="pill" onclick="selectModalSize('${size}', this)">${size}</div>
-        `).join('');
-    } else {
-        sizeGroup.style.display = 'none';
+    if (sizeGroup && sizePills) {
+        if (productSizes.length > 0) {
+            sizeGroup.style.display = 'block';
+            sizePills.innerHTML = productSizes.map(size => `
+                <div class="pill" onclick="selectModalSize('${size}', this)">${size}</div>
+            `).join('');
+        } else {
+            sizeGroup.style.display = 'none';
+        }
     }
+
+/** No-op to clean up the duplicated logic below **/
 
     // Setup Add to Cart Button
     const addToCartBtn = document.getElementById('modalAddToCartBtn');
@@ -922,6 +977,41 @@ async function openProductModal(productId) {
     // Show Modal
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+function renderModalThumbnails(images, productName) {
+    const modalThumbnails = document.getElementById('modalThumbnails');
+    if (!modalThumbnails) return;
+
+    modalThumbnails.innerHTML = '';
+    images.forEach((imgUrl, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = `thumb-item ${idx === 0 ? 'active' : ''}`;
+        thumb.innerHTML = `<img src="${imgUrl}" alt="${productName}">`;
+        thumb.onclick = () => {
+            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            const mainImg = document.getElementById('currentModalImg');
+            if (mainImg) {
+                mainImg.src = imgUrl;
+                currentMainModalImage = imgUrl;
+            }
+        };
+        modalThumbnails.appendChild(thumb);
+    });
+
+    // Set main image if container exists and not already set
+    const mainImg = document.getElementById('currentModalImg');
+    if (mainImg && images.length > 0) {
+        const currentSrc = mainImg.getAttribute('src');
+        // If empty, broken, placeholder, or just weird - set the first image
+        if (!currentSrc || currentSrc === '' || currentSrc.includes('placeholder') || currentSrc.includes('logo-tm') || currentSrc.length < 5) {
+            console.log('[DEBUG] Setting main image to:', images[0]);
+            mainImg.src = images[0];
+            currentMainModalImage = images[0];
+            mainImg.alt = productName;
+        }
+    }
 }
 
 function selectModalSize(size, element) {
@@ -1218,14 +1308,14 @@ function setupIntersectionObserver() {
 
     observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && !isRendering) {
                 // Remove sentinel from observer to prevent double firing
                 observer.unobserve(entry.target);
                 entry.target.remove();
 
                 // Load next page
                 currentPage++;
-                renderProducts(false); // Append
+                renderProducts(false, false); // Append
             }
         });
     }, options);
@@ -1245,7 +1335,7 @@ function updateResultsCount(count = null) {
     resultsCount.textContent = `${total} ${total === 1 ? 'producto' : 'productos'}`;
 }
 
-function clearAllFilters() {
+function clearAllFilters(shouldScroll = false) {
     activeFilters = {
         category: activeFilters.category,
         brands: [],
@@ -1254,7 +1344,7 @@ function clearAllFilters() {
         discount: false
     };
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    applyFilters();
+    applyFilters(shouldScroll);
 }
 
 function showEmptyState() {
@@ -1289,7 +1379,7 @@ function setupMobileFilters() {
 }
 
 function ensureEssentialCollections() {
-    console.log('[DEBUG] Running ensureEssentialCollections check...');
+    // Dedup: Ensure we don't duplicate existing products if sync runs multiple times on same array
     const petosExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('petos'));
     const camisetasExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('camisetas'));
 
@@ -1298,7 +1388,7 @@ function ensureEssentialCollections() {
         const hasCalidosos = petosExist.some(p => p.name.includes('Calidosos'));
         const hasPesada = petosExist.some(p => p.name.includes('Pesada'));
 
-        if (!hasCalidosos) {
+        if (!hasCalidosos && !allProducts.some(p => p.id === 'v-petos-1')) {
             console.log('[DEBUG] Injecting virtual Petos: Los Calidosos...');
             allProducts.push({
                 id: 'v-petos-1',
@@ -1316,7 +1406,7 @@ function ensureEssentialCollections() {
             });
         }
 
-        if (!hasPesada) {
+        if (!hasPesada && !allProducts.some(p => p.id === 'v-petos-2')) {
             console.log('[DEBUG] Injecting virtual Petos: La Pesada...');
             allProducts.push({
                 id: 'v-petos-2',
@@ -1341,7 +1431,7 @@ function ensureEssentialCollections() {
     if (camisetasExist.length < 1) {
         const hasGrasa = camisetasExist.some(p => p.name.includes('Grasa'));
 
-        if (!hasGrasa) {
+        if (!hasGrasa && !allProducts.some(p => p.id === 'v-camisetas-1')) {
             console.log('[DEBUG] Injecting virtual Camisetas: La Grasa...');
             allProducts.push({
                 id: 'v-camisetas-1',
