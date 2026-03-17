@@ -129,251 +129,124 @@ function updateCategoryTitle(category) {
     if (subtitleEl) subtitleEl.textContent = info.subtitle;
 }
 
-// Load products - CACHE-FIRST for instant feedback with dependency waiting
-async function loadProducts(retries = 0) {
-    if (isLoading && retries === 0) return;
-    
-    // Safety: Wait for dependencies if they might still be loading (common on mobile/slow networks)
-    if (typeof supabaseClient === 'undefined' && retries < 10) {
-        console.log(`[RETRY] Waiting for dependencies... (${retries})`);
-        setTimeout(() => loadProducts(retries + 1), 200);
-        return;
-    }
-
+// ==================== SINGLE CLEAN PRODUCT LOADER ====================
+// ONE simple path: try cache → wait for supabase → fetch → render.
+// No parallel loaders. No background syncs. No race conditions.
+async function loadProducts() {
     if (isLoading) return;
     isLoading = true;
 
+    showSkeletonLoaders();
+    updateResultsCount(-1);
+
     try {
-        // 1. PHASE 1: Instant Cache Render
-        let cached = null;
+        // STEP 1: Try to render immediately from cache
+        let renderedFromCache = false;
         try {
-            cached = localStorage.getItem('productsCache_v3');
-        } catch(e) { console.warn('LocalStorage blocked'); }
-
-        let hasRenderedFromCache = false;
-        if (cached) {
-            try {
+            const cached = localStorage.getItem('productsCache_v3');
+            if (cached) {
                 const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed)) {
+                if (Array.isArray(parsed) && parsed.length > 0) {
                     allProducts = parsed;
-                    console.log('⚡ Instant render from cache');
+                    renderedFromCache = true;
+                    console.log('LOAD: Cache hit -', allProducts.length, 'products');
                     ensureEssentialCollections();
                     applyFilters();
-                    populateBrandFilters();
-                    populateSizeFilters();
                     hideSkeletonLoaders();
-                    hasRenderedFromCache = true;
-                } else {
-                    throw new Error('Cache not array');
-                }
-            } catch (e) {
-                console.warn('Cache corrupted/oversized');
-                try { localStorage.removeItem('productsCache_v3'); } catch(err) {}
-            }
-        }
-
-        if (!hasRenderedFromCache) {
-            showSkeletonLoaders();
-            updateResultsCount(-1);
-        }
-
-        // 2. PHASE 2: Quick / Background Sync
-        const category = activeFilters.category;
-        const hasSupabase = typeof supabaseClient !== 'undefined' && supabaseClient !== null;
-
-        if (!hasRenderedFromCache && hasSupabase) {
-            console.log('⚡ Performing quick INITIAL fetch for first paint');
-            try {
-                let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(18);
-                if (category) { query = query.eq('category', category); }
-                let { data: quickData, error: quickError } = await query;
-                
-                if (quickError) throw quickError;
-
-                if (quickData && quickData.length > 0) {
-                    allProducts = quickData;
-                    ensureEssentialCollections();
-                    applyFilters();
-                    console.log('⚡ Quick INITIAL render done. Showing 18 products.');
-                    hideSkeletonLoaders();
-                    hasRenderedFromCache = true; // Prevents loader logic from glitching next phase
-                }
-            } catch (err) {
-                console.warn('Quick fetch failed:', err);
-                hideSkeletonLoaders(); // Don't get stuck forever
-            }
-        }
-
-        // 3. PHASE 3: Background Full Sync (NON-BLOCKING)
-        const processBackgroundSync = (freshData) => {
-            if (freshData && freshData.length > 0) {
-                const isDifferent = allProducts.length !== freshData.length || 
-                                  (allProducts.length > 0 && freshData.length > 0 && allProducts[0].id !== freshData[0].id);
-                
-                if (isDifferent || !hasRenderedFromCache) {
-                    allProducts = freshData;
-                    ensureEssentialCollections();
-                    applyFilters();
-                    console.log('🔄 AllProducts updated natively');
-                    
-                    // Visual feedback for mobile
-                    const sub = document.getElementById('categorySubtitle');
-                    if (sub && sub.textContent.includes('Cargando')) {
-                        sub.textContent = 'Actualizado: ' + allProducts.length + ' productos';
-                    }
-                    
-                    try {
-                        localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
-                        localStorage.setItem('productsCache_Time', Date.now().toString());
-                    } catch(e) { 
-                        console.warn('Cache update failed (Quota likely full):', e.name); 
-                        // If quota is full, we just continue without updating cache
-                    }
                 }
             }
-            isLoading = false;
-            hideSkeletonLoaders();
-        };
-
-        const syncPromise = window.productsLoaded || (typeof syncProducts === 'function' ? syncProducts() : null);
-
-        if (syncPromise) {
-            syncPromise.then(processBackgroundSync).catch(err => {
-                console.warn('Background sync failed:', err);
-                isLoading = false;
-                hideSkeletonLoaders();
-            });
-            
-            if (hasRenderedFromCache || allProducts.length > 0) {
-                console.timeEnd('loadProducts');
-                isLoading = false;
-                return; 
-            }
-        } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-            const { data: fullData, error: fullError } = await supabaseClient
-                .from('products')
-                .select('*')
-                .order('id', { ascending: true });
-            
-            if (fullError) {
-                console.error('[DATABASE] Full fetch failed:', fullError);
-            }
-            processBackgroundSync(fullData || []);
+        } catch(cacheErr) {
+            try { localStorage.removeItem('productsCache_v3'); } catch(_) {}
+            console.warn('LOAD: Cache invalid, cleared.');
         }
 
-    } catch (error) {
-        console.error('Critical load error:', error);
-        ensureEssentialCollections();
-        applyFilters();
-        hideSkeletonLoaders();
-        isLoading = false;
-    }
-}
-
-
-// Background update function (non-blocking)
-async function updateProductsInBackground() {
-    try {
-        let freshData = [];
-
-        // Try to get data from global sync
-        if (window.productsLoaded) {
-            freshData = await window.productsLoaded;
-        } else if (typeof syncProducts === 'function') {
-            freshData = await syncProducts();
-        } else {
-            // Fallback: fetch directly
-            await fetchAndCacheProducts(true);
-            return;
+        // STEP 2: Wait for supabaseClient (scripts may load async on mobile)
+        let waited = 0;
+        while (waited < 4000) {
+            if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) break;
+            await new Promise(function(r) { setTimeout(r, 200); });
+            waited += 200;
         }
 
-        // Update if we got fresh data
-        if (freshData && freshData.length > 0) {
-            const previousCount = allProducts.length;
-            allProducts = freshData;
+        const client = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null;
 
-            // Only re-render if data actually changed
-            if (allProducts.length !== previousCount) {
-                console.log('🔄 Fresh data applied silently');
-                applyFilters();
-            }
-        }
-    } catch (error) {
-        console.warn('Background update failed (using cached data):', error);
-    }
-}
-
-// Fallback fetcher
-async function fetchAndCacheProducts(isBackground = false) {
-    try {
-        const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
         if (!client) {
-            console.error('No Supabase client available');
-            return;
-        }
-
-        console.log('📡 Fetching products directly from Supabase...');
-        const { data, error } = await client
-            .from('products')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (!error && data) {
-            allProducts = data;
-            console.log('✅ Products fetched successfully:', data.length);
-
-            // Cache the data (clear old cache first to prevent quota issues)
-            try {
-                // Remove old cache versions
-                localStorage.removeItem('productsCache');
-                localStorage.removeItem('productsCache_v1');
-
-                if (allProducts && allProducts.length > 0) {
-                    try {
-                        localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
-                        localStorage.setItem('productsCache_Time', Date.now().toString());
-                    } catch(e) { console.warn('Initial cache save failed:', e.name); }
-                }
-                console.log('💾 Cache saved successfully');
-            } catch (e) {
-                console.warn('âš ï¸ Could not save cache (quota exceeded):', e.message);
-                // Try to clear everything except cart and retry
-                try {
-                    const cart = localStorage.getItem('tm_cart');
-                    localStorage.clear();
-                    if (cart) localStorage.setItem('tm_cart', cart);
-                    localStorage.setItem('productsCache_v3', JSON.stringify(data));
-                    localStorage.setItem('productsCache_Time', Date.now().toString());
-                    console.log('💾 Cache saved after cleanup');
-                } catch (e2) {
-                    console.error('âŒ Cache save failed even after cleanup');
-                }
-            }
-
-            // Always render after fetch
-            applyFilters();
-            populateBrandFilters();
-            populateSizeFilters();
-            hideSkeletonLoaders();
-        } else {
-            console.error('Fetch error:', error);
-            if (allProducts.length === 0) {
-                // Inject virtual products as last resort
+            console.warn('LOAD: No supabase client. Using cache/virtual only.');
+            if (!renderedFromCache) {
                 ensureEssentialCollections();
                 applyFilters();
                 hideSkeletonLoaders();
             }
+            isLoading = false;
+            return;
         }
-    } catch (e) {
-        console.error("Direct fetch failed:", e);
-        if (allProducts.length === 0) {
-            // Inject virtual products as last resort
+
+        // STEP 3: Fetch fresh data from Supabase
+        console.log('LOAD: Fetching from Supabase...');
+        const { data, error } = await client
+            .from('products')
+            .select('id, name, category, price, oldPrice, image, images, sizes, colors, brand, badge, folder')
+            .order('id', { ascending: true });
+
+        if (error) {
+            console.error('LOAD: Supabase error:', error.message);
+            if (!renderedFromCache) {
+                ensureEssentialCollections();
+                applyFilters();
+                hideSkeletonLoaders();
+            }
+            isLoading = false;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            console.warn('LOAD: Supabase returned 0 products');
+            if (!renderedFromCache) {
+                ensureEssentialCollections();
+                applyFilters();
+                hideSkeletonLoaders();
+            }
+            isLoading = false;
+            return;
+        }
+
+        // STEP 4: Render fresh data
+        allProducts = data;
+        console.log('LOAD: Supabase OK -', allProducts.length, 'products');
+        ensureEssentialCollections();
+        applyFilters();
+        hideSkeletonLoaders();
+        populateBrandFilters();
+        populateSizeFilters();
+
+        // STEP 5: Save to cache quietly
+        try {
+            localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
+            localStorage.setItem('productsCache_Time', String(Date.now()));
+        } catch(_) {
+            try {
+                const savedCart = localStorage.getItem('tm_cart');
+                localStorage.clear();
+                if (savedCart) localStorage.setItem('tm_cart', savedCart);
+            } catch(__) {}
+        }
+
+    } catch(err) {
+        console.error('LOAD: Unexpected error:', err.message || err);
+        try {
             ensureEssentialCollections();
             applyFilters();
             hideSkeletonLoaders();
-        }
+        } catch(_) {}
     }
+
+    isLoading = false;
 }
+
+// Stubs kept for any legacy references (no-ops)
+async function updateProductsInBackground() {}
+async function fetchAndCacheProducts() {}
+
 
 // Populate filters (Brand & Size)
 function populateBrandFilters() {
