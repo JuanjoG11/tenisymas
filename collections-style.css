@@ -1456,11 +1456,12 @@
 @media (max-width: 900px) {
     .modal-content-container {
         grid-template-columns: 1fr;
-        max-height: 92vh;
+        max-height: 90vh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* Crucial for iOS scroll */
         display: block;
-        margin: 10px;
-        width: calc(100% - 20px);
+        margin: 5vh auto;
+        width: 95%;
     }
 
     .modal-info {
@@ -1469,7 +1470,7 @@
         height: auto;
     }
     .modal-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
 }
 
@@ -1624,109 +1625,6 @@
         font-size: 0.8rem;
     }
 }
-/* ==================== MOBILE MODAL ==================== */
-@media (max-width: 768px) {
-    .product-modal {
-        align-items: flex-end;
-        justify-content: center;
-        background: rgba(0,0,0,0.7);
-    }
-
-    .modal-content-container {
-        width: 100%;
-        max-width: 100%;
-        height: 92vh;       /* Strict height to force flex overflow on .modal-info */
-        max-height: 92vh;
-        border-radius: 24px 24px 0 0 !important;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        /* Slide up from bottom */
-        animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    @keyframes slideUp {
-        from { transform: translateY(100%); }
-        to   { transform: translateY(0); }
-    }
-
-    .modal-gallery {
-        height: 42vh;       /* Take up 42% of modal height for image */
-        min-height: unset;
-        flex-shrink: 0;
-        border-right: none;
-        border-bottom: 1px solid #1a1a1a;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .modal-main-image {
-        flex: 1;
-        min-height: 0;
-        height: auto;
-        padding: 5px;
-    }
-
-    .modal-main-image img {
-        width: 100%;
-        height: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-
-    .modal-thumbnails {
-        height: 60px;
-        gap: 8px;
-        padding: 8px 12px;
-        flex-shrink: 0;
-    }
-
-    .thumb-item {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-    }
-
-    .modal-info {
-        flex: 1;
-        min-height: 0;      /* Crucial: allows flex child to scroll */
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 16px 20px 40px; /* Extra padding so bottom items aren't cut off */
-        border-left: none;
-    }
-
-
-    .modal-title {
-        font-size: 1.3rem;
-    }
-
-    .modal-price {
-        font-size: 1.8rem;
-    }
-
-    .modal-close {
-        top: 12px;
-        right: 12px;
-        width: 34px;
-        height: 34px;
-        font-size: 1.2rem;
-        z-index: 200;
-    }
-
-    .modal-action-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .modal-action-buttons .btn {
-        width: 100%;
-        padding: 14px;
-        font-size: 1rem;
-    }
-}
-
 /* Body scroll lock when modal open (works on iOS) */
 body.modal-open {
     overflow: hidden !important;
