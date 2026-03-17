@@ -46,6 +46,7 @@ if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
 if (typeof isRendering === 'undefined') { var isRendering = false; }
+if (typeof firstLoadComplete === 'undefined') { var firstLoadComplete = false; }
 
 // Addi Configuration Fallback
 window.addiAllySlug = window.addiAllySlug || "tennisymasco-ecommerce";
@@ -135,6 +136,9 @@ async function loadProducts() {
     if (isLoading) return;
     isLoading = true;
 
+    // Show initial loading state
+    updateResultsCount(-1);
+
     // STEP 1: Immediate First Paint (Virtual + Cache)
     // We show this in <100ms
     try {
@@ -155,7 +159,9 @@ async function loadProducts() {
         
         // INITIAL RENDER (Cache or just Virtual)
         applyFilters(); 
-        hideSkeletonLoaders();
+        if (filteredProducts.length > 0) {
+            hideSkeletonLoaders();
+        }
         console.timeEnd('🚀 InstantPaint');
     } catch(e) { console.warn('Instant paint issue:', e); }
 
@@ -197,6 +203,7 @@ async function loadProducts() {
         console.error('LOAD: Sync failed:', err);
     } finally {
         isLoading = false;
+        firstLoadComplete = true; // Background sync or fallback finished, we can now show empty state if needed
         hideSkeletonLoaders();
     }
 }
@@ -477,8 +484,15 @@ function renderProducts(reset = true, shouldScroll = false) {
     }
 
     if (filteredProducts.length === 0) {
-        productsGrid.style.display = 'none';
-        emptyState.style.display = 'block';
+        // Only show empty state if first network fetch is done
+        if (firstLoadComplete) {
+            productsGrid.style.display = 'none';
+            emptyState.style.display = 'block';
+        } else {
+            // Keep grid (it's empty but skeletons might be showing)
+            productsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+        }
         isRendering = false;
         return;
     }
@@ -1218,6 +1232,13 @@ function updateResultsCount(count = null) {
     }
 
     const total = count !== null ? count : filteredProducts.length;
+
+    // If first load isn't complete and we have no products, keep showing 'Cargando'
+    if (!firstLoadComplete && total === 0) {
+        resultsCount.innerHTML = '<span style="opacity: 0.7;">⌛ Cargando...</span>';
+        return;
+    }
+
     resultsCount.textContent = `${total} ${total === 1 ? 'producto' : 'productos'}`;
 }
 
