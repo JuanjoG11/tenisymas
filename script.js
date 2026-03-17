@@ -703,7 +703,16 @@ async function syncProducts() {
             if (error) throw error;
 
             if (data && data.length > 0) {
-                products = data;
+                // Dedup logic: Ensure unique IDs
+                const uniqueData = [];
+                const seenIds = new Set();
+                data.forEach(p => {
+                    if (!seenIds.has(p.id)) {
+                        seenIds.add(p.id);
+                        uniqueData.push(p);
+                    }
+                });
+                products = uniqueData;
 
                 // Update Cache (Smart Minified Cache)
                 try {

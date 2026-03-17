@@ -1459,16 +1459,18 @@
         margin: 10px;
         width: calc(100% - 20px);
     }
-    }
 
     .modal-info {
         padding: 25px 20px;
         overflow-y: visible !important;
         height: auto;
+    }
     .modal-title {
         font-size: 1.8rem;
     }
 }
+
+
 /* SIZE GUIDE MODAL STYLES */
 .size-guide-modal {
     position: fixed;

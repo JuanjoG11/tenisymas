@@ -477,11 +477,13 @@ function applyFilters() {
             if (!matches && (fCat.includes('peto') || fCat.includes('camiseta'))) {
                 const search = ((product.name || '') + ' ' + rawCat).toLowerCase();
                 if (search.includes('peto') || search.includes('camiseta')) {
-                    return true;
+                    // fallthrough to next filters
+                } else {
+                    return false;
                 }
+            } else if (!matches) {
+                return false;
             }
-
-            if (!matches) return false;
         }
 
         // Brand
@@ -503,8 +505,14 @@ function applyFilters() {
 
         // Size
         if (activeFilters.sizes.length > 0) {
-            const pSizes = product.sizes || product.tallas || [];
-            if (!activeFilters.sizes.some(s => pSizes.includes(s))) return false;
+            const rawSizes = product.sizes || product.tallas || [];
+            let pSizes = [];
+            if (Array.isArray(rawSizes)) {
+                pSizes = rawSizes.map(String);
+            } else if (typeof rawSizes === 'string') {
+                pSizes = rawSizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim());
+            }
+            if (!activeFilters.sizes.some(s => pSizes.includes(String(s)))) return false;
         }
 
         // Discount
@@ -649,7 +657,10 @@ function createProductCardHTML(product) {
     // Full gallery: cover first, then extra photos (avoid duplicates)
     const images = [coverImage, ...extraImages.filter(img => img !== coverImage)];
     const hasMultipleImages = images.length > 1;
-    const mainImage = coverImage; // Cover is always the catalog thumbnail
+    // Optimization: Only render first 2 images for the catalog to avoid excessive memory/DOM usage
+    // The modal will still show EVERYTHING including Supabase auto-discovery.
+    const catalogImages = images.slice(0, 2); 
+    const mainImage = coverImage;
 
     // Determine correct selector type (Chips vs Dropdown)
     const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala'].includes(category);
@@ -667,7 +678,7 @@ function createProductCardHTML(product) {
                       width="300" 
                       height="300"
                 >
-                ${images.map((img, idx) => `
+                ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
                          class="product-image ${idx === 0 ? 'active' : ''} ${idx === 1 ? 'hover-img' : ''}" 
@@ -693,7 +704,7 @@ function createProductCardHTML(product) {
                         </svg>
                     </button>
                     <div class="carousel-dots">
-                        ${images.map((_, index) => `
+                        ${catalogImages.map((_, index) => `
                             <span class="carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToProductImage('${product.id}', ${index})"></span>
                         `).join('')}
                     </div>
@@ -875,7 +886,7 @@ async function openProductModal(productId) {
         // Update text as requested
         buyNowBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-            VERIFICAR TALLA Y COMPRAR
+            COMPRAR AHORA
         `;
         
         buyNowBtn.onclick = (e) => {
