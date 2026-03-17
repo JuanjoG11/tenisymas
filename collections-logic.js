@@ -56,21 +56,40 @@ window.selectedModalColor = window.selectedModalColor || null;
 window.modalQty = window.modalQty || 1;
 window.currentMainModalImage = window.currentMainModalImage || '';
 
+// GLOBAL ERROR LOGGER (FOR MOBILE DEBUGGING)
+window.onerror = function(msg, url, line) {
+    console.error('Mobile Error:', msg, 'at', line);
+    const sub = document.getElementById('categorySubtitle');
+    if (sub) sub.textContent = 'Error: ' + msg.substring(0, 30);
+};
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Collections page loaded (Logic V2)');
+    try {
+        console.log('🚀 Collections page loaded (Logic V3)');
+        setupCollections();
+    } catch(err) {
+        console.error('INIT FAILED:', err);
+    }
+});
 
+async function setupCollections() {
     // 1. Get category immediately to ensure correct initial render
     const urlParams = new URLSearchParams(window.location.search);
-    const category = urlParams.get('category');
-
-    if (category) {
-        activeFilters.category = category;
-        updateCategoryTitle(category);
+    const categoryName = urlParams.get('category');
+    
+    if (categoryName) {
+        activeFilters.category = categoryName;
     }
-
+    
+    updateCategoryTitle(categoryName);
+    
     // 2. Setup Intersection Observer for infinite scroll
-    setupIntersectionObserver();
+    try {
+        if (typeof IntersectionObserver !== 'undefined') {
+            setupIntersectionObserver();
+        }
+    } catch(e) { console.warn('Observer failed', e); }
 
     // 3. Load Products (Non-blocking cache-first)
     loadProducts();
@@ -78,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Setup Event Listeners
     setupFilters();
     setupMobileFilters();
-});
+}
 
 // Update category title
 function updateCategoryTitle(category) {
@@ -110,30 +129,46 @@ function updateCategoryTitle(category) {
     if (subtitleEl) subtitleEl.textContent = info.subtitle;
 }
 
-// Load products - CACHE-FIRST for instant feedback
-// Load products - ULTRA-AGGRESSIVE CACHE-FIRST for marketplace speed
-async function loadProducts() {
-    console.time('loadProducts');
+// Load products - CACHE-FIRST for instant feedback with dependency waiting
+async function loadProducts(retries = 0) {
+    if (isLoading && retries === 0) return;
+    
+    // Safety: Wait for dependencies if they might still be loading (common on mobile/slow networks)
+    if (typeof supabaseClient === 'undefined' && retries < 10) {
+        console.log(`[RETRY] Waiting for dependencies... (${retries})`);
+        setTimeout(() => loadProducts(retries + 1), 200);
+        return;
+    }
+
     if (isLoading) return;
     isLoading = true;
 
     try {
         // 1. PHASE 1: Instant Cache Render
-        const cached = localStorage.getItem('productsCache_v3');
-        let hasRenderedFromCache = false;
+        let cached = null;
+        try {
+            cached = localStorage.getItem('productsCache_v3');
+        } catch(e) { console.warn('LocalStorage blocked'); }
 
+        let hasRenderedFromCache = false;
         if (cached) {
             try {
-                allProducts = JSON.parse(cached);
-                console.log('⚡ Instant render from cache');
-                ensureEssentialCollections();
-                applyFilters();
-                populateBrandFilters();
-                populateSizeFilters();
-                hideSkeletonLoaders();
-                hasRenderedFromCache = true;
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed)) {
+                    allProducts = parsed;
+                    console.log('⚡ Instant render from cache');
+                    ensureEssentialCollections();
+                    applyFilters();
+                    populateBrandFilters();
+                    populateSizeFilters();
+                    hideSkeletonLoaders();
+                    hasRenderedFromCache = true;
+                } else {
+                    throw new Error('Cache not array');
+                }
             } catch (e) {
-                console.warn('Cache corrupted');
+                console.warn('Cache corrupted/oversized');
+                try { localStorage.removeItem('productsCache_v3'); } catch(err) {}
             }
         }
 
@@ -143,9 +178,10 @@ async function loadProducts() {
         }
 
         // 2. PHASE 2: Quick / Background Sync
-        // ULTRA-SPEED: If no cache, fetch ONLY initial page size (24 items) to instantly paint the screen
         const category = activeFilters.category;
-        if (!hasRenderedFromCache && typeof supabaseClient !== 'undefined') {
+        const hasSupabase = typeof supabaseClient !== 'undefined' && supabaseClient !== null;
+
+        if (!hasRenderedFromCache && hasSupabase) {
             console.log('⚡ Performing quick INITIAL fetch for first paint');
             try {
                 let query = supabaseClient.from('products').select('*').order('id', { ascending: true }).limit(18);
@@ -179,6 +215,12 @@ async function loadProducts() {
                     ensureEssentialCollections();
                     applyFilters();
                     console.log('🔄 AllProducts updated natively');
+                    
+                    // Visual feedback for mobile
+                    const sub = document.getElementById('categorySubtitle');
+                    if (sub && sub.textContent.includes('Cargando')) {
+                        sub.textContent = 'Actualizado: ' + allProducts.length + ' productos';
+                    }
                     
                     try {
                         localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
@@ -496,6 +538,7 @@ function executeApplyFilters(shouldScroll = false) {
     }
 
     filteredProducts = allProducts.filter(product => {
+        if (!product) return false;
         // Category
         if (fCat && !isSpecialCat) {
             const rawCat = product.category || product.categoria || '';
@@ -596,8 +639,11 @@ function renderProducts(reset = true, shouldScroll = false) {
 
     const productsGrid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
-    const sentinels = document.querySelectorAll('.scroll-sentinel');
-    sentinels.forEach(s => s.remove()); // Remove old sentinels
+    const sentinelNodes = document.querySelectorAll('.scroll-sentinel');
+    // More compatible way to iterate NodeList for older mobile browsers
+    for (let i = 0; i < sentinelNodes.length; i++) {
+        sentinelNodes[i].remove();
+    }
 
     if (filteredProducts.length === 0) {
         productsGrid.style.display = 'none';
@@ -1176,9 +1222,11 @@ function handleAddToCart(productId, requiresSize, requiresColor, btnElement) {
     let hasError = false;
 
     // Get the product card context
-    const productCard = btnElement ? btnElement.closest('.product-card') : document.getElementById(`size-${productId}`)?.closest('.product-card');
+    const sizeEl = document.getElementById(`size-${productId}`);
+    const productCard = btnElement ? btnElement.closest('.product-card') : (sizeEl ? sizeEl.closest('.product-card') : null);
+    
     if (!productCard) {
-        console.error("No se encontrí³ el contenedor del producto");
+        console.error("No se encontró el contenedor del producto");
         return;
     }
 
@@ -1343,7 +1391,10 @@ function clearAllFilters(shouldScroll = false) {
         sizes: [],
         discount: false
     };
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = false;
+    }
     applyFilters(shouldScroll);
 }
 
@@ -1379,9 +1430,12 @@ function setupMobileFilters() {
 }
 
 function ensureEssentialCollections() {
+    if (!Array.isArray(allProducts)) {
+        allProducts = [];
+    }
     // Dedup: Ensure we don't duplicate existing products if sync runs multiple times on same array
-    const petosExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('petos'));
-    const camisetasExist = allProducts.filter(p => normalize(p.category || p.categoria).includes('camisetas'));
+    const petosExist = allProducts.filter(p => p && normalize(p.category || p.categoria).includes('petos'));
+    const camisetasExist = allProducts.filter(p => p && normalize(p.category || p.categoria).includes('camisetas'));
 
     // Inject missing Petos (Expected: 2 collections at $65.000)
     if (petosExist.length < 2) {
