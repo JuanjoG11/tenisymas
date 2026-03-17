@@ -185,7 +185,7 @@ async function loadProducts() {
         console.log('LOAD: Fetching from Supabase...');
         const { data, error } = await client
             .from('products')
-            .select('id, name, category, price, oldPrice, image, images, sizes, colors, brand, badge, folder')
+            .select('*')
             .order('id', { ascending: true });
 
         if (error) {
