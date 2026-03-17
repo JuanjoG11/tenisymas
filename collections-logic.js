@@ -513,11 +513,19 @@ function parsePrice(priceString) {
 
 function formatDisplayPrice(price) {
     if (!price || price === '0' || price === 0 || price === '$0' || price === '0.00') return '$0';
-    if (typeof price === 'number') return '$' + price.toLocaleString('es-CO');
-    // If it's a string that's just digits, add $
-    if (typeof price === 'string' && /^\d+$/.test(price.replace(/[.,]/g, ''))) {
-        if (!price.startsWith('$')) return '$' + price;
+    
+    if (typeof price === 'number') {
+        return '$' + price.toLocaleString('es-CO');
     }
+    
+    // Si es un string con números, extraerlos y formatearlos
+    if (typeof price === 'string') {
+        const cleanDigits = price.replace(/[^\d]/g, '');
+        if (cleanDigits) {
+            return '$' + parseInt(cleanDigits, 10).toLocaleString('es-CO');
+        }
+    }
+    
     return price;
 }
 

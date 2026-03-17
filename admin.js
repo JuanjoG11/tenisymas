@@ -248,6 +248,16 @@ async function saveProduct(productData, file) {
 }
 
 function setupEventListeners() {
+    // 💡 Auto uppercase on the name field as the user types
+    const nameInput = document.getElementById('name');
+    if (nameInput) {
+        nameInput.addEventListener('input', function() {
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.toUpperCase();
+            this.setSelectionRange(start, end);
+        });
+    }
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (adminPassword.value === ADMIN_PASS) {
@@ -292,7 +302,7 @@ function setupEventListeners() {
             }
 
             const productData = {
-                name: document.getElementById('name').value,
+                name: document.getElementById('name').value.toUpperCase(),
                 category: document.getElementById('category').value,
                 price: document.getElementById('price').value,
                 oldprice: document.getElementById('oldPrice').value,
@@ -628,6 +638,14 @@ window.editProduct = (id) => {
 window.deleteProduct = async (id) => {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
         try {
+            // First, delete any dependent records in the inventory table 
+            // to bypass the 409 Foreign Key constraint error
+            await supabaseClient
+                .from('inventory')
+                .delete()
+                .eq('product_id', id);
+
+            // Now delete the actual product
             const { error } = await supabaseClient
                 .from('products')
                 .delete()
