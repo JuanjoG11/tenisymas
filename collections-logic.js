@@ -129,118 +129,76 @@ function updateCategoryTitle(category) {
     if (subtitleEl) subtitleEl.textContent = info.subtitle;
 }
 
-// ==================== SINGLE CLEAN PRODUCT LOADER ====================
-// ONE simple path: try cache → wait for supabase → fetch → render.
-// No parallel loaders. No background syncs. No race conditions.
+// ==================== ULTRA-FAST PRODUCT LOADER ====================
+// Strategy: Render local/cache first (instant), then update from network promise.
 async function loadProducts() {
     if (isLoading) return;
     isLoading = true;
 
-    showSkeletonLoaders();
-    updateResultsCount(-1);
-
+    // STEP 1: Immediate First Paint (Virtual + Cache)
+    // We show this in <100ms
     try {
-        // STEP 1: Try to render immediately from cache
-        let renderedFromCache = false;
-        try {
-            const cached = localStorage.getItem('productsCache_v3');
-            if (cached) {
-                const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    allProducts = parsed;
-                    renderedFromCache = true;
-                    console.log('LOAD: Cache hit -', allProducts.length, 'products');
-                    ensureEssentialCollections();
-                    applyFilters();
-                    hideSkeletonLoaders();
-                }
+        console.time('🚀 InstantPaint');
+        
+        // Ensure we at least have the virtual collections right away
+        ensureEssentialCollections(); 
+        
+        const cached = localStorage.getItem('productsCache_v3');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                allProducts = parsed;
+                ensureEssentialCollections(); // Re-ensure in case cache didn't have them
+                console.log('LOAD: Cache hit');
             }
-        } catch(cacheErr) {
-            try { localStorage.removeItem('productsCache_v3'); } catch(_) {}
-            console.warn('LOAD: Cache invalid, cleared.');
         }
-
-        // STEP 2: Wait for supabaseClient (scripts may load async on mobile)
-        let waited = 0;
-        while (waited < 4000) {
-            if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) break;
-            await new Promise(function(r) { setTimeout(r, 200); });
-            waited += 200;
-        }
-
-        const client = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null;
-
-        if (!client) {
-            console.warn('LOAD: No supabase client. Using cache/virtual only.');
-            if (!renderedFromCache) {
-                ensureEssentialCollections();
-                applyFilters();
-                hideSkeletonLoaders();
-            }
-            isLoading = false;
-            return;
-        }
-
-        // STEP 3: Fetch fresh data from Supabase
-        console.log('LOAD: Fetching from Supabase...');
-        const { data, error } = await client
-            .from('products')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (error) {
-            console.error('LOAD: Supabase error:', error.message);
-            if (!renderedFromCache) {
-                ensureEssentialCollections();
-                applyFilters();
-                hideSkeletonLoaders();
-            }
-            isLoading = false;
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            console.warn('LOAD: Supabase returned 0 products');
-            if (!renderedFromCache) {
-                ensureEssentialCollections();
-                applyFilters();
-                hideSkeletonLoaders();
-            }
-            isLoading = false;
-            return;
-        }
-
-        // STEP 4: Render fresh data
-        allProducts = data;
-        console.log('LOAD: Supabase OK -', allProducts.length, 'products');
-        ensureEssentialCollections();
-        applyFilters();
+        
+        // INITIAL RENDER (Cache or just Virtual)
+        applyFilters(); 
         hideSkeletonLoaders();
-        populateBrandFilters();
-        populateSizeFilters();
+        console.timeEnd('🚀 InstantPaint');
+    } catch(e) { console.warn('Instant paint issue:', e); }
 
-        // STEP 5: Save to cache quietly
-        try {
-            localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
-            localStorage.setItem('productsCache_Time', String(Date.now()));
-        } catch(_) {
-            try {
-                const savedCart = localStorage.getItem('tm_cart');
-                localStorage.clear();
-                if (savedCart) localStorage.setItem('tm_cart', savedCart);
-            } catch(__) {}
+    // STEP 2: Background Sync (Wait for the data already being fetched by script.js)
+    try {
+        let freshData = null;
+        
+        // script.js creates window.productsLoaded as a Singleton Promise
+        if (window.productsLoaded) {
+            console.log('LOAD: Waiting for existing fetch from script.js...');
+            freshData = await window.productsLoaded;
+        } else {
+            // Fallback if script.js didn't start the fetch
+            const client = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null;
+            if (client) {
+                console.log('LOAD: Manual fetch trigger...');
+                const { data } = await client.from('products').select('*').order('id', { ascending: true });
+                freshData = data;
+            }
         }
 
-    } catch(err) {
-        console.error('LOAD: Unexpected error:', err.message || err);
-        try {
+        if (freshData && freshData.length > 0) {
+            const hasChanged = allProducts.length !== freshData.length;
+            allProducts = freshData;
             ensureEssentialCollections();
-            applyFilters();
-            hideSkeletonLoaders();
-        } catch(_) {}
+            
+            if (hasChanged) {
+                console.log('LOAD: UI Updated with fresh data');
+                applyFilters();
+            }
+            
+            // Save to cache quietly
+            try {
+                localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_Time', String(Date.now()));
+            } catch(_) {}
+        }
+    } catch(err) {
+        console.error('LOAD: Sync failed:', err);
+    } finally {
+        isLoading = false;
+        hideSkeletonLoaders();
     }
-
-    isLoading = false;
 }
 
 // Stubs kept for any legacy references (no-ops)
