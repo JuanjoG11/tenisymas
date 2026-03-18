@@ -704,8 +704,6 @@ function createProductCardHTML(product, absoluteIndex = 999) {
                     ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
                 </div>
-                <!-- Addi Installments Widget -->
-                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
 
                 <div class="view-details-tag">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -751,6 +749,13 @@ async function openProductModal(productId) {
     if (titleEl) titleEl.textContent = product.name;
     if (categoryEl) categoryEl.textContent = product.category || product.categoria || 'Calzado';
     if (priceEl) priceEl.textContent = formatDisplayPrice(product.price || product.precio);
+
+    // Update Addi Widget in Modal
+    const addiContainer = document.getElementById('modalAddiContainer');
+    if (addiContainer) {
+        const cleanPrice = (product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0';
+        addiContainer.innerHTML = `<addi-widget price="${cleanPrice}" ally-slug="${window.addiAllySlug || 'tennisymasco-ecommerce'}"></addi-widget>`;
+    }
 
     if (mainImg) {
         mainImg.onerror = () => {
