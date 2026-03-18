@@ -496,7 +496,24 @@ function executeApplyFilters(shouldScroll = false) {
     const sizeContainer = document.getElementById('sizeFilters');
     if (sizeContainer) populateSizeFilters();
 
-    // 4. Render First Page
+    // 4. Sort: Priority to products with multiple images (push single-image last)
+    filteredProducts.sort((a, b) => {
+        // Count images including main and gallery
+        let aGallery = a.images || [];
+        if (typeof aGallery === 'string' && aGallery.startsWith('[')) try { aGallery = JSON.parse(aGallery); } catch(e) {}
+        const aCount = (Array.isArray(aGallery) ? aGallery.length : 0) + (a.image ? 1 : 0);
+
+        let bGallery = b.images || [];
+        if (typeof bGallery === 'string' && bGallery.startsWith('[')) try { bGallery = JSON.parse(bGallery); } catch(e) {}
+        const bCount = (Array.isArray(bGallery) ? bGallery.length : 0) + (b.image ? 1 : 0);
+        
+        // Priority: More than 1 image comes first
+        if (aCount <= 1 && bCount > 1) return 1;
+        if (aCount > 1 && bCount <= 1) return -1;
+        return 0; // Maintain order within same group
+    });
+
+    // 5. Render First Page
     renderProducts(true, shouldScroll);
     updateResultsCount();
 }
@@ -642,12 +659,12 @@ function createProductCardHTML(product, absoluteIndex = 999) {
         extraImages = product.images;
     }
     
-    // Full gallery: cover first, then extra photos (avoid duplicates)
+    // GALERÍA (Gallery in modal) = product.image + extra links from product.images
     const images = [coverImage, ...extraImages.filter(img => img !== coverImage)];
     const hasMultipleImages = images.length > 1;
-    // Optimization: Only render first 2 images for the catalog to avoid excessive memory/DOM usage
-    // The modal will still show EVERYTHING including Supabase auto-discovery.
-    const catalogImages = images.slice(0, 2); 
+    
+    // Show up to 5 images in the catalog carousel for better visual variety
+    const catalogImages = images.slice(0, 5); 
     const mainImage = coverImage;
 
     // Determine correct selector type (Chips vs Dropdown)
@@ -657,15 +674,6 @@ function createProductCardHTML(product, absoluteIndex = 999) {
         <div class="product-card" data-id="${product.id}" data-category="${product.category}">
             ${product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : ''}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
-                <img src="${mainImage}" 
-                     alt="${product.name}" 
-                      class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
-                      loading="${absoluteIndex < 4 ? 'eager' : 'lazy'}"
-                      onload="this.classList.add('loaded')"
-                      decoding="async"
-                      width="300" 
-                      height="300"
-                >
                 ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
@@ -803,8 +811,14 @@ async function openProductModal(productId) {
     document.body.classList.add('modal-open');
     document.body.dataset.scrollY = scrollY;
 
-    // Show initial data
-    document.getElementById('modalTitle').textContent = product.name;
+    // Size Guide Visibility (Footwear Only)
+    const sizeGuideContainer = document.querySelector('.size-guide-container');
+    const sizeWarning = document.querySelector('.size-warning');
+    const isSpecialCategory = (product.category || '').toLowerCase().includes('peto') || (product.category || '').toLowerCase().includes('camiseta');
+    
+    if (sizeGuideContainer) sizeGuideContainer.style.display = isSpecialCategory ? 'none' : 'block';
+    if (sizeWarning) sizeWarning.style.display = isSpecialCategory ? 'none' : 'block';
+
     renderModalThumbnails(images, product.name);
     
     // Now fetch extra images in the background if they exist
