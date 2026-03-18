@@ -2,7 +2,44 @@ console.log('%c🚀 ADDI CORE ENGINE V3.0 ACTIVATED', 'color: #00ff00; font-weig
 // ==================== CHECKOUT LOGIC FOR ADDI ====================
 
 let checkoutCart = [];
-const SHIPPING_COST = 16500;
+const DEFAULT_SHIPPING_COST = 16500;
+const FREE_SHIPPING_THRESHOLD = 250000;
+
+const colombiaCities = {
+    "Amazonas": ["Leticia", "Puerto Nariño"],
+    "Antioquia": ["Medellín", "Bello", "Itagüí", "Envigado", "Apartadó", "Rionegro", "Turbo", "Caucasia", "Caldas", "Chigorodó", "La Estrella", "Girardota", "Marinilla", "Sabaneta", "Santa Rosa de Osos"],
+    "Arauca": ["Arauca", "Tame", "Saravena", "Arauquita"],
+    "Atlántico": ["Barranquilla", "Soledad", "Malambo", "Sabanalarga", "Baranoa", "Galapa", "Puerto Colombia"],
+    "Bogotá DC": ["Bogotá DC"],
+    "Bolívar": ["Cartagena de Indias", "Magangué", "Turbaco", "Arjona", "Carmen de Bolívar"],
+    "Boyacá": ["Tunja", "Sogamoso", "Duitama", "Chiquinquirá", "Puerto Boyacá"],
+    "Caldas": ["Manizales", "La Dorada", "Chinchiná", "Villamaría", "Riosucio"],
+    "Caquetá": ["Florencia", "San Vicente del Caguán", "Puerto Rico"],
+    "Casanare": ["Yopal", "Aguazul", "Paz de Ariporo", "Villanueva"],
+    "Cauca": ["Popayán", "Santander de Quilichao", "Puerto Tejada", "El Tambo"],
+    "Cesar": ["Valledupar", "Aguachica", "Agustín Codazzi", "Bosconia"],
+    "Chocó": ["Quibdó", "Istmina", "Condoto"],
+    "Córdoba": ["Montería", "Cereté", "Sahagún", "Lorica", "Montelíbano", "Planeta Rica"],
+    "Cundinamarca": ["Soacha", "Fusagasugá", "Facatativá", "Zipaquirá", "Chía", "Girardot", "Mosquera", "Madrid", "Funza", "Cajicá", "Sibaté", "Tocancipá"],
+    "Guainía": ["Inírida"],
+    "Guaviare": ["San José del Guaviare", "Retorno"],
+    "Huila": ["Neiva", "Pitalito", "Garzón", "La Plata"],
+    "La Guajira": ["Riohacha", "Maicao", "Uribia", "Manaure", "San Juan del Cesar"],
+    "Magdalena": ["Santa Marta", "Ciénaga", "Fundación", "El Banco", "Plato"],
+    "Meta": ["Villavicencio", "Acacías", "Granada", "Puerto López"],
+    "Nariño": ["Pasto", "Tumaco", "Ipiales", "Túquerres"],
+    "Norte de Santander": ["Cúcuta", "Ocaña", "Villa del Rosario", "Los Patios", "Tibú", "Pamplona"],
+    "Putumayo": ["Mocoa", "Orito", "Puerto Asís", "Valle del Guamuez"],
+    "Quindío": ["Armenia", "Calarcá", "La Tebaida", "Montenegro", "Quimbaya"],
+    "Risaralda": ["Pereira", "Dosquebradas", "Santa Rosa de Cabal", "La Virginia"],
+    "San Andrés y Providencia": ["San Andrés", "Providencia"],
+    "Santander": ["Bucaramanga", "Floridablanca", "Girón", "Piedecuesta", "Barrancabermeja", "San Gil"],
+    "Sucre": ["Sincelejo", "Corozal", "San Marcos"],
+    "Tolima": ["Ibagué", "Espinal", "Chaparral", "Líbano", "Mariquita"],
+    "Valle del Cauca": ["Cali", "Buenaventura", "Palmira", "Tuluá", "Yumbo", "Cartago", "Buga", "Jamundí", "Candelaria", "Florida"],
+    "Vaupés": ["Mitú"],
+    "Vichada": ["Puerto Carreño", "Cumaribo"]
+};
 
 // ==================== MERCADO PAGO CONFIGURATION ====================
 const MP_PUBLIC_KEY = 'APP_USR-c4eb2276-e656-4cc8-ad42-3135168127fe';
@@ -15,7 +52,36 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCheckoutCart();
     setupPaymentSelectors();
     setupCheckoutForm();
+    setupLocationSelectors();
 });
+
+function setupLocationSelectors() {
+    const deptSelect = document.getElementById('department');
+    const citySelect = document.getElementById('city');
+
+    if (deptSelect && citySelect) {
+        deptSelect.addEventListener('change', () => {
+            const dept = deptSelect.value;
+            const cities = colombiaCities[dept] || [];
+
+            // Reset and enable
+            citySelect.innerHTML = '<option value="" disabled selected>Ciudad / Municipio</option>';
+            citySelect.disabled = false;
+
+            cities.forEach(city => {
+                const opt = document.createElement('option');
+                opt.value = city;
+                opt.textContent = city;
+                citySelect.appendChild(opt);
+            });
+
+            // If only one city (like Bogota), select it automatically
+            if (cities.length === 1) {
+                citySelect.value = cities[0];
+            }
+        });
+    }
+}
 
 function loadCheckoutCart() {
     const savedCart = localStorage.getItem('tm_cart');
@@ -30,12 +96,19 @@ function loadCheckoutCart() {
 function renderCheckoutSummary() {
     const listContainer = document.getElementById('checkoutItemsList');
     const subtotalEl = document.getElementById('summarySubtotal');
+    const shippingEl = document.getElementById('summaryShipping');
     const totalEl = document.getElementById('summaryTotal');
     if (!listContainer) return;
+
     let subtotal = 0;
     listContainer.innerHTML = checkoutCart.map(item => {
-        const priceClean = parseInt(item.price.replace(/[^0-9]/g, ''));
-        const itemTotal = priceClean * item.quantity;
+        let priceValue = 0;
+        if (typeof item.price === 'number') {
+            priceValue = item.price;
+        } else {
+            priceValue = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+        }
+        const itemTotal = priceValue * item.quantity;
         subtotal += itemTotal;
         return `
             <div class="checkout-item-row">
@@ -45,6 +118,7 @@ function renderCheckoutSummary() {
                 </div>
                 <div class="item-info-row">
                     <h4>${item.name}</h4>
+                    ${item.size ? `<span class="item-meta">Talla: ${item.size}</span>` : ''}
                 </div>
                 <div class="item-price-final">
                     $${itemTotal.toLocaleString('es-CO')}
@@ -52,9 +126,26 @@ function renderCheckoutSummary() {
             </div>
         `;
     }).join('');
-    const total = subtotal + SHIPPING_COST;
-    subtotalEl.textContent = `$${subtotal.toLocaleString('es-CO')}`;
-    totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
+
+    // Dynamic Shipping
+    const currentShipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_COST;
+    const total = subtotal + currentShipping;
+
+    if (subtotalEl) subtotalEl.textContent = `$${subtotal.toLocaleString('es-CO')}`;
+    
+    if (shippingEl) {
+        if (currentShipping === 0) {
+            shippingEl.innerHTML = '<span style="color: #2ecc71; font-weight: bold;">GRATIS</span>';
+        } else {
+            shippingEl.textContent = `$${currentShipping.toLocaleString('es-CO')}`;
+        }
+    }
+    
+    if (totalEl) totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
+}
+
+function getShippingCost(subtotal) {
+    return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_COST;
 }
 
 function setupPaymentSelectors() {
@@ -136,7 +227,8 @@ async function handleAddiCheckout(customer) {
 
         // Calcular total real
         const subtotal = checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0);
-        const totalAmount = Math.round(subtotal + SHIPPING_COST);
+        const currentShipping = getShippingCost(subtotal);
+        const totalAmount = Math.round(subtotal + currentShipping);
 
         // Mapear items reales para Addi
         const addiItems = checkoutCart.map(item => ({
@@ -250,9 +342,12 @@ async function handleMercadoPagoCheckout(customer) {
             image: getAbsoluteUrl(item.image)
         }));
 
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const currentShipping = getShippingCost(subtotal);
+
         items.push({
             name: "Costo de Envío",
-            price: SHIPPING_COST,
+            price: currentShipping,
             quantity: 1
         });
 
@@ -312,7 +407,8 @@ async function handleWhatsAppFallback(customer) {
         };
     });
 
-    const finalTotal = total + SHIPPING_COST;
+    const currentShipping = getShippingCost(total);
+    const finalTotal = total + currentShipping;
     message += `\n💰 *TOTAL: $${finalTotal.toLocaleString('es-CO')}*`;
 
     // (NUEVO) Registrar en la base de datos de pedidos

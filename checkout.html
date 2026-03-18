@@ -78,33 +78,63 @@
                                 placeholder="Apartamento, unidad, bloque, etc. (opcional)">
                         </div>
                         <div class="form-row split">
-                            <div class="form-group">
-                                <input type="text" id="city" placeholder="Ciudad / Municipio" required>
-                            </div>
                             <div class="form-group select-wrapper">
                                 <select id="department" required>
                                     <option value="" disabled selected>Departamento</option>
+                                    <option value="Amazonas">Amazonas</option>
                                     <option value="Antioquia">Antioquia</option>
+                                    <option value="Arauca">Arauca</option>
                                     <option value="Atlántico">Atlántico</option>
                                     <option value="Bogotá DC">Bogotá DC</option>
                                     <option value="Bolívar">Bolívar</option>
+                                    <option value="Boyacá">Boyacá</option>
                                     <option value="Caldas">Caldas</option>
+                                    <option value="Caquetá">Caquetá</option>
+                                    <option value="Casanare">Casanare</option>
                                     <option value="Cauca">Cauca</option>
+                                    <option value="Cesar">Cesar</option>
+                                    <option value="Chocó">Chocó</option>
+                                    <option value="Córdoba">Córdoba</option>
                                     <option value="Cundinamarca">Cundinamarca</option>
+                                    <option value="Guainía">Guainía</option>
+                                    <option value="Guaviare">Guaviare</option>
                                     <option value="Huila">Huila</option>
+                                    <option value="La Guajira">La Guajira</option>
+                                    <option value="Magdalena">Magdalena</option>
                                     <option value="Meta">Meta</option>
                                     <option value="Nariño">Nariño</option>
                                     <option value="Norte de Santander">Norte de Santander</option>
+                                    <option value="Putumayo">Putumayo</option>
                                     <option value="Quindío">Quindío</option>
                                     <option value="Risaralda">Risaralda</option>
+                                    <option value="San Andrés y Providencia">San Andrés</option>
                                     <option value="Santander">Santander</option>
+                                    <option value="Sucre">Sucre</option>
                                     <option value="Tolima">Tolima</option>
                                     <option value="Valle del Cauca">Valle del Cauca</option>
+                                    <option value="Vaupés">Vaupés</option>
+                                    <option value="Vichada">Vichada</option>
+                                </select>
+                            </div>
+                            <div class="form-group select-wrapper">
+                                <select id="city" required disabled title="Selecciona primero el departamento">
+                                    <option value="" disabled selected>Ciudad / Municipio</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <input type="tel" id="phone" placeholder="Teléfono de contacto (WhatsApp)" required>
+                        </div>
+                        
+                        <!-- ENGAGING SHIPPING MESSAGE -->
+                        <div class="shipping-info-banner">
+                            <div class="shipping-icon-animated">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                            </div>
+                            <div class="shipping-text">
+                                <h4>🚚 ¡Tu espera valdrá la pena!</h4>
+                                <p>Tu pedido llegará en <strong>3 a 5 días hábiles</strong>. Estamos preparando algo especial para ti, ¡la calidad merece este pequeño tiempo!</p>
+                            </div>
                         </div>
                     </section>
 

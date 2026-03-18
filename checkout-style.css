@@ -710,3 +710,66 @@
     font-weight: 900 !important;
     letter-spacing: 1px !important;
 }
+
+/* Shipping Info Banner */
+.shipping-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 193, 7, 0.05);
+    border: 1px dashed rgba(255, 193, 7, 0.3);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-top: 25px;
+    animation: pulseSubtle 4s infinite ease-in-out;
+}
+
+@keyframes pulseSubtle {
+    0%, 100% { transform: scale(1); border-color: rgba(255, 193, 7, 0.3); }
+    50% { transform: scale(1.01); border-color: rgba(255, 193, 7, 0.6); }
+}
+
+.shipping-icon-animated {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.shipping-icon-animated svg {
+    animation: truckMove 3s infinite linear;
+}
+
+@keyframes truckMove {
+    0% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    100% { transform: translateX(-5px); }
+}
+
+.shipping-text h4 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    color: #ffc107;
+    font-weight: 800;
+}
+
+.shipping-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #bbb;
+    line-height: 1.5;
+}
+
+/* Metadata in Summary */
+.item-meta {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-red);
+    margin-top: 4px;
+    font-weight: 600;
+}
