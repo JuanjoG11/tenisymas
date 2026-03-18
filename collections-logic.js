@@ -1537,7 +1537,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 
-console.log('✅ Collections logic V2 ready');
+console.log('✅ Collections logic V3 ready');
 
 
 
