@@ -138,8 +138,10 @@
                         });
 
                         video.addEventListener('error', () => {
-                            clearTimeout(videoTimeout);
-                            video.style.display = 'none';
+                            setTimeout(function() {
+            var intro = document.querySelector('.intro');
+            if (intro) intro.style.display = 'none';
+        }, 2200); // 1.5s + 0.5s + buffer
                             fallback.style.display = 'block';
                         });
 
@@ -147,6 +149,17 @@
                             // Autoplay blocked handling
                         });
                     }
+
+                    // Global timeout to ensure intro is removed even if video events fail
+                    setTimeout(function() {
+                        const intro = document.getElementById('intro');
+                        if (intro) intro.style.display = 'none';
+                        const main = document.getElementById('main-content');
+                        if (main) {
+                            main.style.opacity = '1';
+                            main.style.visibility = 'visible';
+                        }
+                    }, 2000); 
                 </script>
             </div>
         </div>

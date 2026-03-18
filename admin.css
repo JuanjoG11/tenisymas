@@ -1,4 +1,4 @@
-﻿/* Admin Specific Styles */
+/* Admin Specific Styles */
 :root {
     --admin-bg: #0a0a0a;
     --admin-card: #1a1a1a;
@@ -574,4 +574,33 @@ body {
 
 .btn-view:hover {
     background: rgba(255, 255, 255, 0.2);
+}
+
+/* Tools & Optimization Styles */
+.tool-box {
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.tool-box:hover {
+    border-color: rgba(255, 51, 51, 0.4) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+#migrationUI {
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#migrationProgress {
+    box-shadow: 0 0 15px rgba(255, 51, 51, 0.4);
+}
+
+#migrationCount {
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }

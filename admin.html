@@ -7,8 +7,8 @@
     <title>Admin - TENNISYMAS.CO</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="images/logo-tm.png" type="image/png">
 </head>
 
 <body>
@@ -36,6 +36,7 @@
                     <button class="tab-btn active" onclick="switchTab('products')">Productos</button>
                     <button class="tab-btn" onclick="switchTab('orders')">Pedidos <span id="newOrdersBadge"
                             class="new-badge" style="display: none;">!</span></button>
+                    <button class="tab-btn" onclick="switchTab('tools')">🛠️ Herramientas</button>
                 </div>
                 <div class="admin-actions">
                     <button id="logoutBtn" class="btn-logout">Cerrar Sesión</button>
@@ -176,6 +177,38 @@
                                 <!-- Orders will be listed here -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools View -->
+            <div id="toolsView" class="tab-content" style="display: none;">
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>🛠️ Herramientas de Sistema</h2>
+                    </div>
+                    <p style="margin-bottom: 20px; color: #888;">Utilidades para el mantenimiento y optimización.</p>
+                    
+                    <div class="tool-box" style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; border: 1px solid #333;">
+                        <h3 style="margin-bottom: 20px; color: #fff;">🚀 Optimización de Imágenes</h3>
+                        <p style="font-size: 0.95rem; color: #aaa; margin-bottom: 25px; line-height: 1.6;">
+                            Busca productos con imágenes Base64 y las sube a <b>Supabase Storage</b> automágicamente.
+                            <br><br>
+                            <span style="color: #ff3333;">⚠️ Esto mejorará la velocidad en móviles drásticamente.</span>
+                        </p>
+                        
+                        <div id="migrationUI" style="display: none; margin-bottom: 25px;">
+                            <div style="background: #000; border-radius: 8px; height: 12px; width: 100%; overflow: hidden; border: 1px solid #444;">
+                                <div id="migrationProgress" style="background: #ff3333; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <span id="migrationCount" style="font-size: 0.85rem; font-weight: 700;">Procesando: 0/0</span>
+                            </div>
+                        </div>
+
+                        <button id="migrateBtn" class="btn btn-primary" onclick="runImageMigration()" style="padding: 15px 30px; font-weight: 800; border-radius: 12px;">
+                            INICIAR OPTIMIZACIÓN MASIVA
+                        </button>
                     </div>
                 </div>
             </div>

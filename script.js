@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const waBtn = document.querySelector('.whatsapp-float');
         if (waBtn) waBtn.classList.add('visible');
-    }, 3500);
+    }, 2000); // Reduced from 3500ms
 });
 
 // ==================== HERO BACKGROUND SLIDER ====================
@@ -685,12 +685,20 @@ async function syncProducts() {
         const cacheIsFresh = lastFetch && (now - lastFetch < BG_REFRESH_INTERVAL);
 
         // 1. FAST PATH: Serve cache immediately (always, if available)
+        const cacheTTL = 1000 * 60 * 60; // 1 hour (Increased for stability)
         if (cachedData) {
             try {
-                products = JSON.parse(cachedData);
-                console.log('⚡ Script.js: Loaded from cache', products.length);
-                renderHomepageSections();
+                const parsedCache = JSON.parse(cachedData);
+                const timestamp = parsedCache.timestamp;
+                const data = parsedCache.data;
 
+                if (timestamp && (Date.now() - timestamp < cacheTTL)) {
+                    console.log('[SYNC] Valid cache found, skipping network fetch.');
+                    products = data; // Assuming 'products' is the global variable
+                    renderHomepageSections(); // Assuming this is the correct render function
+                    isSyncing = false;
+                    return products;
+                }
                 // If cache is very fresh, skip network fetch entirely and resolve now
                 if (cacheIsFresh) {
                     isSyncing = false;
@@ -722,19 +730,25 @@ async function syncProducts() {
                 });
                 products = uniqueData;
 
-                // Save cache — store all fields plus oldPrice alias for compatibility
-                try {
-                    const minified = products.map(p => ({
-                        ...p,
-                        oldPrice: p.oldPrice || p.oldprice || null // alias for templates
-                    }));
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(minified));
-                    localStorage.setItem(CACHE_TIME_KEY, String(now));
-                    console.log('📦 Script.js: Cache refreshed (' + minified.length + ' products)');
-                } catch (e) {
-                    console.warn('Cache save failed:', e.message);
-                    localStorage.removeItem(CACHE_KEY);
-                }
+                    // Save cache in idle time to avoid blocking UI
+                    const saveCache = () => {
+                        try {
+                            const cacheData = JSON.stringify({
+                                timestamp: Date.now(),
+                                data: products
+                            });
+                            localStorage.setItem('productsCache_v3', cacheData);
+                            console.log('📦 Script.js: Cache updated in background');
+                        } catch (storageErr) {
+                            console.warn('[SYNC] localStorage full or failed:', storageErr);
+                        }
+                    };
+
+                    if (window.requestIdleCallback) {
+                        window.requestIdleCallback(saveCache, { timeout: 2000 });
+                    } else {
+                        setTimeout(saveCache, 100);
+                    }
 
                 renderHomepageSections();
                 console.log('✅ Script.js: Data synced', products.length);

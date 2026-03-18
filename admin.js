@@ -45,6 +45,7 @@ const loginError = document.getElementById('loginError');
 // View Containers
 const productsView = document.getElementById('productsView');
 const ordersView = document.getElementById('ordersView');
+const toolsView = document.getElementById('toolsView');
 const tabButtons = document.querySelectorAll('.tab-btn');
 
 const productForm = document.getElementById('productForm');
@@ -413,21 +414,147 @@ window.switchTab = (tab) => {
 
     // Update buttons
     tabButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('onclick').includes(tab));
+        const btnTab = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+        btn.classList.toggle('active', btnTab === tab);
     });
 
     // Update views
     if (tab === 'products') {
         productsView.style.display = 'block';
         ordersView.style.display = 'none';
+        if (toolsView) toolsView.style.display = 'none';
         renderAdminProducts();
-    } else {
+    } else if (tab === 'orders') {
         productsView.style.display = 'none';
         ordersView.style.display = 'block';
+        if (toolsView) toolsView.style.display = 'none';
         renderOrders();
         newOrdersBadge.style.display = 'none';
+    } else if (tab === 'tools') {
+        productsView.style.display = 'none';
+        ordersView.style.display = 'none';
+        if (toolsView) toolsView.style.display = 'block';
     }
 };
+
+// ==================== IMAGE OPTIMIZATION (MIGRATION) ====================
+window.runImageMigration = async () => {
+    if (!confirm('¿Seguro que quieres iniciar la optimización? \nEsto buscará imágenes pesadas y las convertirá en links ligeros.')) return;
+
+    const btn = document.getElementById('migrateBtn');
+    const ui = document.getElementById('migrationUI');
+    const progress = document.getElementById('migrationProgress');
+    const countText = document.getElementById('migrationCount');
+    
+    btn.disabled = true;
+    ui.style.display = 'block';
+    
+    try {
+        // 1. Get all products
+        const { data: allProducts, error } = await supabaseClient.from('products').select('*');
+        if (error) throw error;
+
+        // 2. Filter products with base64 images (either main image or gallery)
+        const toProcess = allProducts.filter(p => {
+            const mainIsBase64 = p.image && p.image.startsWith('data:image');
+            
+            // Re-normalize gallery if it's a string
+            let gallery = p.images || [];
+            if (typeof gallery === 'string' && gallery.startsWith('[')) {
+                try { gallery = JSON.parse(gallery); } catch(e) {}
+            }
+            const galleryHasBase64 = Array.isArray(gallery) && gallery.some(img => img && img.startsWith('data:image'));
+            
+            return mainIsBase64 || galleryHasBase64;
+        });
+        
+        if (toProcess.length === 0) {
+            showToast('✅ ¡Genial! No tienes imágenes en Base64 para optimizar.');
+            btn.disabled = false;
+            return;
+        }
+
+        let done = 0;
+        const total = toProcess.length;
+
+        for (const product of toProcess) {
+            try {
+                countText.innerText = `Procesando: ${done + 1}/${total} (${product.name})`;
+                let updates = {};
+                let changed = false;
+
+                // Process Main Image
+                if (product.image && product.image.startsWith('data:image')) {
+                    const file = base64ToFile(product.image, `main_${product.id}.jpg`);
+                    const newUrl = await uploadImage(file);
+                    if (newUrl && !newUrl.startsWith('data:image')) {
+                        updates.image = newUrl;
+                        changed = true;
+                    }
+                }
+
+                // Process Gallery Images (Deep Check)
+                let gallery = product.images || [];
+                if (typeof gallery === 'string' && gallery.startsWith('[')) {
+                    try { gallery = JSON.parse(gallery); } catch(e) { gallery = []; }
+                }
+
+                if (Array.isArray(gallery) && gallery.some(img => img && img.startsWith('data:image'))) {
+                    const newGallery = [];
+                    for (let i = 0; i < gallery.length; i++) {
+                        const img = gallery[i];
+                        if (img && img.startsWith('data:image')) {
+                            const file = base64ToFile(img, `gal_${product.id}_${i}.jpg`);
+                            const newUrl = await uploadImage(file);
+                            newGallery.push(newUrl || img); // Fallback to old if upload fails
+                        } else {
+                            newGallery.push(img);
+                        }
+                    }
+                    updates.images = newGallery;
+                    changed = true;
+                }
+                
+                if (changed) {
+                    const { error: updateError } = await supabaseClient
+                        .from('products')
+                        .update(updates)
+                        .eq('id', product.id);
+                    
+                    if (updateError) throw updateError;
+                }
+                
+                done++;
+                progress.style.width = `${(done / total) * 100}%`;
+            } catch (err) {
+                console.error(`Error migrando producto ${product.id}:`, err);
+            }
+        }
+
+        showToast(`🎉 ¡Optimización completada! ${done} productos mejorados.`);
+        btn.innerHTML = '✅ ¡SITIO OPTIMIZADO!';
+        btn.style.background = '#27ae60';
+        await loadProducts(); // Refresh local list
+    } catch (err) {
+        console.error('Migration failed:', err);
+        showToast('Error en la migración', true);
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+// Helper: Convert base64 string to a File object
+function base64ToFile(base64String, filename) {
+    const arr = base64String.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+}
 
 // Order Management
 async function loadOrders() {

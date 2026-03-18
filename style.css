@@ -82,8 +82,9 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 10000;
-    animation: fadeOutIntro 0.5s ease 3s forwards;
+    animation: fadeOutIntro 0.5s ease 1.5s forwards;
 }
+
 
 @keyframes fadeOutIntro {
     to {

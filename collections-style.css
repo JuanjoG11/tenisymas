@@ -18,6 +18,8 @@
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     color: white;
+    -webkit-user-select: none;
+    user-select: none;
 }
 .tm-notification.active { transform: translateX(0); opacity: 1; }
 .tm-notification.success { border-left-color: #22c55e; }
@@ -56,6 +58,7 @@
     padding: 20px 0 0;
     /* Remove bottom padding */
     background: var(--color-black);
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Site Header Sticky */
@@ -640,12 +643,13 @@
 
     .category-header {
         padding: 20px 10px 10px;
-        margin-bottom: 10px;
     }
+}
 
-    .category-header h1 {
-        font-size: 2.2rem;
-    }
+/* Global fixes for mobile */
+body {
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Back Button */
@@ -1115,6 +1119,9 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
     animation: modalPop 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    overscroll-behavior: contain;
 }
 
 /* Left side: Gallery */
@@ -1361,6 +1368,7 @@
     background: rgba(255, 255, 255, 0.03);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .pill:hover {

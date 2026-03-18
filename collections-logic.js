@@ -42,7 +42,7 @@ if (typeof activeFilters === 'undefined') {
 
 // Pagination / Infinite Scroll State
 if (typeof currentPage === 'undefined') { var currentPage = 1; }
-if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 24; }
+if (typeof itemsPerPage === 'undefined') { var itemsPerPage = 12; } // Fixed stability: 12 is better for mobile than 24 or 48
 if (typeof observer === 'undefined') { var observer = null; }
 if (typeof isLoading === 'undefined') { var isLoading = false; }
 if (typeof isRendering === 'undefined') { var isRendering = false; }
@@ -406,11 +406,11 @@ function setupFilters() {
 let applyFiltersTimeout = null;
 function applyFilters(shouldScroll = false) {
     if (applyFiltersTimeout) clearTimeout(applyFiltersTimeout);
-    
     applyFiltersTimeout = setTimeout(() => {
         executeApplyFilters(shouldScroll);
-    }, 10); // Batch rapid changes
+    }, 250); // Increased debounce for mobile stability
 }
+
 
 function executeApplyFilters(shouldScroll = false) {
     // 1. Reset Pagination
@@ -571,8 +571,8 @@ function renderProducts(reset = true, shouldScroll = false) {
     const end = start + itemsPerPage;
     const chunk = filteredProducts.slice(start, end);
 
-    // Create HTML
-    const html = chunk.map(product => createProductCardHTML(product)).join('');
+    // Create HTML - pass index to optimize 'loading' attribute logic
+    const html = chunk.map((product, idx) => createProductCardHTML(product, start + idx)).join('');
 
     // Append to Grid
     if (reset) {
@@ -599,7 +599,7 @@ function renderProducts(reset = true, shouldScroll = false) {
 
 
 
-function createProductCardHTML(product) {
+function createProductCardHTML(product, absoluteIndex = 999) {
     // Defensive size parsing logic for rendering
     let currentSizes = [];
     const rawSizes = product.sizes || product.tallas;
@@ -660,7 +660,7 @@ function createProductCardHTML(product) {
                 <img src="${mainImage}" 
                      alt="${product.name}" 
                       class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
-                      loading="${filteredProducts.indexOf(product) < 4 ? 'eager' : 'lazy'}"
+                      loading="${absoluteIndex < 4 ? 'eager' : 'lazy'}"
                       onload="this.classList.add('loaded')"
                       decoding="async"
                       width="300" 
@@ -794,29 +794,41 @@ async function openProductModal(productId) {
         currentMainModalImage = images[0];
     }
 
-    // 2. MAGIC: Load additional images from Supabase Storage automatically if folder exists
+    // Show Modal IMMEDIATELY with cached data to avoid 'stuck button' feel
+    modal.classList.add('active');
+    
+    // iOS-Safe Scroll Lock
+    const scrollY = window.scrollY;
+    document.body.style.top = `-${scrollY}px`;
+    document.body.classList.add('modal-open');
+    document.body.dataset.scrollY = scrollY;
+
+    // Show initial data
+    document.getElementById('modalTitle').textContent = product.name;
+    renderModalThumbnails(images, product.name);
+    
+    // Now fetch extra images in the background if they exist
     if (product.folder && typeof window.getImagesFromFolder === 'function') {
         try {
+            console.log('[DEBUG] Fetching extra images for:', product.folder);
             const extraImages = await window.getImagesFromFolder(product.folder);
-            if (extraImages.length > 0) {
-                // Filter out duplicates if any
-                const existingUrls = new Set(images);
-                extraImages.forEach(url => {
-                    if (!existingUrls.has(url)) images.push(url);
-                });
+            
+            if (extraImages && extraImages.length > 0) {
+                // Merge and dedup
+                const allImages = [...new Set([...images, ...extraImages])];
+                console.log('[DEBUG] Extra images found:', extraImages.length);
+                renderModalThumbnails(allImages, product.name);
                 
-                // Safety guard: if modal was closed while images were fetching, stop
-                if (!modal.classList.contains('active')) return;
-
-                // Re-render thumbnails if more images were found
-                renderModalThumbnails(images, product.name);
+                // If it was just the logo before, update main image
+                if (mainImg && mainImg.src.includes('logo-tm.png')) {
+                    mainImg.src = allImages[0];
+                    currentMainModalImage = allImages[0];
+                }
             }
         } catch (err) {
-            console.warn('Background image fetch failed:', err);
+            console.error('[ERROR] Failed to discover images:', err);
         }
     }
-
-    renderModalThumbnails(images, product.name);
 
     // Continue modal initialization...
     // Populate Colors (Pills)
@@ -926,9 +938,7 @@ async function openProductModal(productId) {
         };
     }
 
-    // Show Modal
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Note: Modal activated at the start of openProductModal for better UX
 }
 
 function renderModalThumbnails(images, productName) {
@@ -936,7 +946,10 @@ function renderModalThumbnails(images, productName) {
     if (!modalThumbnails) return;
 
     modalThumbnails.innerHTML = '';
-    images.forEach((imgUrl, idx) => {
+    // Filter out invalid/empty URLs
+    const validImages = images.filter(url => url && typeof url === 'string' && url.trim().length > 5);
+    
+    validImages.forEach((imgUrl, idx) => {
         const thumb = document.createElement('div');
         thumb.className = `thumb-item ${idx === 0 ? 'active' : ''}`;
         thumb.innerHTML = `<img src="${imgUrl}" alt="${productName}">`;
@@ -980,10 +993,16 @@ function selectModalColor(color, element) {
 
 function closeProductModal() {
     const modal = document.getElementById('productModal');
-    if (modal) modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('active');
+        
+        // Restore iOS Scroll
+        const scrollY = document.body.dataset.scrollY || '0';
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, parseInt(scrollY || '0'));
+    }
 }
-
 function openSizeGuide() {
     const modal = document.getElementById('sizeGuideModal');
     if (modal) modal.classList.add('active');
