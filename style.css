@@ -2221,8 +2221,7 @@ body {
     display: flex;
     flex-direction: column;
     height: fit-content;
-    will-change: transform;
-    /* Only active on desktop via media query above */
+    /* will-change removed for mobile performance */
 }
 
 
@@ -2264,9 +2263,8 @@ body {
     }
 
     .collage-col {
-        will-change: transform;
+        /* hardware acceleration via translateZ only, avoiding excessive will-change */
         transform: translateZ(0);
-        /* Force Hardware Acceleration on Mobile */
     }
 }
 

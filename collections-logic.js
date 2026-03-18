@@ -426,9 +426,11 @@ function executeApplyFilters(shouldScroll = false) {
         allProducts = [];
     }
 
+    // 2. Filter correctly with all sub-filters
     filteredProducts = allProducts.filter(product => {
         if (!product) return false;
-        // Category
+        
+        // --- 1. Category Filter ---
         if (fCat && !isSpecialCat) {
             const rawCat = product.category || product.categoria || '';
             const pCat = normalize(rawCat);
@@ -447,13 +449,13 @@ function executeApplyFilters(shouldScroll = false) {
             }
         }
 
-        // Brand
+        // --- 2. Brand Filter ---
         if (activeFilters.brands.length > 0) {
             const pBrand = product.brand || product.marca || '';
             if (!activeFilters.brands.includes(pBrand)) return false;
         }
 
-        // Price
+        // --- 3. Price Filter ---
         if (activeFilters.prices.length > 0) {
             const price = parsePrice(product.price || product.precio);
             let match = false;
@@ -464,7 +466,7 @@ function executeApplyFilters(shouldScroll = false) {
             if (!match) return false;
         }
 
-        // Size
+        // --- 4. Size Filter ---
         if (activeFilters.sizes.length > 0) {
             const rawSizes = product.sizes || product.tallas || [];
             let pSizes = [];
@@ -473,16 +475,24 @@ function executeApplyFilters(shouldScroll = false) {
             } else if (typeof rawSizes === 'string') {
                 pSizes = rawSizes.replace(/[\[\]"]/g, '').split(',').map(s => s.trim());
             }
-            // Strict equality check after stringification
             if (!activeFilters.sizes.some(s => pSizes.includes(String(s)))) return false;
         }
 
-        // Discount
+        // --- 5. Discount Filter ---
         if (activeFilters.discount) {
             if (!product.discount && !product.descuento) return false;
         }
 
         return true;
+    });
+
+    // --- SORTING: Products WITH photos first ---
+    filteredProducts.sort((a, b) => {
+        const aImg = (a.image && typeof a.image === 'string' && a.image.length > 20 && !a.image.includes('logo-tm')) ? 1 : 0;
+        const bImg = (b.image && typeof b.image === 'string' && b.image.length > 20 && !b.image.includes('logo-tm')) ? 1 : 0;
+        
+        if (bImg !== aImg) return bImg - aImg;
+        return 0; // Maintain database order
     });
 
     // 3. Populate Filters only on first substantial load to avoid wiping user selection during interaction?
@@ -645,9 +655,8 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     // Full gallery: cover first, then extra photos (avoid duplicates)
     const images = [coverImage, ...extraImages.filter(img => img !== coverImage)];
     const hasMultipleImages = images.length > 1;
-    // Optimization: Only render first 2 images for the catalog to avoid excessive memory/DOM usage
-    // The modal will still show EVERYTHING including Supabase auto-discovery.
-    const catalogImages = images.slice(0, 2); 
+    // Optimization: Show up to 6 images in the catalog carousel for a complete experience on all devices
+    const catalogImages = images.slice(0, 6); 
     const mainImage = coverImage;
 
     // Determine correct selector type (Chips vs Dropdown)
@@ -657,15 +666,6 @@ function createProductCardHTML(product, absoluteIndex = 999) {
         <div class="product-card" data-id="${product.id}" data-category="${product.category}">
             ${product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : ''}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
-                <img src="${mainImage}" 
-                     alt="${product.name}" 
-                      class="product-image main-img ${hasMultipleImages ? '' : 'active'}" 
-                      loading="${absoluteIndex < 4 ? 'eager' : 'lazy'}"
-                      onload="this.classList.add('loaded')"
-                      decoding="async"
-                      width="300" 
-                      height="300"
-                >
                 ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
@@ -1524,7 +1524,7 @@ document.addEventListener('click', (e) => {
             if (menuToggle) menuToggle.classList.remove('active');
         }
         
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
     }
 });
 
