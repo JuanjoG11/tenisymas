@@ -680,7 +680,7 @@ function createProductCardHTML(product, absoluteIndex = 999) {
                          class="product-image ${idx === 0 ? 'active' : ''} ${idx === 1 ? 'hover-img' : ''}" 
                          loading="${idx === 0 ? 'eager' : 'lazy'}"
                          decoding="async"
-                         style="will-change: opacity, transform; transform: translateZ(0);"
+                         style="transform: translateZ(0);"
                          width="300" 
                          height="300">
                 `).join('')}
@@ -947,13 +947,11 @@ async function openProductModal(productId) {
             }
 
             if (typeof addToCart === 'function') {
-                console.log('[DEBUG] Adding to cart from modal:', product.id, selectedModalSize);
+                console.log('[DEBUG] Buying from modal:', product.id);
+                // The addToCart global function handles saveCart and opening the cart drawer automatically with its own 50ms timeout
+                // so we don't need another setTimeout or openCart call here.
                 addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
-                closeProductModal();
-                // Ensure cart opens
-                setTimeout(() => {
-                    if (typeof openCart === 'function') openCart();
-                }, 100);
+                closeProductModal(); 
             }
         };
     }
@@ -1016,11 +1014,14 @@ function closeProductModal() {
     if (modal) {
         modal.classList.remove('active');
         
-        // Restore iOS Scroll
-        const scrollY = document.body.dataset.scrollY || '0';
-        document.body.classList.remove('modal-open');
-        document.body.style.top = '';
-        window.scrollTo(0, parseInt(scrollY || '0'));
+        // Let animation finish before resetting scroll to prevent Safari 'WebPage Error' crash
+        // This delay avoids the conflict between fixed-body removal and immediate JS scroll
+        setTimeout(() => {
+            const scrollY = document.body.dataset.scrollY || '0';
+            document.body.classList.remove('modal-open');
+            document.body.style.top = '';
+            window.scrollTo(0, parseInt(scrollY || '0'));
+        }, 150); 
     }
 }
 function openSizeGuide() {
