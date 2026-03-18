@@ -486,12 +486,34 @@ function executeApplyFilters(shouldScroll = false) {
         return true;
     });
 
-    // --- SORTING: Products WITH photos first ---
+    // --- SORTING: Richer content first (More images > At least one image > Placeholders) ---
     filteredProducts.sort((a, b) => {
-        const aImg = (a.image && typeof a.image === 'string' && a.image.length > 20 && !a.image.includes('logo-tm')) ? 1 : 0;
-        const bImg = (b.image && typeof b.image === 'string' && b.image.length > 20 && !b.image.includes('logo-tm')) ? 1 : 0;
+        // Count real images for A
+        const aExtraCount = (Array.isArray(a.images) ? a.images.filter(img => img && !img.includes('logo-tm')).length : 0);
+        const aHasMain = (a.image && typeof a.image === 'string' && a.image.length > 20 && !a.image.includes('logo-tm')) ? 1 : 0;
+        const aTotalImages = Math.max(aHasMain, aExtraCount + (aHasMain ? 0 : 0)); 
+        // Actually simpler: just check total unique non-placeholder images
+        const aSet = new Set();
+        if (aHasMain) aSet.add(a.image);
+        if (Array.isArray(a.images)) a.images.forEach(img => { if(img && !img.includes('logo-tm')) aSet.add(img); });
+        const aCount = aSet.size;
+
+        const bHasMain = (b.image && typeof b.image === 'string' && b.image.length > 20 && !b.image.includes('logo-tm')) ? 1 : 0;
+        const bSet = new Set();
+        if (bHasMain) bSet.add(b.image);
+        if (Array.isArray(b.images)) b.images.forEach(img => { if(img && !img.includes('logo-tm')) bSet.add(img); });
+        const bCount = bSet.size;
+
+        // Tier 1: More than 1 photo
+        // Tier 2: 1 photo
+        // Tier 3: 0 photos
+        if (aCount !== bCount) {
+            // First, prioritize having ANY photo
+            if ((aCount > 0) !== (bCount > 0)) return bCount - aCount;
+            // Then prioritize MORE photos
+            return bCount - aCount;
+        }
         
-        if (bImg !== aImg) return bImg - aImg;
         return 0; // Maintain database order
     });
 
