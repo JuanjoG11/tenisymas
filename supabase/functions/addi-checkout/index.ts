@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 serve(async (req) => {
@@ -13,20 +14,23 @@ serve(async (req) => {
 
     try {
         const { orderData } = await req.json()
-        // Credenciales específicas para tennisymasco-ecommerce (enviadas por soporte Addi)
-        const CLIENT_ID = Deno.env.get("ADDI_CLIENT_ID") || "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
-        const CLIENT_SECRET = Deno.env.get("ADDI_CLIENT_SECRET") || "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
-        const ALLY_SLUG = "tennisymasco-ecommerce"
+
+        // Credenciales dadas por soporte de Addi para pruebas
+        const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
+        const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
+
+        if (!CLIENT_ID || !CLIENT_SECRET) {
+            console.error("Faltan credenciales de Addi en los secrets de Supabase");
+            throw new Error("Addi credentials not configured");
+        }
         
-        const IS_SANDBOX = true;
-        // Staging Auth server: auth.addi-staging.com
-        // Staging Auth AUDIENCE: api.staging.addi.com (per auth swagger docs)
-        // Staging API server: api.addi-staging.com (per integration swagger docs)
+        const ALLY_SLUG = "tennisymasco-ecommerce"
+        const IS_SANDBOX = true; // STAGING - Requerido por soporte Addi
         const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
         const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
         const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
 
-        console.log(`--- ADDI STAGING V3.0.6 ---`);
+        console.log(`--- ADDI STAGING V3.1.5 ---`);
         console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
         console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
 
@@ -65,10 +69,23 @@ serve(async (req) => {
         const successUrl = `${SITE_BASE}/success.html`;
         const cancelUrl = `${SITE_BASE}/checkout.html`;
 
+        const totalAmount = Math.round(Number(orderData.totalAmount));
+        const items = orderData.items.map((item: any) => ({
+            sku: String(item.sku || "REF001"),
+            name: cleanStr(item.name || "PRODUCTO").slice(0, 100),
+            quantity: Number(item.quantity || 1),
+            unitPrice: Math.round(Number(item.unitPrice))
+        }));
+
+        const itemsTotal = items.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0);
+        const shippingAmount = Math.max(0, totalAmount - itemsTotal);
+
         const addiPayload = {
             allySlug: ALLY_SLUG,
             orderId: safeOrderId,
-            totalAmount: String(Math.round(Number(orderData.totalAmount))),
+            totalAmount: totalAmount,
+            shippingAmount: shippingAmount,
+            taxAmount: 0,
             currency: "COP",
             client: {
                 idType: "CC",
@@ -85,16 +102,11 @@ serve(async (req) => {
                 country: "CO"
             },
             allyUrlRedirection: {
-                successUrl: "https://tenisymas.com/success.html",
-                cancelUrl: "https://tenisymas.com/checkout.html",
-                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback"
+                logoUrl: "https://tennisymas.com/images/logo-tm.png",
+                callbackUrl: orderData.redirectionUrls?.callback || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
+                redirectionUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
             },
-            items: orderData.items.map((item: any) => ({
-                sku: String(item.sku || "REF001"),
-                name: cleanStr(item.name || "PRODUCTO").slice(0, 100),
-                quantity: String(item.quantity || 1),
-                unitPrice: String(Math.round(Number(item.unitPrice)))
-            }))
+            items: items
         }
 
         console.log("[Addi] Payload:", JSON.stringify(addiPayload, null, 2))

@@ -1,0 +1,76 @@
+{
+  "payloadSent": {
+    "orderData": {
+      "allySlug": "tennisymasco-ecommerce",
+      "orderId": "TM-TEST-1774548927348",
+      "totalAmount": 250000,
+      "currency": "COP",
+      "shippingAddress": {
+        "line1": "CALLE 100 15-20",
+        "city": "BOGOTA",
+        "administrativeDivision": "BOGOTA DC",
+        "country": "CO"
+      },
+      "client": {
+        "idType": "CC",
+        "idNumber": "1234567890",
+        "firstName": "JUAN",
+        "lastName": "PEREZ",
+        "email": "test@example.com",
+        "cellphone": "3001234567"
+      },
+      "items": [
+        {
+          "sku": "REF001",
+          "name": "TENIS PRUEBA",
+          "quantity": 1,
+          "unitPrice": 233500
+        }
+      ]
+    }
+  },
+  "httpStatus": 400,
+  "rawBody": "{\"error\":\"Addi API V3 Error\",\"status\":400,\"details\":{\"code\":\"021-018\",\"message\":\"The redirect URL is invalid.\"},\"called_url\":\"https://api.addi-staging.com/v1/online-applications\",\"sent_payload\":{\"allySlug\":\"tennisymasco-ecommerce\",\"orderId\":\"TM-TEST-1774548927348\",\"totalAmount\":\"250000\",\"currency\":\"COP\",\"client\":{\"idType\":\"CC\",\"idNumber\":\"1234567890\",\"firstName\":\"JUAN\",\"lastName\":\"PEREZ\",\"email\":\"test@example.com\",\"cellphone\":\"3001234567\"},\"shippingAddress\":{\"lineOne\":\"CALLE 100 15-20\",\"city\":\"BOGOTA\",\"state\":\"BOGOTA DC\",\"country\":\"CO\"},\"allyUrlRedirection\":{\"successUrl\":\"https://tenisymas.com/success.html\",\"cancelUrl\":\"https://tenisymas.com/checkout.html\",\"callbackUrl\":\"https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback\"},\"items\":[{\"sku\":\"REF001\",\"name\":\"TENIS PRUEBA\",\"quantity\":\"1\",\"unitPrice\":\"233500\"}]}}",
+  "parsedBody": {
+    "error": "Addi API V3 Error",
+    "status": 400,
+    "details": {
+      "code": "021-018",
+      "message": "The redirect URL is invalid."
+    },
+    "called_url": "https://api.addi-staging.com/v1/online-applications",
+    "sent_payload": {
+      "allySlug": "tennisymasco-ecommerce",
+      "orderId": "TM-TEST-1774548927348",
+      "totalAmount": "250000",
+      "currency": "COP",
+      "client": {
+        "idType": "CC",
+        "idNumber": "1234567890",
+        "firstName": "JUAN",
+        "lastName": "PEREZ",
+        "email": "test@example.com",
+        "cellphone": "3001234567"
+      },
+      "shippingAddress": {
+        "lineOne": "CALLE 100 15-20",
+        "city": "BOGOTA",
+        "state": "BOGOTA DC",
+        "country": "CO"
+      },
+      "allyUrlRedirection": {
+        "successUrl": "https://tenisymas.com/success.html",
+        "cancelUrl": "https://tenisymas.com/checkout.html",
+        "callbackUrl": "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback"
+      },
+      "items": [
+        {
+          "sku": "REF001",
+          "name": "TENIS PRUEBA",
+          "quantity": "1",
+          "unitPrice": "233500"
+        }
+      ]
+    }
+  }
+}

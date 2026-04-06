@@ -1,0 +1,26 @@
+{
+  "categories": [
+    "ninos",
+    "tenis-guayos",
+    "guayos",
+    "futsal"
+  ],
+  "petosCount": 3,
+  "petos": [
+    {
+      "id": 21,
+      "name": "Futsal joma top-flex rebound negro verde menta  ",
+      "category": "futsal"
+    },
+    {
+      "id": 27,
+      "name": "Teni guayo F50 blanco rojo ",
+      "category": "ninos"
+    },
+    {
+      "id": 40,
+      "name": "Guayo predator elite FG BECKAM ROSA",
+      "category": "guayos"
+    }
+  ]
+}

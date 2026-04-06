@@ -1,0 +1,9 @@
+{
+  "testing": "Produccion auth: https://auth.addi.com/oauth/token",
+  "authStatus": 400,
+  "authBody": {
+    "error": "invalid_request",
+    "error_description": "Invalid domain 'auth.addi.com' for client_id 'p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk'"
+  },
+  "result": "AUTH FAILED"
+}
