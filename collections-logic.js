@@ -57,6 +57,29 @@ window.selectedModalColor = window.selectedModalColor || null;
 window.modalQty = window.modalQty || 1;
 window.currentMainModalImage = window.currentMainModalImage || '';
 
+// ==================== COL → EUR SIZE CONVERSION ====================
+// Colombian talla → European size mapping (based on official size guide)
+// For sizes ≤37 (youth/niño): EUR = COL + 1
+// For sizes ≥38 (adult): EUR = COL + 2
+const COL_TO_EUR = {
+    '28':'29','29':'30','30':'31','31':'32','32':'33','33':'34',
+    '34':'35','35':'36','36':'37','37':'38',
+    '38':'40','39':'41','40':'42','41':'43','42':'44','43':'45',
+    '44':'46','45':'47'
+};
+// Reverse: EUR → COL (for filter matching)
+const EUR_TO_COL = {};
+Object.entries(COL_TO_EUR).forEach(([col, eur]) => { EUR_TO_COL[eur] = col; });
+
+function colToEur(size) {
+    const s = String(size).trim();
+    return COL_TO_EUR[s] || s; // fallback: return as-is if not in map
+}
+function eurToCol(size) {
+    const s = String(size).trim();
+    return EUR_TO_COL[s] || s;
+}
+
 // GLOBAL ERROR LOGGER (FOR MOBILE DEBUGGING)
 window.onerror = function(msg, url, line) {
     console.error('Mobile Error:', msg, 'at', line);
@@ -89,12 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function setupCollections() {
-    // 1. Get category immediately to ensure correct initial render
+    // 1. Get category and brand immediately to ensure correct initial render
     const urlParams = new URLSearchParams(window.location.search);
     const categoryName = urlParams.get('category');
+    const brandName = urlParams.get('brand');
     
     if (categoryName) {
         activeFilters.category = categoryName;
+    }
+    
+    if (brandName) {
+        activeFilters.brands = brandName.split(',').map(b => b.trim());
     }
     
     updateCategoryTitle(categoryName);
@@ -116,21 +144,22 @@ async function setupCollections() {
 
 // Update category title
 function updateCategoryTitle(category) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const brand = urlParams.get('brand');
+    
     const titles = {
         'guayos': { title: 'GUAYOS', subtitle: 'Domina el campo con el mejor calzado' },
         'futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' },
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
-        'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' },
-        'tenis-guayos': { title: 'TENIS-GUAYOS', subtitle: 'Estilo y rendimiento en un solo lugar' },
-        'petos,camisetas': { title: 'PETOS Y CAMISETAS', subtitle: 'Equípate con lo mejor para tu equipo' },
-        'tenis-running': { title: 'RUNNING', subtitle: 'Máximo confort y amortiguación' },
-        'tenis-futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' }
+        'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' }
     };
 
-    // Robust title selection: fallback to the category name itself formatted if no match
     let info = titles[category];
-    if (!info && category) {
-        // Format category name (e.g. tenis-guayos -> TENIS GUAYOS)
+    
+    // Handle specific branding titles
+    if (category === 'futsal' && brand && brand.toLowerCase().includes('joma')) {
+        info = { title: 'FÚTSAL JOMA', subtitle: 'Colección Original Exclusiva' };
+    } else if (!info && category) {
         const displayTitle = category.replace(/[-,]/g, ' ').toUpperCase();
         info = { title: displayTitle, subtitle: 'Nuestra mejor selección' };
     } else if (!info) {
@@ -346,12 +375,15 @@ function populateSizeFilters() {
 
     const container = document.getElementById('sizeFilters');
     if (container) {
-        const newHTML = sizesArray.map(size => `
+        const newHTML = sizesArray.map(size => {
+            const eur = colToEur(size);
+            const label = eur === size ? size : `EUR ${eur} (COL ${size})`;
+            return `
             <label class="filter-checkbox">
                 <input type="checkbox" value="${size}" data-filter="size" ${activeFilters.sizes.includes(size) ? 'checked' : ''}>
-                <span>${size}</span>
+                <span>${label}</span>
             </label>
-        `).join('');
+        `;}).join('');
         
         // Only update DOM if content actually changed to avoid layout thrashing
         if (container.getAttribute('data-last-html') !== newHTML) {
@@ -451,8 +483,15 @@ function executeApplyFilters(shouldScroll = false) {
 
         // --- 2. Brand Filter ---
         if (activeFilters.brands.length > 0) {
-            const pBrand = product.brand || product.marca || '';
-            if (!activeFilters.brands.includes(pBrand)) return false;
+            const pBrand = (product.brand || product.marca || '').toLowerCase();
+            const pName = (product.name || '').toLowerCase();
+            
+            const match = activeFilters.brands.some(b => {
+                const searchBrand = b.toLowerCase();
+                return pBrand.includes(searchBrand) || pName.includes(searchBrand);
+            });
+            
+            if (!match) return false;
         }
 
         // --- 3. Price Filter ---
@@ -896,9 +935,11 @@ async function openProductModal(productId) {
     if (sizeGroup && sizePills) {
         if (productSizes.length > 0) {
             sizeGroup.style.display = 'block';
-            sizePills.innerHTML = productSizes.map(size => `
-                <div class="pill" onclick="selectModalSize('${size}', this)">${size}</div>
-            `).join('');
+            sizePills.innerHTML = productSizes.map(size => {
+                const eur = colToEur(size);
+                const label = eur === size ? `Talla ${size}` : `EUR ${eur} (COL ${size})`;
+                return `<div class="pill" onclick="selectModalSize('${size}', this)">${label}</div>`;
+            }).join('');
         } else {
             sizeGroup.style.display = 'none';
         }
