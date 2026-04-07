@@ -188,7 +188,7 @@ async function loadProducts() {
 
         ensureEssentialCollections();
 
-        const cached = localStorage.getItem('productsCache_v3');
+        const cached = localStorage.getItem('productsCache_v4');
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -199,7 +199,7 @@ async function loadProducts() {
                 }
             } catch(e) {
                 console.warn('Cache parse failed, clearing:', e);
-                localStorage.removeItem('productsCache_v3');
+                localStorage.removeItem('productsCache_v4');
             }
         }
 
@@ -267,7 +267,7 @@ async function loadProducts() {
 
             // Refresh cache
             try {
-                localStorage.setItem('productsCache_v3', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_v4', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
             } catch(_) {}
         }
@@ -466,19 +466,21 @@ function executeApplyFilters(shouldScroll = false) {
         if (fCat && !isSpecialCat) {
             const rawCat = product.category || product.categoria || '';
             const pCat = normalize(rawCat);
-            const matches = allowedCats.some(cat => pCat === cat);
+            
+            // Check for exact matches first
+            let matches = allowedCats.some(cat => pCat === cat);
 
-            // EMERGENCY BYPASS: If category specifies petos/camisetas and we match by text, force include
-            if (!matches && (fCat.includes('peto') || fCat.includes('camiseta'))) {
+            // EMERGENCY BYPASS & FLEXIBLE MATCH:
+            // Si no hay match exacto pero estamos en Petos/Camisetas, buscamos coincidencia parcial
+            const isTargetingPetos = fCat.includes('peto') || fCat.includes('camiseta');
+            if (isTargetingPetos) {
                 const search = ((product.name || '') + ' ' + rawCat).toLowerCase();
                 if (search.includes('peto') || search.includes('camiseta')) {
-                    // fallthrough to next filters
-                } else {
-                    return false;
+                    matches = true;
                 }
-            } else if (!matches) {
-                return false;
             }
+
+            if (!matches) return false;
         }
 
         // --- 2. Brand Filter ---
@@ -503,7 +505,7 @@ function executeApplyFilters(shouldScroll = false) {
                     if (!hasJoma) return false;
                     // Palabras clave que identifican los modelos exclusivos originales
                     const isJomaOriginal =
-                        pName.includes('originales') ||
+                        pName.includes('original') ||
                         pName.includes('reboun pink') ||
                         pName.includes('liga 5');
                     return isJomaOriginal;

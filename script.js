@@ -674,7 +674,7 @@ async function syncProducts() {
 
     isSyncing = true;
     syncPromise = (async () => {
-        const CACHE_KEY = 'productsCache_v3';
+        const CACHE_KEY = 'productsCache_v4';
         const CACHE_TIME_KEY = 'productsCache_Time';
         // Background refresh every 5 minutes, but always serve cache immediately (stale-while-revalidate)
         const BG_REFRESH_INTERVAL = 5 * 60 * 1000;
@@ -737,7 +737,7 @@ async function syncProducts() {
                                 timestamp: Date.now(),
                                 data: products
                             });
-                            localStorage.setItem('productsCache_v3', cacheData);
+                            localStorage.setItem('productsCache_v4', cacheData);
                             console.log('📦 Script.js: Cache updated in background');
                         } catch (storageErr) {
                             console.warn('[SYNC] localStorage full or failed:', storageErr);
