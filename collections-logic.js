@@ -188,7 +188,7 @@ async function loadProducts() {
 
         ensureEssentialCollections();
 
-        const cached = localStorage.getItem('productsCache_v4');
+        const cached = localStorage.getItem('productsCache_v5');
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -199,7 +199,7 @@ async function loadProducts() {
                 }
             } catch(e) {
                 console.warn('Cache parse failed, clearing:', e);
-                localStorage.removeItem('productsCache_v4');
+                localStorage.removeItem('productsCache_v5');
             }
         }
 
@@ -267,7 +267,7 @@ async function loadProducts() {
 
             // Refresh cache
             try {
-                localStorage.setItem('productsCache_v4', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_v5', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
             } catch(_) {}
         }
@@ -631,9 +631,14 @@ function renderProducts(reset = true, shouldScroll = false) {
     const productsGrid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
     const sentinelNodes = document.querySelectorAll('.scroll-sentinel');
-    // More compatible way to iterate NodeList for older mobile browsers
+
     for (let i = 0; i < sentinelNodes.length; i++) {
         sentinelNodes[i].remove();
+    }
+    
+    // Performance: Disconnect existing observer to prevent lag on rapid category switches
+    if (reset && (typeof observer !== 'undefined' && observer)) {
+        observer.disconnect();
     }
 
     if (filteredProducts.length === 0) {
@@ -1492,15 +1497,15 @@ function ensureEssentialCollections() {
                 name: 'Colección La Pesada',
                 category: 'petos',
                 price: '$65.000',
-                image: 'images/petos2_portada.jpg.jpeg',
+                image: 'images/petos2_portada.jpg',
                 sizes: ["S", "M", "L", "XL"],
                 colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
                 images: [
-                    'images/petos2_portada.jpg.jpeg',
-                    'images/petos2_blanco_azul_frente.jpg.jpeg',
-                    'images/petos2_blanco_azul_atras.jpg.jpeg',
-                    'images/petos2_negro_verde.jpg.jpeg',
-                    'images/petos2_comparacion.jpg.jpeg'
+                    'images/petos2_portada.jpg',
+                    'images/petos2_blanco_azul_frente.jpg',
+                    'images/petos2_blanco_azul_atras.jpg',
+                    'images/petos2_negro_verde.jpg',
+                    'images/petos2_comparacion.jpg'
                 ]
             });
         }
@@ -1517,15 +1522,15 @@ function ensureEssentialCollections() {
                 name: 'Colección La Grasa',
                 category: 'camisetas',
                 price: '$75.000',
-                image: 'images/camisetas_portada.jpg.jpeg',
+                image: 'images/camisetas_portada.jpg',
                 sizes: ["S", "M", "L", "XL"],
                 colors: ["BLANCO-AZUL", "NEGRO", "BLANCO-VERDE"],
                 images: [
-                    'images/camisetas_portada.jpg.jpeg',
-                    'images/camisetas_foto1.jpg.jpeg',
-                    'images/camisetas_foto2.jpg.jpeg',
-                    'images/camisetas_foto3.jpg.jpeg',
-                    'images/camisetas_foto4.jpg.jpeg'
+                    'images/camisetas_portada.jpg',
+                    'images/camisetas_foto1.jpg',
+                    'images/camisetas_foto2.jpg',
+                    'images/camisetas_foto3.jpg',
+                    'images/camisetas_foto4.jpg'
                 ]
             });
         }
