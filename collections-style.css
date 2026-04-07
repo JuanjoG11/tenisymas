@@ -1060,32 +1060,39 @@ body {
     opacity: 1;
 }
 
+/* ── SINGLE definition of modal container ── */
 .modal-content-container {
     background: #111;
     width: 95%;
     max-width: 1100px;
+    /* height fixed so children can scroll inside */
+    height: 90vh;
     max-height: 90vh;
-    border-radius: 24px;
+    border-radius: 12px;
     position: relative;
     display: grid;
     grid-template-columns: 1.2fr 1fr;
+    /* clip the border-radius corners but DON'T block child scroll */
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    animation: modalPop 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
+    animation: modalPop 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    overscroll-behavior: contain;
 }
 
 @keyframes modalPop {
-    from { transform: scale(0.9) translateY(20px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
+    from { transform: scale(0.92) translateY(16px); opacity: 0; }
+    to   { transform: scale(1)    translateY(0);    opacity: 1; }
 }
 
 .modal-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: white;
     width: 40px;
     height: 40px;
@@ -1094,9 +1101,10 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 100;
+    z-index: 200;
     transition: all 0.2s;
     font-size: 1.5rem;
+    line-height: 1;
 }
 
 .modal-close:hover {
@@ -1104,31 +1112,13 @@ body {
     transform: rotate(90deg);
 }
 
-/* Robust 2-Column Professional Layout */
-.modal-content-container {
-    background: #111;
-    width: 95%;
-    max-width: 1100px;
-    max-height: 90vh;
-    border-radius: 12px;
-    position: relative;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
-    animation: modalPop 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    overscroll-behavior: contain;
-}
-
-/* Left side: Gallery */
+/* Left side: Gallery — fills its column, gallery itself doesn't scroll */
 .modal-gallery {
     background: #000;
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
     border-right: 1px solid #1a1a1a;
 }
 
@@ -1137,31 +1127,35 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px;
-    min-height: 400px;
+    padding: 24px;
+    overflow: hidden;
     background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
 }
 
 .modal-main-image img {
     max-width: 100%;
-    max-height: 500px;
+    max-height: 100%;
     object-fit: contain;
     transition: transform 0.4s ease;
+    display: block;
 }
 
 .modal-thumbnails {
     display: flex;
-    gap: 12px;
-    padding: 15px;
+    flex-shrink: 0;
+    gap: 10px;
+    padding: 12px 15px;
     background: #0a0a0a;
     border-top: 1px solid #1a1a1a;
     justify-content: center;
     overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .thumb-item {
-    width: 65px;
-    height: 65px;
+    flex-shrink: 0;
+    width: 62px;
+    height: 62px;
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
@@ -1187,13 +1181,31 @@ body {
     object-fit: cover;
 }
 
-/* Right side: Info */
+/* Right side: Info — THIS is the scrollable column */
 .modal-info {
-    padding: 30px 40px;
+    padding: 28px 36px;
+    /* KEY FIX: allow scroll inside this column, height = full grid row */
     overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
     display: flex;
     flex-direction: column;
+    gap: 0;
     border-left: 1px solid #1a1a1a;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-red) #1a1a1a;
+}
+
+.modal-info::-webkit-scrollbar {
+    width: 5px;
+}
+.modal-info::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+.modal-info::-webkit-scrollbar-thumb {
+    background: var(--color-red);
+    border-radius: 3px;
 }
 
 .modal-header-top {
@@ -1639,10 +1651,17 @@ body {
         font-size: 0.8rem;
     }
 }
-/* Body scroll lock when modal open (works on iOS) */
+/* Body scroll lock when modal open */
+/* Desktop: simple overflow hidden - NO position:fixed (causes page freeze on PC) */
 body.modal-open {
     overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
+}
+
+/* Mobile/iOS only: position:fixed needed to prevent background scroll on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    body.modal-open {
+        position: fixed !important;
+        width: 100% !important;
+        top: var(--scroll-y, 0);
+    }
 }

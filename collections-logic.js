@@ -824,9 +824,10 @@ async function openProductModal(productId) {
     // Show Modal IMMEDIATELY with cached data to avoid 'stuck button' feel
     modal.classList.add('active');
     
-    // iOS-Safe Scroll Lock
+    // iOS-Safe Scroll Lock (does not break desktop)
     const scrollY = window.scrollY;
-    document.body.style.top = `-${scrollY}px`;
+    // Set CSS variable so the mobile position:fixed rule keeps scroll position
+    document.documentElement.style.setProperty('--scroll-y', `-${scrollY}px`);
     document.body.classList.add('modal-open');
     document.body.dataset.scrollY = scrollY;
 
@@ -1019,18 +1020,20 @@ function closeProductModal() {
     if (modal) {
         modal.classList.remove('active');
         
-        // Restore iOS Scroll
-        const scrollY = document.body.dataset.scrollY || '0';
+        // Restore scroll position
+        const scrollY = parseInt(document.body.dataset.scrollY || '0');
         document.body.classList.remove('modal-open');
         document.body.style.top = '';
-        window.scrollTo(0, parseInt(scrollY || '0'));
+        document.body.style.overflow = '';
+        document.documentElement.style.removeProperty('--scroll-y');
+        window.scrollTo(0, scrollY);
     }
 }
 function openSizeGuide() {
     const modal = document.getElementById('sizeGuideModal');
     if (modal) modal.classList.add('active');
-    // Ensure body overflow is hidden to prevent scroll behind
-    document.body.style.overflow = 'hidden';
+    // Body overflow is already locked by modal-open class from openProductModal
+    // No need to set overflow independently here
 }
 
 function closeSizeGuide() {
@@ -1040,7 +1043,10 @@ function closeSizeGuide() {
     // Only restore body scroll if the product modal is also closed
     const productModal = document.getElementById('productModal');
     if (productModal && !productModal.classList.contains('active')) {
+        document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
+        document.body.style.top = '';
+        document.documentElement.style.removeProperty('--scroll-y');
     }
 }
 
