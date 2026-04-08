@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProducts();
     loadOrders();
     setupEventListeners();
+    setupRealtime();
 });
 
 function checkAuth() {
@@ -623,16 +624,126 @@ function renderOrders() {
                     </select>
                 </td>
                 <td>
-                    <button class="btn-icon btn-view" onclick="viewOrderDetails('${order.id}')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </button>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn-icon btn-view" onclick="viewOrderDetails('${order.id}')" title="Ver Detalles">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                        ${!order.stock_processed ? `
+                        <button class="btn-icon" onclick="processOrderStock('${order.id}')" style="background: #f1c40f; color: #000;" title="Descontar Stock">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </button>
+                        ` : `
+                        <span style="color: #2ecc71; font-size: 1.2rem;" title="Stock Descontado">✓</span>
+                        `}
+                    </div>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+function setupRealtime() {
+    if (!supabaseClient) return;
+    
+    // Listen for new orders
+    supabaseClient
+        .channel('admin_orders')
+        .on('postgres_changes', { event: 'INSERT', table: 'orders', schema: 'public' }, payload => {
+            console.log('📦 Nuevo pedido recibido!', payload.new);
+            showNotification('¡NUEVO PEDIDO RECIBIDO! 🔔');
+            loadOrders();
+            if (newOrdersBadge) newOrdersBadge.style.display = 'inline-block';
+        })
+        .subscribe();
+        
+    // Listen for product changes
+    supabaseClient
+        .channel('admin_products')
+        .on('postgres_changes', { event: '*', table: 'products', schema: 'public' }, () => {
+            loadProducts();
+        })
+        .subscribe();
+}
+
+window.processOrderStock = async (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (!confirm(`¿Deseas descontar el stock de este pedido (${order.items.length} productos)?\nEsta acción actualizará el inventario global automáticamente.`)) return;
+
+    try {
+        showToast('Procesando inventario...', false);
+        
+        for (const item of order.items) {
+            const productId = item.id || item.product_id;
+            const size = item.size;
+            const qty = item.quantity || 1;
+
+            if (!productId || !size) {
+                console.warn('Producto sin ID o Talla en el pedido:', item);
+                continue;
+            }
+
+            // 1. Get current stock
+            const { data: invData, error: fetchErr } = await supabaseClient
+                .from('inventory')
+                .select('stock')
+                .eq('product_id', productId)
+                .eq('location_id', 0)
+                .eq('size', String(size))
+                .single();
+
+            if (fetchErr && fetchErr.code !== 'PGRST116') { // PGRST116 is not found
+                console.error('Error fetching inventory:', fetchErr);
+                continue;
+            }
+
+            const currentStock = invData ? invData.stock : 0;
+            const newStock = Math.max(0, currentStock - qty);
+
+            // 2. Update Stock
+            const { error: upsertErr } = await supabaseClient
+                .from('inventory')
+                .upsert({
+                    product_id: productId,
+                    location_id: 0,
+                    size: String(size),
+                    stock: newStock,
+                    updated_at: new Date()
+                }, { onConflict: 'product_id, location_id, size' });
+
+            if (upsertErr) throw upsertErr;
+        }
+
+        // 3. Mark order as stock_processed
+        await supabaseClient
+            .from('orders')
+            .update({ stock_processed: true })
+            .eq('id', orderId);
+
+        showToast('✅ Inventario actualizado correctamente');
+        loadOrders();
+    } catch (err) {
+        console.error('Error processing stock:', err);
+        showToast('Error al procesar stock: ' + err.message, true);
+    }
+};
+
+function showNotification(msg) {
+    if (typeof showToast === 'function') {
+        showToast(msg);
+    }
+    // Browser Notification if permitted
+    if (Notification.permission === "granted") {
+        new Notification("Tenis y Mas", { body: msg, icon: 'images/logo-tm.png' });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
 }
 
 window.updateOrderStatus = async (id, newStatus) => {

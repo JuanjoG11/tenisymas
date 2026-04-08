@@ -15,24 +15,26 @@ serve(async (req) => {
     try {
         const { orderData } = await req.json()
 
-        // Credenciales dadas por soporte de Addi para pruebas
-        const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
-        const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
+        // Credenciales de Addi desde variables de entorno (con fallback de pruebas)
+        const CLIENT_ID = Deno.env.get("ADDICLIENT_ID") || "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk";
+        const CLIENT_SECRET = Deno.env.get("ADDICLIENT_SECRET") || "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4";
 
         if (!CLIENT_ID || !CLIENT_SECRET) {
             console.error("Faltan credenciales de Addi en los secrets de Supabase");
             throw new Error("Addi credentials not configured");
         }
         
-        const ALLY_SLUG = "tennisymasco-ecommerce"
-        const IS_SANDBOX = true; // STAGING - Requerido por soporte Addi
-        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
-        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
-        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
+        const ALLY_SLUG = "tennisymasco-ecommerce";
+        // Permitir configurar sandbox vía variable de entorno ADDI_SANDBOX ("true" o "false")
+        const IS_SANDBOX = Deno.env.get("ADDI_SANDBOX") === "false" ? false : true; // por defecto true (staging)
+        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com";
+        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com";
+        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com";
 
-        console.log(`--- ADDI STAGING V3.1.5 ---`);
+        console.log(`--- ADDI ${IS_SANDBOX ? "STAGING" : "PRODUCTION"} V3.1.5 ---`);
         console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
         console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
+        console.log(`[Addi] Using CLIENT_ID: ${CLIENT_ID ? "[PROVIDED]" : "MISSING"}`);
 
         // 1. Obtener Token OAuth (V3 usa /oauth/token)
         const authRes = await fetch(`${BASE_AUTH_URL}/oauth/token`, {
@@ -96,15 +98,15 @@ serve(async (req) => {
                 cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10).padStart(10, '0')
             },
             shippingAddress: {
-                lineOne: cleanStr(orderData.shippingAddress.line1),
+                line1: cleanStr(orderData.shippingAddress.line1),
                 city: cleanStr(orderData.shippingAddress.city),
-                state: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
+                administrativeDivision: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
                 country: "CO"
             },
             allyUrlRedirection: {
                 logoUrl: "https://tennisymas.com/images/logo-tm.png",
                 callbackUrl: orderData.redirectionUrls?.callback || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
-                redirectionUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
+                successUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
             },
             items: items
         }
@@ -138,8 +140,8 @@ serve(async (req) => {
 
             // Registrar el pedido en Supabase
             try {
-                const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
-                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+                const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
                 if (SUPABASE_URL && SERVICE_ROLE) {
                     const orderRecord = {
@@ -191,13 +193,14 @@ serve(async (req) => {
             }
 
             console.error(`❌ ERROR ADDI API: ${responseStatus}`, errorBody);
-
+            // Propagar error al cliente para diagnóstico rápido
             return new Response(JSON.stringify({
                 error: "Addi API V3 Error",
                 status: responseStatus,
                 details: errorBody,
                 called_url: addiUrl,
-                sent_payload: addiPayload
+                sent_payload: addiPayload,
+                message: "Revisa credenciales y modo sandbox (env ADDI_SANDBOX)"
             }), {
                 status: responseStatus,
                 headers: { ...corsHeaders, "Content-Type": "application/json" }
