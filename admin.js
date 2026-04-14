@@ -602,6 +602,27 @@ function renderOrders() {
         const methodClass = `method-${order.payment_method}`;
         const statusClass = `status-${order.status || 'pending'}`;
 
+        const translateStatus = (status) => {
+            const map = {
+                'approved': 'Aprobado',
+                'pending': 'Pendiente',
+                'rejected': 'Rechazado',
+                'in_process': 'En Proceso',
+                'cancelled': 'Cancelado',
+                'in_mediation': 'En Mediación'
+            };
+            return map[status] || status;
+        };
+
+        const translateMethod = (method) => {
+            const map = {
+                'mercadopago': 'Mercado Pago',
+                'whatsapp': 'WhatsApp',
+                'addi': 'Addi'
+            };
+            return map[method] || method;
+        };
+
         return `
             <tr>
                 <td class="order-date">${date}</td>
@@ -612,10 +633,10 @@ function renderOrders() {
                 <td class="order-items-summary">${items}</td>
                 <td class="order-total">
                     $${Number(order.total).toLocaleString('es-CO')}
-                    ${order.status_payment ? `<br><span class="payment-status-badge status-${order.status_payment}">${order.status_payment}</span>` : ''}
+                    ${order.status_payment ? `<br><span class="payment-status-badge p-status-${order.status_payment}">${translateStatus(order.status_payment)}</span>` : ''}
                     ${order.paid_at ? `<br><small style="color: #666; font-size: 10px;">Pagado: ${new Date(order.paid_at).toLocaleDateString()}</small>` : ''}
                 </td>
-                <td><span class="method-badge ${methodClass}">${order.payment_method}</span></td>
+                <td><span class="method-badge ${methodClass}">${translateMethod(order.payment_method)}</span></td>
                 <td>
                     <select class="status-select ${statusClass}" onchange="updateOrderStatus('${order.id}', this.value)">
                         <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
