@@ -787,18 +787,68 @@ window.viewOrderDetails = (id) => {
     const order = orders.find(o => o.id === id);
     if (!order) return;
 
-    // For now simple alert with data, we could build a modal later
-    const details = `
-        CLIENTE: ${escapeHTML(order.customer_info.firstName)} ${escapeHTML(order.customer_info.lastName)}
-        TELÉFONO: ${escapeHTML(order.customer_info.phone)}
-        DIRECCIÓN: ${escapeHTML(order.customer_info.address)}
-        CIUDAD: ${escapeHTML(order.customer_info.city)}, ${escapeHTML(order.customer_info.department)}
-        DNI/CC: ${escapeHTML(order.customer_info.dni || 'N/A')}
+    const modal = document.getElementById('orderDetailsModal');
+    const content = document.getElementById('modalOrderContent');
+    
+    // Build items list
+    let itemsHtml = '';
+    if (order.items && Array.isArray(order.items)) {
+        itemsHtml = order.items.map(item => `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600;">${item.name}</span>
+                    <span style="font-size: 0.75rem; color: #888;">Talla: ${item.size} | Cant: ${item.quantity || 1}</span>
+                </div>
+                <span style="color: #ff3333; font-weight: 700;">$${Number(item.price).toLocaleString('es-CO')}</span>
+            </div>
+        `).join('');
+    } else {
+        itemsHtml = '<p style="color: #888;">No hay detalles de productos disponibles.</p>';
+    }
+
+    const customer = order.customer_info || {};
+
+    content.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="color: #ff3333; margin-bottom: 12px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; font-weight: 800;">👤 Datos Cliente</h4>
+                <p style="margin-bottom: 5px;"><strong>Nombre:</strong> ${escapeHTML(customer.firstName || '')} ${escapeHTML(customer.lastName || '')}</p>
+                <p style="margin-bottom: 5px;"><strong>Teléfono:</strong> ${escapeHTML(customer.phone || 'N/A')}</p>
+                <p style="margin-bottom: 0;"><strong>DNI/CC:</strong> ${escapeHTML(customer.dni || 'N/A')}</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="color: #ff3333; margin-bottom: 12px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; font-weight: 800;">📍 Ubicación Envío</h4>
+                <p style="margin-bottom: 5px;"><strong>Ciudad:</strong> ${escapeHTML(customer.city || 'N/A')}</p>
+                <p style="margin-bottom: 5px;"><strong>Depto:</strong> ${escapeHTML(customer.department || 'N/A')}</p>
+                <p style="margin-bottom: 0;"><strong>Dirección:</strong> ${escapeHTML(customer.address || 'N/A')}</p>
+            </div>
+        </div>
         
-        PAGO: ${escapeHTML(order.payment_method.toUpperCase())}
-        TOTAL: $${Number(order.total).toLocaleString('es-CO')}
+        <h4 style="color: #ff3333; margin-bottom: 12px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; font-weight: 800;">🛍️ Productos Solicitados</h4>
+        <div style="max-height: 200px; overflow-y: auto; padding-right: 5px; margin-bottom: 25px;">
+            ${itemsHtml}
+        </div>
+
+        <div style="background: linear-gradient(135deg, rgba(255,51,51,0.15) 0%, rgba(10,10,10,0.5) 100%); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,51,51,0.2); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin: 0; font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Método de Pago</p>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                    <strong style="text-transform: uppercase; font-size: 1.1rem; color: #fff;">${escapeHTML(order.payment_method)}</strong>
+                    ${order.payment_status ? `<span class="payment-status-badge p-status-${order.payment_status}" style="margin:0;">${order.payment_status.toUpperCase()}</span>` : ''}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 0; font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Total del Pedido</p>
+                <strong style="font-size: 1.8rem; color: #ff3333; text-shadow: 0 0 20px rgba(255,51,51,0.3);">$${Number(order.total).toLocaleString('es-CO')}</strong>
+            </div>
+        </div>
     `;
-    alert(details);
+
+    modal.style.display = 'flex';
+};
+
+window.closeOrderModal = () => {
+    document.getElementById('orderDetailsModal').style.display = 'none';
 };
 
 function resetForm() {

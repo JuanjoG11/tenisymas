@@ -215,8 +215,23 @@
         </main>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="toast">Producto guardado correctamente</div>
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="admin-overlay" style="display: none; z-index: 3000;">
+        <div class="admin-card" style="max-width: 550px; width: 95%; border-color: rgba(255,51,51,0.4); box-shadow: 0 0 50px rgba(0,0,0,0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                <h2 style="margin-bottom: 0; font-size: 1.5rem; color: #fff;">📄 Detalles del Pedido</h2>
+                <button onclick="closeOrderModal()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">&times;</button>
+            </div>
+            
+            <div id="modalOrderContent" style="color: #eee;">
+                <!-- Content via JS -->
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
+                <button onclick="closeOrderModal()" class="btn btn-primary" style="padding: 10px 25px;">Entendido</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="admin.js"></script>
