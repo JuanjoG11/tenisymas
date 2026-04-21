@@ -236,6 +236,8 @@ async function handleAddiCheckout(customer) {
             name: cleanStr(item.name).slice(0, 100),
             quantity: parseInt(item.quantity) || 1,
             unitPrice: parseInt(item.price.replace(/[^0-9]/g, '')),
+            size: item.size || null,
+            color: item.color || null,
             category: "Fashion"
         }));
 
@@ -339,6 +341,8 @@ async function handleMercadoPagoCheckout(customer) {
             name: item.name,
             price: parseInt(item.price.replace(/[^0-9]/g, '')),
             quantity: item.quantity,
+            size: item.size || null,
+            color: item.color || null,
             image: getAbsoluteUrl(item.image)
         }));
 
@@ -403,7 +407,8 @@ async function handleWhatsAppFallback(customer) {
             name: item.name,
             quantity: item.quantity,
             price: itemPrice,
-            size: item.size || null
+            size: item.size || null,
+            color: item.color || null
         };
     });
 

@@ -88,7 +88,13 @@ serve(async (req) => {
             if (SUPABASE_URL && SERVICE_ROLE) {
                 const orderRecord = {
                     customer_info: customer,
-                    items: items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+                    items: items.map((i: any) => ({ 
+                        name: i.name, 
+                        quantity: i.quantity, 
+                        price: i.price,
+                        size: i.size || null,
+                        color: i.color || null
+                    })),
                     total: items.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0),
                     payment_method: 'mercadopago',
                     status: 'pending',

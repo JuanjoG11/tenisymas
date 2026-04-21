@@ -797,7 +797,11 @@ window.viewOrderDetails = (id) => {
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="display: flex; flex-direction: column;">
                     <span style="font-weight: 600;">${item.name}</span>
-                    <span style="font-size: 0.75rem; color: #888;">Talla: ${item.size} | Cant: ${item.quantity || 1}</span>
+                    <span style="font-size: 0.75rem; color: #888;">
+                        ${item.size ? `Talla: <strong style="color: #fff;">${item.size}</strong> ` : ''}
+                        ${item.color ? `| Color: <strong style="color: #fff;">${item.color}</strong> ` : ''}
+                        ${(item.size || item.color) ? '| ' : ''}Cant: ${item.quantity || 1}
+                    </span>
                 </div>
                 <span style="color: #ff3333; font-weight: 700;">$${Number(item.price).toLocaleString('es-CO')}</span>
             </div>

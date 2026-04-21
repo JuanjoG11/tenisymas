@@ -155,7 +155,13 @@ serve(async (req) => {
                             department: orderData.shippingAddress.administrativeDivision,
                             dni: orderData.client.idNumber
                         },
-                        items: orderData.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice })),
+                        items: orderData.items.map((i: any) => ({ 
+                            name: i.name, 
+                            quantity: i.quantity, 
+                            price: i.unitPrice,
+                            size: i.size || null,
+                            color: i.color || null
+                        })),
                         total: orderData.totalAmount,
                         payment_method: 'addi',
                         status: 'pending',
