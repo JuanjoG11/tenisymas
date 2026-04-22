@@ -31,7 +31,7 @@
     <div id="adminDashboard" class="admin-container" style="display: none;">
         <header class="admin-header">
             <div class="admin-nav">
-                <h1>Panel de Control</h1>
+                <h1>Panel de Control <span class="live-indicator" title="Conectado a la base de datos en tiempo real">● EN VIVO</span></h1>
                 <div class="admin-tabs">
                     <button class="tab-btn active" onclick="switchTab('products')">Productos</button>
                     <button class="tab-btn" onclick="switchTab('orders')">Pedidos <span id="newOrdersBadge"
@@ -152,7 +152,8 @@
                 <div class="admin-card orders-card">
                     <div class="card-header">
                         <h2>Gestión de Pedidos</h2>
-                        <div class="header-actions">
+                        <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-secondary" onclick="playNotification(); showToast('Prueba de sonido enviada');" style="background: rgba(255,255,255,0.05); border: 1px dashed #555;">🔔 Probar Sonido</button>
                             <button class="btn btn-secondary" onclick="loadOrders()">🔄 Actualizar</button>
                             <span id="orderCount" class="badge">0 pedidos</span>
                         </div>

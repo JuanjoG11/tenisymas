@@ -58,6 +58,8 @@ const ordersTableBody = document.getElementById('ordersTableBody');
 const searchOrdersInput = document.getElementById('searchOrders');
 const orderCountBadge = document.getElementById('orderCount');
 const newOrdersBadge = document.getElementById('newOrdersBadge');
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+notificationSound.volume = 0.5;
 const imageInput = document.getElementById('image');
 const imageFile = document.getElementById('imageFile');
 const manualPathContainer = document.getElementById('manualPathContainer');
@@ -755,15 +757,28 @@ window.processOrderStock = async (orderId) => {
     }
 };
 
+function playNotification() {
+    notificationSound.currentTime = 0;
+    notificationSound.play().catch(e => console.warn('Bloqueado por el navegador (interacción requerida):', e));
+}
+
 function showNotification(msg) {
     if (typeof showToast === 'function') {
         showToast(msg);
     }
+    
+    // Play sound
+    playNotification();
+
     // Browser Notification if permitted
     if (Notification.permission === "granted") {
         new Notification("Tenis y Mas", { body: msg, icon: 'images/logo-tm.png' });
     } else if (Notification.permission !== "denied") {
-        Notification.requestPermission();
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("Tenis y Mas", { body: msg, icon: 'images/logo-tm.png' });
+            }
+        });
     }
 }
 

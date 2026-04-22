@@ -243,7 +243,7 @@ async function handleAddiCheckout(customer) {
 
         const payload = {
             orderData: {
-                testMode: true,
+                testMode: false,
                 allySlug: "tennisymasco-ecommerce",
                 orderId: "TM-" + Date.now(),
                 totalAmount: totalAmount,
@@ -265,7 +265,8 @@ async function handleAddiCheckout(customer) {
                 redirectionUrls: {
                     success: window.location.origin + "/success.html",
                     failure: window.location.origin + "/checkout.html",
-                    cancel: window.location.origin + "/checkout.html"
+                    cancel: window.location.origin + "/checkout.html",
+                    origin: window.location.origin
                 },
                 items: addiItems
             }
@@ -402,7 +403,7 @@ async function handleWhatsAppFallback(customer) {
     const orderItems = checkoutCart.map(item => {
         const itemPrice = parseInt(item.price.replace(/[^0-9]/g, ''));
         total += itemPrice * item.quantity;
-        message += `📦 *${item.quantity}x ${item.name}*\n`;
+        message += `📦 *${item.quantity}x ${item.name}* ${item.size ? `(Talla: ${item.size})` : ''} ${item.color ? `(Color: ${item.color})` : ''}\n`;
         return {
             name: item.name,
             quantity: item.quantity,

@@ -445,7 +445,7 @@ function handleIntegratedCheckout() {
         }
         const itemTotal = itemPrice * item.quantity;
         total += itemTotal;
-        message += `📦 *${item.quantity}x ${item.name}* - $${itemPrice.toLocaleString('es-CO')}\n`;
+        message += `📦 *${item.quantity}x ${item.name}* ${item.size ? `(Talla: ${item.size})` : ''} ${item.color ? `(Color: ${item.color})` : ''}\n`;
     });
 
     message += `\n💰 *TOTAL GLOBAL: $${total.toLocaleString('es-CO')}*\n\n¿Quedo atento a la confirmación!`;

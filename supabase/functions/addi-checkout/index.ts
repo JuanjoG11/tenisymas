@@ -14,27 +14,28 @@ serve(async (req) => {
 
     try {
         const { orderData } = await req.json()
+        const isClientTestMode = orderData.testMode === true;
 
-        // Credenciales de Addi desde variables de entorno (con fallback de pruebas)
-        const CLIENT_ID = Deno.env.get("ADDICLIENT_ID") || "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk";
-        const CLIENT_SECRET = Deno.env.get("ADDICLIENT_SECRET") || "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4";
+        // Credenciales de Addi desde variables de entorno
+        const CLIENT_ID = Deno.env.get("ADDICLIENT_ID") || (isClientTestMode ? "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk" : null);
+        const CLIENT_SECRET = Deno.env.get("ADDICLIENT_SECRET") || (isClientTestMode ? "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4" : null);
 
         if (!CLIENT_ID || !CLIENT_SECRET) {
-            console.error("Faltan credenciales de Addi en los secrets de Supabase");
-            throw new Error("Addi credentials not configured");
+            console.error("Faltan credenciales de Addi en los secrets de Supabase para el modo solicitado");
+            throw new Error(`Credenciales de Addi no configuradas para modo ${isClientTestMode ? 'TEST' : 'PRODUCCIÓN'}`);
         }
         
         const ALLY_SLUG = "tennisymasco-ecommerce";
-        // Permitir configurar sandbox vía variable de entorno ADDI_SANDBOX ("true" o "false")
-        const IS_SANDBOX = Deno.env.get("ADDI_SANDBOX") === "false" ? false : true; // por defecto true (staging)
+        
+        // Prioridad: 1. Flag del cliente, 2. Variable de entorno
+        const IS_SANDBOX = isClientTestMode;
+        
         const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com";
         const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com";
         const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com";
 
-        console.log(`--- ADDI ${IS_SANDBOX ? "STAGING" : "PRODUCTION"} V3.1.5 ---`);
-        console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
+        console.log(`--- ADDI ${IS_SANDBOX ? "STAGING (SANDBOX)" : "PRODUCTION"} ENGINE ---`);
         console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
-        console.log(`[Addi] Using CLIENT_ID: ${CLIENT_ID ? "[PROVIDED]" : "MISSING"}`);
 
         // 1. Obtener Token OAuth (V3 usa /oauth/token)
         const authRes = await fetch(`${BASE_AUTH_URL}/oauth/token`, {
@@ -66,10 +67,17 @@ serve(async (req) => {
         console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
 
         const safeOrderId = String(orderData.orderId).replace(/[^a-zA-Z0-9-]/g, '');
-        // Siempre usar las URLs reales del dominio en producción para que Addi las acepte
-        const SITE_BASE = "https://tenisymas.com";
+        
+        // Determinar el dominio base: Usamos exactamente el que estaba en el commit que funcionaba
+        let SITE_BASE = "https://tenisymas.com";
+        
+        if (orderData.redirectionUrls?.origin && orderData.redirectionUrls.origin.includes('tennisymas')) {
+            SITE_BASE = orderData.redirectionUrls.origin;
+        }
+
         const successUrl = `${SITE_BASE}/success.html`;
-        const cancelUrl = `${SITE_BASE}/checkout.html`;
+        console.log(`[Addi] Target SITE_BASE: ${SITE_BASE}`);
+        console.log(`[Addi] Success URL: ${successUrl}`);
 
         const totalAmount = Math.round(Number(orderData.totalAmount));
         const items = orderData.items.map((item: any) => ({
@@ -98,15 +106,15 @@ serve(async (req) => {
                 cellphone: String(orderData.client.cellphone).replace(/\D/g, '').slice(-10).padStart(10, '0')
             },
             shippingAddress: {
-                line1: cleanStr(orderData.shippingAddress.line1),
+                lineOne: cleanStr(orderData.shippingAddress.line1),
                 city: cleanStr(orderData.shippingAddress.city),
-                administrativeDivision: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
+                state: cleanStr(orderData.shippingAddress.administrativeDivision || orderData.shippingAddress.city),
                 country: "CO"
             },
             allyUrlRedirection: {
                 logoUrl: "https://tennisymas.com/images/logo-tm.png",
-                callbackUrl: orderData.redirectionUrls?.callback || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
-                successUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
+                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
+                redirectionUrl: successUrl
             },
             items: items
         }

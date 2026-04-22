@@ -117,6 +117,27 @@ body {
     font-weight: 900;
 }
 
+.live-indicator {
+    font-size: 0.65rem;
+    vertical-align: middle;
+    margin-left: 10px;
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: 1px;
+    -webkit-text-fill-color: #2ecc71;
+    animation: pulseLive 2s infinite;
+    display: inline-block;
+}
+
+@keyframes pulseLive {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; text-shadow: 0 0 5px #2ecc71; }
+    100% { opacity: 0.6; }
+}
+
 .admin-actions {
     display: flex;
     gap: 1rem;

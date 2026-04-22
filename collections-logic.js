@@ -1010,11 +1010,11 @@ async function openProductModal(productId) {
             
             if (productSizes.length > 0 && !selectedModalSize) {
                 showNotification('⚠️ Por favor selecciona tu Talla primero', 'error');
-                // Highlight size group
+                // Highlight size group and SHAKE it
                 const sizeGroup = document.getElementById('modalSizeGroup');
                 if (sizeGroup) {
-                    sizeGroup.style.background = 'rgba(255, 51, 51, 0.1)';
-                    setTimeout(() => sizeGroup.style.background = '', 1000);
+                    sizeGroup.classList.add('shake');
+                    setTimeout(() => sizeGroup.classList.remove('shake'), 600);
                 }
                 return;
             }
