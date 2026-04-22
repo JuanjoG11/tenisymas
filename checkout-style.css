@@ -103,6 +103,36 @@
     color: white !important;
     font-size: 0.95rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Forzar visibilidad de opciones y cursor */
+.checkout-form-section select {
+    cursor: pointer;
+}
+
+/* Fix for invisible text in select options on some browsers */
+.checkout-form-section select option {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    padding: 10px;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper::after {
+    content: '▼';
+    font-size: 0.6rem;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-red);
+    pointer-events: none;
+    opacity: 0.7;
 }
 
 .checkout-form-section input:focus,
