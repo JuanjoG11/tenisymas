@@ -158,7 +158,7 @@ function updateCategoryTitle(category) {
     
     // Handle specific branding titles
     if (category === 'futsal' && brand && brand.toLowerCase().includes('joma')) {
-        info = { title: 'FÚTSAL JOMA', subtitle: 'Colección Original Exclusiva' };
+        info = { title: 'FÚTSAL JOMA ORIGINAL', subtitle: 'Colección Original Exclusiva' };
     } else if (!info && category) {
         const displayTitle = category.replace(/[-,]/g, ' ').toUpperCase();
         info = { title: displayTitle, subtitle: 'Nuestra mejor selección' };
@@ -306,12 +306,16 @@ function populateBrandFilters() {
     const brands = [...new Set(allProducts.map(p => p.brand || p.marca).filter(Boolean))];
     const container = document.getElementById('brandFilters');
     if (container) {
-        container.innerHTML = brands.sort().map(brand => `
-            <label class="filter-checkbox">
-            <input type="checkbox" value="${brand}" data-filter="brand">
-                <span>${brand}</span>
-            </label>
-        `).join('');
+        container.innerHTML = brands.sort().map(brand => {
+            const isJoma = brand.toLowerCase().includes('joma');
+            const displayBrand = isJoma ? 'Joma ORIGINAL' : brand;
+            return `
+                <label class="filter-checkbox">
+                <input type="checkbox" value="${brand}" data-filter="brand">
+                    <span>${displayBrand}</span>
+                </label>
+            `;
+        }).join('');
         // Re-attach listeners for new inputs
         attachFilterListeners();
     }
@@ -799,7 +803,7 @@ function createProductCardHTML(product, absoluteIndex = 999) {
                 ` : ''}
             </div>
             <div class="product-info" onclick="openProductModal('${product.id}')" style="cursor: pointer;">
-                <h3 class="product-name">${product.name}</h3>
+                <h3 class="product-name">${product.name.replace(/joma/gi, 'Joma ORIGINAL')}</h3>
                 <div class="product-price-container">
                     ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
                     <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
