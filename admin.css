@@ -673,3 +673,46 @@ body {
         padding: 1px 6px;
     }
 }
+
+/* Size Manager Styles */
+.size-manager-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.size-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 40px;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 51, 51, 0.1);
+}
+
+.size-row input {
+    padding: 8px !important;
+    font-size: 0.9rem !important;
+}
+
+.btn-remove-size {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-remove-size:hover {
+    background: #e74c3c;
+    color: white;
+}

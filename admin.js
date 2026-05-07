@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOrders();
     setupEventListeners();
     setupRealtime();
+    addSizeRow('', 0); // Initial empty size row
 });
 
 function checkAuth() {
@@ -214,7 +215,7 @@ function fileToBase64(file) {
     });
 }
 
-async function saveProduct(productData, file) {
+async function saveProduct(productData, file, inventoryData = []) {
     try {
         let finalImageUrl = productData.image;
 
@@ -229,20 +230,50 @@ async function saveProduct(productData, file) {
         const { id, created_at, ...rest } = { ...productData, image: finalImageUrl };
         const dataToSave = rest;
 
+        let savedProduct;
         if (editingId) {
-            const { error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('products')
                 .update(dataToSave)
-                .eq('id', editingId);
+                .eq('id', editingId)
+                .select();
             if (error) throw error;
+            savedProduct = data[0];
             showToast('Producto actualizado ✓');
         } else {
-            const { error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('products')
-                .insert([dataToSave]);
+                .insert([dataToSave])
+                .select();
             if (error) throw error;
+            savedProduct = data[0];
             showToast('Producto agregado ✓');
         }
+
+        // Save Inventory/Stock
+        if (savedProduct && inventoryData.length > 0) {
+            const productId = savedProduct.id;
+            
+            // First, delete old inventory for this product to avoid orphaned records
+            await supabaseClient
+                .from('inventory')
+                .delete()
+                .eq('product_id', productId);
+
+            // Now insert the new inventory data
+            for (const inv of inventoryData) {
+                await supabaseClient
+                    .from('inventory')
+                    .upsert({
+                        product_id: productId,
+                        location_id: 0,
+                        size: String(inv.size),
+                        stock: inv.stock,
+                        updated_at: new Date()
+                    }, { onConflict: 'product_id, location_id, size' });
+            }
+        }
+
         await loadProducts();
         resetForm();
     } catch (err) {
@@ -305,6 +336,20 @@ function setupEventListeners() {
                 }
             }
 
+            // Collect sizes and stock from manager
+            const sizeRows = document.querySelectorAll('.size-row');
+            const sizes = [];
+            const inventory = [];
+
+            sizeRows.forEach(row => {
+                const sizeVal = row.querySelector('.size-input').value.trim();
+                const stockVal = parseInt(row.querySelector('.stock-input').value) || 0;
+                if (sizeVal) {
+                    sizes.push(sizeVal);
+                    inventory.push({ size: sizeVal, stock: stockVal });
+                }
+            });
+
             const productData = {
                 name: document.getElementById('name').value.toUpperCase(),
                 category: document.getElementById('category').value,
@@ -312,10 +357,10 @@ function setupEventListeners() {
                 oldprice: document.getElementById('oldPrice').value,
                 image: imageInput.value || 'images/placeholder.png',
                 images: extraUrls.length > 0 ? extraUrls : null,
-                sizes: document.getElementById('sizes').value.split(',').map(s => s.trim()).filter(s => s !== '')
+                sizes: sizes
             };
 
-            await saveProduct(productData, file);
+            await saveProduct(productData, file, inventory);
         } finally {
             // Always re-enable the button (resetForm also resets it, but just in case)
             submitBtn.disabled = false;
@@ -882,7 +927,37 @@ function resetForm() {
     document.getElementById('extraImages').value = '';
     document.getElementById('galleryFiles').value = '';
     renderGalleryPreview();
+
+    // Reset size manager
+    document.getElementById('sizeManagerContainer').innerHTML = '';
+    addSizeRow('', 0);
 }
+
+// Size Manager Logic
+window.addSizeRow = (size = '', stock = 0) => {
+    const container = document.getElementById('sizeManagerContainer');
+    const row = document.createElement('div');
+    row.className = 'size-row';
+    row.innerHTML = `
+        <input type="text" class="size-input" placeholder="Talla (Ej: 38)" value="${size}">
+        <input type="number" class="stock-input" placeholder="Cant" value="${stock}" min="0">
+        <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    `;
+    container.appendChild(row);
+};
+
+window.removeSizeRow = (btn) => {
+    btn.parentElement.remove();
+    // If no rows left, add an empty one
+    if (document.querySelectorAll('.size-row').length === 0) {
+        addSizeRow('', 0);
+    }
+};
 
 function renderAdminProducts() {
     const searchTerm = searchInput.value.toLowerCase();
@@ -919,7 +994,7 @@ function renderAdminProducts() {
     `).join('');
 }
 
-window.editProduct = (id) => {
+window.editProduct = async (id) => {
     const product = products.find(p => p.id === id);
     if (!product) return;
 
@@ -929,14 +1004,42 @@ window.editProduct = (id) => {
     document.getElementById('price').value = product.price;
     document.getElementById('oldPrice').value = product.oldprice || '';
     document.getElementById('image').value = product.image;
-    let currentSizes = product.sizes || [];
-    if (typeof currentSizes === 'string') {
-        try { currentSizes = JSON.parse(currentSizes); } catch (e) { currentSizes = currentSizes.split(',').map(s => s.trim()); }
+    
+    // Clear and load sizes/stock
+    const container = document.getElementById('sizeManagerContainer');
+    container.innerHTML = '';
+    
+    try {
+        // Fetch inventory for this product
+        const { data: invData, error } = await supabaseClient
+            .from('inventory')
+            .select('size, stock')
+            .eq('product_id', id)
+            .eq('location_id', 0);
+        
+        if (error) throw error;
+        
+        if (invData && invData.length > 0) {
+            invData.forEach(item => {
+                addSizeRow(item.size, item.stock);
+            });
+        } else {
+            // Fallback to basic sizes from product table if no inventory found
+            let currentSizes = product.sizes || [];
+            if (typeof currentSizes === 'string') {
+                try { currentSizes = JSON.parse(currentSizes); } catch (e) { currentSizes = currentSizes.split(',').map(s => s.trim()); }
+            }
+            if (Array.isArray(currentSizes)) {
+                currentSizes = currentSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
+            }
+            currentSizes.forEach(s => addSizeRow(s, 0));
+        }
+    } catch (err) {
+        console.error('Error loading inventory:', err);
+        // Fallback
+        addSizeRow('', 0);
     }
-    if (Array.isArray(currentSizes)) {
-        currentSizes = currentSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
-    }
-    document.getElementById('sizes').value = currentSizes.join(', ');
+
     // Load extra images
     const extraImages = product.images;
     if (Array.isArray(extraImages) && extraImages.length > 0) {
@@ -991,6 +1094,11 @@ window.deleteProduct = async (id) => {
 
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
+    if (!toast) {
+        console.warn('Toast element missing:', msg);
+        if (isError) alert(msg);
+        return;
+    }
     toast.innerText = msg;
     toast.style.background = isError ? '#e74c3c' : '#27ae60';
     toast.classList.add('show');
