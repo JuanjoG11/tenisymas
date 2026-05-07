@@ -241,11 +241,19 @@ async function loadProducts() {
             const client = (typeof supabaseClient !== 'undefined' && supabaseClient) ? supabaseClient : null;
             if (client) {
                 console.log('LOAD: Manual fetch trigger...');
-                const { data } = await client
-                    .from('products')
-                    .select('*')
-                    .order('id', { ascending: true });
-                freshData = data;
+                const [prodRes, invRes] = await Promise.all([
+                    client.from('products').select('*').order('id', { ascending: true }),
+                    client.from('inventory').select('product_id, size, stock')
+                ]);
+                
+                if (!prodRes.error && prodRes.data) {
+                    freshData = prodRes.data;
+                    const inventoryData = invRes.data || [];
+                    freshData = freshData.map(p => ({
+                        ...p,
+                        inventory: inventoryData.filter(inv => inv.product_id === p.id)
+                    }));
+                }
             }
         }
 
@@ -750,9 +758,13 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     // Determine correct selector type (Chips vs Dropdown)
     const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala'].includes(category);
 
+    const inventory = product.inventory || [];
+    const totalStock = inventory.reduce((sum, inv) => sum + (inv.stock || 0), 0);
+    const isOutOfStock = (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes);
+
     return `
-        <div class="product-card" data-id="${product.id}" data-category="${product.category}">
-            ${product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : ''}
+        <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}" data-category="${product.category}">
+            ${isOutOfStock ? `<div class="product-badge out-of-stock-badge">AGOTADO</div>` : (product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : '')}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
                 ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 

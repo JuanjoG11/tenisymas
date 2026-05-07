@@ -713,14 +713,22 @@ async function syncProducts() {
 
         // 2. NETWORK PATH: Fetch from Supabase (background if we already had cache)
         try {
-            let { data, error } = await supabaseClient
-                .from('products')
-                .select('*')
-                .order('id', { ascending: true });
+            // Fetch both products and inventory in parallel for speed
+            const [prodRes, invRes] = await Promise.all([
+                supabaseClient.from('products').select('*').order('id', { ascending: true }),
+                supabaseClient.from('inventory').select('product_id, size, stock')
+            ]);
 
-            if (error) throw error;
+            if (prodRes.error) throw prodRes.error;
+            let data = prodRes.data;
+            const inventoryData = invRes.data || [];
 
             if (data && data.length > 0) {
+                // Attach inventory to each product
+                data = data.map(p => ({
+                    ...p,
+                    inventory: inventoryData.filter(inv => inv.product_id === p.id)
+                }));
                 // Dedup: Ensure unique IDs
                 const seen = new Set();
                 const uniqueData = data.filter(p => {
