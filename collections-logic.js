@@ -376,8 +376,7 @@ function populateSizeFilters() {
     const container = document.getElementById('sizeFilters');
     if (container) {
         const newHTML = sizesArray.map(size => {
-            const eur = colToEur(size);
-            const label = eur === size ? size : `EUR ${eur} (COL ${size})`;
+            const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
             return `
             <label class="filter-checkbox">
                 <input type="checkbox" value="${size}" data-filter="size" ${activeFilters.sizes.includes(size) ? 'checked' : ''}>
@@ -964,8 +963,7 @@ async function openProductModal(productId) {
         if (productSizes.length > 0) {
             sizeGroup.style.display = 'block';
             sizePills.innerHTML = productSizes.map(size => {
-                const eur = colToEur(size);
-                const label = eur === size ? `Talla ${size}` : `EUR ${eur} (COL ${size})`;
+                const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
                 return `<div class="pill" onclick="selectModalSize('${size}', this)">${label}</div>`;
             }).join('');
         } else {
