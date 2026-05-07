@@ -811,6 +811,19 @@ async function openProductModal(productId) {
     const product = allProducts.find(p => p.id == productId);
     if (!product) return;
 
+    // Fetch stock for this product before rendering sizes
+    let inventory = [];
+    if (window.supabaseClient) {
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('inventory')
+                .select('size, stock')
+                .eq('product_id', productId);
+            if (!error && data) inventory = data;
+        } catch (err) { console.error('Error fetching stock:', err); }
+    }
+
+
     const modal = document.getElementById('productModal');
     if (!modal) return;
 
@@ -963,8 +976,18 @@ async function openProductModal(productId) {
         if (productSizes.length > 0) {
             sizeGroup.style.display = 'block';
             sizePills.innerHTML = productSizes.map(size => {
+                // If inventory exists, check stock. If no inventory records at all, allow as 'managed but unknown' or 'not managed yet'
+                // For better UX, if NO inventory records exist for THIS product, we allow all sizes (legacy mode)
+                const stockItem = inventory.find(inv => String(inv.size) === String(size));
+                const stockCount = stockItem ? stockItem.stock : (inventory.length === 0 ? 1 : 0);
+                const isOutOfStock = stockCount <= 0;
+                
                 const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
-                return `<div class="pill" onclick="selectModalSize('${size}', this)">${label}</div>`;
+                const displayLabel = isOutOfStock ? `${label} (Agotado)` : label;
+                const disabledClass = isOutOfStock ? 'disabled out-of-stock' : '';
+                const clickAction = isOutOfStock ? '' : `onclick="selectModalSize('${size}', this)"`;
+                
+                return `<div class="pill ${disabledClass}" ${clickAction}>${displayLabel}</div>`;
             }).join('');
         } else {
             sizeGroup.style.display = 'none';

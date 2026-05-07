@@ -1402,6 +1402,14 @@ body {
     color: white;
     box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3);
 }
+.pill.out-of-stock {
+    opacity: 0.4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    background: rgba(255, 255, 255, 0.01);
+    border-color: #222;
+    color: #888;
+}
 
 /* Actions */
 .modal-actions {
