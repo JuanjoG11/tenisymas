@@ -879,8 +879,7 @@ body {
     border-color: var(--color-red);
     color: white;
     font-weight: 700;
-    transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(255, 51, 51, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 51, 51, 0.3);
 }
 
 /* Make sure container handles different content heights */

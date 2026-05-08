@@ -1061,9 +1061,10 @@ async function openProductModal(productId) {
             }
 
             if (typeof addToCart === 'function') {
-                console.log('[DEBUG] Adding to cart from modal:', product.id, selectedModalSize);
                 addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
                 closeProductModal();
+                // Redirigir al checkout directamente
+                window.location.href = 'checkout.html';
             }
         };
     }
@@ -1111,7 +1112,9 @@ function renderModalThumbnails(images, productName) {
 
 function selectModalSize(size, element) {
     selectedModalSize = size;
-    element.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    // Usar la referencia directa al contenedor padre ya conocido para evitar búsquedas lentas en mobile
+    const pills = element.parentElement.children;
+    for (let i = 0; i < pills.length; i++) pills[i].classList.remove('active');
     element.classList.add('active');
 }
 
@@ -1133,6 +1136,13 @@ function closeProductModal() {
         document.body.style.overflow = '';
         document.documentElement.style.removeProperty('--scroll-y');
         window.scrollTo(0, scrollY);
+
+        // Reset state para el próximo producto (evita bugs de talla y cantidad residuales)
+        selectedModalSize = null;
+        selectedModalColor = null;
+        modalQty = 1;
+        const qtyDisplay = document.getElementById('modalQtyValue');
+        if (qtyDisplay) qtyDisplay.textContent = '1';
     }
 }
 function openSizeGuide() {
