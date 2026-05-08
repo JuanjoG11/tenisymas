@@ -715,7 +715,7 @@ async function syncProducts() {
         try {
             // Fetch both products and inventory in parallel for speed
             const [prodRes, invRes] = await Promise.all([
-                supabaseClient.from('products').select('*').order('id', { ascending: true }),
+                supabaseClient.from('products').select('*').order('created_at', { ascending: false }),
                 supabaseClient.from('inventory').select('product_id, size, stock')
             ]);
 

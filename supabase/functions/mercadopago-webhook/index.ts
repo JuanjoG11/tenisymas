@@ -65,7 +65,27 @@ serve(async (req) => {
                 })
 
                 if (error) console.error("Error actualizando DB:", error)
-                else console.log("✅ Pedido actualizado en DB")
+                else {
+                    console.log("✅ Pedido actualizado en DB");
+                    
+                    // NOTIFICACIÓN WATI (Solo si el pago es aprobado)
+                    if (status === 'approved') {
+                        try {
+                            const WATI_ENDPOINT = "https://live-mt-server.wati.io/10112908";
+                            const WATI_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwibmFtZWlkIjoidGVubmlzeW1hc3BlcmVpcmFjb0BnbWFpbC5jb20iLCJlbWFpbCI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwiYXV0aF90aW1lIjoiMDUvMDgvMjAyNiAwMDoxMjoxMiIsInRlbmFudF9pZCI6IjEwMTEyOTA4IiwiZGJfbmFtZSI6Im10LXByb2QtVGVuYW50cyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFETUlOSVNUUkFUT1IiLCJleHAiOjI1MzQwMjMwMDgwMCwiaXNzIjoiQ2xhcmVfQUkiLCJhdWQiOiJDbGFyZV9BSSJ9.7ArKApwDNT5eqRT2dpiG-hHq0QaBEP_PUnKS8E1wuxU";
+                            const msg = `✅ *¡VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n📦 *Orden:* ${externalReference}\n💳 *Método:* Mercado Pago (${paymentData.payment_method_id})\n\n¡Es hora de preparar el envío! 🚀`;
+                            
+                            await fetch(`${WATI_ENDPOINT}/api/v1/sendSessionMessage/573204961453`, {
+                                method: "POST",
+                                headers: { 
+                                    "Authorization": `Bearer ${WATI_TOKEN}`, 
+                                    "Content-Type": "application/json" 
+                                },
+                                body: JSON.stringify({ messageText: msg })
+                            }).catch(() => {});
+                        } catch(e) {}
+                    }
+                }
             }
         }
 

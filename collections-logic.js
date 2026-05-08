@@ -242,7 +242,7 @@ async function loadProducts() {
             if (client) {
                 console.log('LOAD: Manual fetch trigger...');
                 const [prodRes, invRes] = await Promise.all([
-                    client.from('products').select('*').order('id', { ascending: true }),
+                    client.from('products').select('*').order('created_at', { ascending: false }),
                     client.from('inventory').select('product_id, size, stock')
                 ]);
                 

@@ -47,6 +47,23 @@ serve(async (req) => {
                 })
             })
             console.log(`✅ Pedido ${body.orderId} actualizado a: ${newStatus} / ${statusPayment}`)
+
+            // NOTIFICACIÓN WATI (Para actualizaciones de estado importantes)
+            try {
+                const WATI_ENDPOINT = "https://live-mt-server.wati.io/10112908";
+                const WATI_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwibmFtZWlkIjoidGVubmlzeW1hc3BlcmVpcmFjb0BnbWFpbC5jb20iLCJlbWFpbCI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwiYXV0aF90aW1lIjoiMDUvMDgvMjAyNiAwMDoxMjoxMiIsInRlbmFudF9pZCI6IjEwMTEyOTA4IiwiZGJfbmFtZSI6Im10LXByb2QtVGVuYW50cyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFETUlOSVNUUkFUT1IiLCJleHAiOjI1MzQwMjMwMDgwMCwiaXNzIjoiQ2xhcmVfQUkiLCJhdWQiOiJDbGFyZV9BSSJ9.7ArKApwDNT5eqRT2dpiG-hHq0QaBEP_PUnKS8E1wuxU";
+                const icon = body.status === 'APPROVED' ? '✅' : 'ℹ️';
+                const msg = `${icon} *ACTUALIZACIÓN ADDI*\n\n📦 *Orden:* ${body.orderId}\n📈 *Nuevo Estado:* ${body.status}\n\nRevisa el panel administrativo para más detalles.`;
+                
+                await fetch(`${WATI_ENDPOINT}/api/v1/sendSessionMessage/573204961453`, {
+                    method: "POST",
+                    headers: { 
+                        "Authorization": `Bearer ${WATI_TOKEN}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ messageText: msg })
+                }).catch(() => {});
+            } catch(e) {}
         }
 
         // Addi requiere que el callback devuelva el mismo objeto recibido con HTTP 200
