@@ -14,27 +14,24 @@ serve(async (req) => {
 
     try {
         const { orderData } = await req.json()
-        const isClientTestMode = orderData.testMode === true;
 
-        // Credenciales de Addi desde variables de entorno
-        const CLIENT_ID = Deno.env.get("ADDICLIENT_ID") || (isClientTestMode ? "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk" : null);
-        const CLIENT_SECRET = Deno.env.get("ADDICLIENT_SECRET") || (isClientTestMode ? "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4" : null);
+        // Credenciales dadas por soporte de Addi para pruebas
+        const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
+        const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
 
         if (!CLIENT_ID || !CLIENT_SECRET) {
-            console.error("Faltan credenciales de Addi en los secrets de Supabase para el modo solicitado");
-            throw new Error(`Credenciales de Addi no configuradas para modo ${isClientTestMode ? 'TEST' : 'PRODUCCIÓN'}`);
+            console.error("Faltan credenciales de Addi en los secrets de Supabase");
+            throw new Error("Addi credentials not configured");
         }
         
-        const ALLY_SLUG = "tennisymasco-ecommerce";
-        
-        // Prioridad: 1. Flag del cliente, 2. Variable de entorno
-        const IS_SANDBOX = isClientTestMode;
-        
-        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com";
-        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com";
-        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com";
+        const ALLY_SLUG = "tennisymasco-ecommerce"
+        const IS_SANDBOX = true; // STAGING - Requerido por soporte Addi
+        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
+        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
+        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
 
-        console.log(`--- ADDI ${IS_SANDBOX ? "STAGING (SANDBOX)" : "PRODUCTION"} ENGINE ---`);
+        console.log(`--- ADDI STAGING V3.1.5 ---`);
+        console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
         console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
 
         // 1. Obtener Token OAuth (V3 usa /oauth/token)
@@ -67,17 +64,10 @@ serve(async (req) => {
         console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
 
         const safeOrderId = String(orderData.orderId).replace(/[^a-zA-Z0-9-]/g, '');
-        
-        // Determinar el dominio base: Usamos exactamente el que estaba en el commit que funcionaba
-        let SITE_BASE = "https://tenisymas.com";
-        
-        if (orderData.redirectionUrls?.origin && orderData.redirectionUrls.origin.includes('tennisymas')) {
-            SITE_BASE = orderData.redirectionUrls.origin;
-        }
-
+        // Siempre usar las URLs reales del dominio en producción para que Addi las acepte
+        const SITE_BASE = "https://tenisymas.com";
         const successUrl = `${SITE_BASE}/success.html`;
-        console.log(`[Addi] Target SITE_BASE: ${SITE_BASE}`);
-        console.log(`[Addi] Success URL: ${successUrl}`);
+        const cancelUrl = `${SITE_BASE}/checkout.html`;
 
         const totalAmount = Math.round(Number(orderData.totalAmount));
         const items = orderData.items.map((item: any) => ({
@@ -113,8 +103,8 @@ serve(async (req) => {
             },
             allyUrlRedirection: {
                 logoUrl: "https://tennisymas.com/images/logo-tm.png",
-                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
-                redirectionUrl: successUrl
+                callbackUrl: orderData.redirectionUrls?.callback || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
+                redirectionUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
             },
             items: items
         }
@@ -148,8 +138,8 @@ serve(async (req) => {
 
             // Registrar el pedido en Supabase
             try {
-                const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+                const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
+                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
                 if (SUPABASE_URL && SERVICE_ROLE) {
                     const orderRecord = {
@@ -163,13 +153,7 @@ serve(async (req) => {
                             department: orderData.shippingAddress.administrativeDivision,
                             dni: orderData.client.idNumber
                         },
-                        items: orderData.items.map((i: any) => ({ 
-                            name: i.name, 
-                            quantity: i.quantity, 
-                            price: i.unitPrice,
-                            size: i.size || null,
-                            color: i.color || null
-                        })),
+                        items: orderData.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice })),
                         total: orderData.totalAmount,
                         payment_method: 'addi',
                         status: 'pending',
@@ -207,14 +191,13 @@ serve(async (req) => {
             }
 
             console.error(`❌ ERROR ADDI API: ${responseStatus}`, errorBody);
-            // Propagar error al cliente para diagnóstico rápido
+
             return new Response(JSON.stringify({
                 error: "Addi API V3 Error",
                 status: responseStatus,
                 details: errorBody,
                 called_url: addiUrl,
-                sent_payload: addiPayload,
-                message: "Revisa credenciales y modo sandbox (env ADDI_SANDBOX)"
+                sent_payload: addiPayload
             }), {
                 status: responseStatus,
                 headers: { ...corsHeaders, "Content-Type": "application/json" }

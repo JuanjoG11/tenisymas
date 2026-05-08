@@ -7,48 +7,28 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-    // Manejo de CORS
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders, status: 200 })
-    }
+    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
         const { items, customer, orderId } = await req.json()
-        const ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")
+        const ACCESS_TOKEN = "APP_USR-8626270631469210-022013-797bdb9a76a3d85b866049fb85eb4e38-3213704453";
 
-        if (!ACCESS_TOKEN) {
-            throw new Error("MP_ACCESS_TOKEN no configurado en Supabase")
-        }
+        console.log(`--- MP CHECKOUT: ${orderId} ---`)
 
-        console.log(`--- MERCADO PAGO CHECKOUT ---`)
-        console.log(`Orden: ${orderId}`)
+        // Generar un external_reference único por cada intento
+        const uniqueRef = `${orderId}-${Date.now()}`;
 
-        // 1. Preparar la preferencia para Mercado Pago
         const preference = {
             items: items.map((item: any) => ({
-                id: item.id || "prod-001",
-                title: item.name,
+                title: String(item.name).replace(/[^\w\s]/gi, '').substring(0, 50),
                 unit_price: Math.round(Number(item.price)),
                 quantity: Number(item.quantity || 1),
-                currency_id: "COP",
-                picture_url: item.image || "",
+                currency_id: "COP"
             })),
             payer: {
-                name: customer.firstName,
-                surname: customer.lastName,
                 email: customer.email,
-                phone: {
-                    area_code: "57",
-                    number: customer.phone.replace(/\D/g, '').slice(-10)
-                },
-                identification: {
-                    type: "CC",
-                    number: String(customer.dni)
-                },
-                address: {
-                    street_name: customer.address,
-                    zip_code: "",
-                }
+                name: customer.firstName,
+                surname: customer.lastName
             },
             back_urls: {
                 success: "https://tenisymas.com/success.html",
@@ -56,15 +36,10 @@ serve(async (req) => {
                 pending: "https://tenisymas.com/checkout.html"
             },
             auto_return: "approved",
-            statement_descriptor: "TENNIS Y MAS",
-            external_reference: orderId,
-            notification_url: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/mercadopago-webhook",
+            external_reference: uniqueRef
         }
 
-        console.log("Preference created:", JSON.stringify(preference, null, 2))
-
-        // 2. Crear la preferencia en la API de Mercado Pago
-        const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+        const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${ACCESS_TOKEN}`,
@@ -73,62 +48,20 @@ serve(async (req) => {
             body: JSON.stringify(preference)
         })
 
-        const data = await response.json()
+        const data = await res.json()
 
-        if (!response.ok) {
-            console.error("Error Mercado Pago API:", data)
-            throw new Error(data.message || "Error al crear la preferencia de pago")
-        }
+        if (!res.ok) throw new Error(data.message || "Error MP");
 
-        // 3. (NUEVO) Registrar el pedido en la tabla 'orders' para el administrador
-        try {
-            const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
-            const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-
-            if (SUPABASE_URL && SERVICE_ROLE) {
-                const orderRecord = {
-                    customer_info: customer,
-                    items: items.map((i: any) => ({ 
-                        name: i.name, 
-                        quantity: i.quantity, 
-                        price: i.price,
-                        size: i.size || null,
-                        color: i.color || null
-                    })),
-                    total: items.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0),
-                    payment_method: 'mercadopago',
-                    status: 'pending',
-                    external_reference: orderId
-                }
-
-                await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${SERVICE_ROLE}`,
-                        "apikey": SERVICE_ROLE,
-                        "Content-Type": "application/json",
-                        "Prefer": "return=minimal"
-                    },
-                    body: JSON.stringify(orderRecord)
-                })
-                console.log("✅ Pedido registrado en la base de datos")
-            }
-        } catch (dbErr) {
-            console.error("❌ Error registrando pedido (no bloqueante):", dbErr)
-        }
-
-        // 4. Devolver los datos necesarios para el Checkout
         return new Response(JSON.stringify({
             id: data.id,
-            init_point: data.init_point,
-            debug_preference: preference // TEMPORAL PARA DEPÓSITO DE LOGS FRONTAL
+            init_point: data.init_point
         }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
         })
 
     } catch (err: any) {
-        console.error("Error Interno:", err.message)
+        console.error("Checkout Error:", err.message);
         return new Response(JSON.stringify({ error: err.message }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" }

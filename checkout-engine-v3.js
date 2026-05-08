@@ -422,8 +422,16 @@ async function handleMercadoPagoCheckout(customer) {
         console.log('🎫 Respuesta de MP:', result);
 
         if (result.init_point) {
-            console.log('✅ Redirigiendo a Pasarela Oficial...');
-            window.location.href = result.init_point;
+            console.log('✅ Iniciando Pasarela Segura (SDK)...');
+            
+            // Usar el SDK oficial para evitar errores de CSP y seguridad del navegador
+            const mp = new MercadoPago('APP_USR-c4eb2276-e656-4cc8-ad42-3135168127fe');
+            mp.checkout({
+                preference: {
+                    id: result.id
+                },
+                autoOpen: true
+            });
         } else {
             throw new Error("No se obtuvo el punto de inicio (init_point)");
         }
