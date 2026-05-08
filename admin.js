@@ -342,11 +342,15 @@ function setupEventListeners() {
             const inventory = [];
 
             sizeRows.forEach(row => {
+                const colorVal = row.querySelector('.color-input').value.trim();
                 const sizeVal = row.querySelector('.size-input').value.trim();
                 const stockVal = parseInt(row.querySelector('.stock-input').value) || 0;
+                
                 if (sizeVal) {
-                    sizes.push(sizeVal);
-                    inventory.push({ size: sizeVal, stock: stockVal });
+                    // Combine size and color for the inventory record
+                    const finalLabel = colorVal ? `${sizeVal} (${colorVal})` : sizeVal;
+                    sizes.push(finalLabel);
+                    inventory.push({ size: finalLabel, stock: stockVal });
                 }
             });
 
@@ -934,13 +938,17 @@ function resetForm() {
 }
 
 // Size Manager Logic
-window.addSizeRow = (size = '', stock = 0) => {
+window.addSizeRow = (size = '', stock = 0, color = '') => {
     const container = document.getElementById('sizeManagerContainer');
+    const category = document.getElementById('category').value;
+    const isUniform = category === 'petos,camisetas';
+    
     const row = document.createElement('div');
     row.className = 'size-row';
     row.innerHTML = `
-        <input type="text" class="size-input" placeholder="Talla (Ej: 38)" value="${size}">
-        <input type="number" class="stock-input" placeholder="Cant" value="${stock}" min="0">
+        <input type="text" class="color-input" placeholder="Color" value="${color}" style="flex: 1.5; display: ${isUniform ? 'block' : 'none'};">
+        <input type="text" class="size-input" placeholder="Talla" value="${size}" style="flex: 1;">
+        <input type="number" class="stock-input" placeholder="Cant" value="${stock}" min="0" style="flex: 0.8;">
         <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -950,6 +958,14 @@ window.addSizeRow = (size = '', stock = 0) => {
     `;
     container.appendChild(row);
 };
+
+// Update existing rows when category changes
+document.getElementById('category').addEventListener('change', (e) => {
+    const isUniform = e.target.value === 'petos,camisetas';
+    document.querySelectorAll('.color-input').forEach(input => {
+        input.style.display = isUniform ? 'block' : 'none';
+    });
+});
 
 window.removeSizeRow = (btn) => {
     btn.parentElement.remove();
@@ -1021,7 +1037,14 @@ window.editProduct = async (id) => {
         
         if (invData && invData.length > 0) {
             invData.forEach(item => {
-                addSizeRow(item.size, item.stock);
+                let size = String(item.size);
+                let color = '';
+                if (size.includes('(') && size.endsWith(')')) {
+                    const parts = size.split('(');
+                    size = parts[0].trim();
+                    color = parts[1].replace(')', '').trim();
+                }
+                addSizeRow(size, item.stock, color);
             });
         } else {
             // Fallback to basic sizes from product table if no inventory found
@@ -1032,7 +1055,16 @@ window.editProduct = async (id) => {
             if (Array.isArray(currentSizes)) {
                 currentSizes = currentSizes.map(s => String(s).replace(/[\[\]"]/g, '').trim()).filter(Boolean);
             }
-            currentSizes.forEach(s => addSizeRow(s, 0));
+            currentSizes.forEach(s => {
+                let size = String(s);
+                let color = '';
+                if (size.includes('(') && size.endsWith(')')) {
+                    const parts = size.split('(');
+                    size = parts[0].trim();
+                    color = parts[1].replace(')', '').trim();
+                }
+                addSizeRow(size, 0, color);
+            });
         }
     } catch (err) {
         console.error('Error loading inventory:', err);

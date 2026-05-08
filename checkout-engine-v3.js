@@ -3,7 +3,7 @@ console.log('%c🚀 ADDI CORE ENGINE V3.0 ACTIVATED', 'color: #00ff00; font-weig
 
 let checkoutCart = [];
 const DEFAULT_SHIPPING_COST = 16500;
-const FREE_SHIPPING_THRESHOLD = 250000;
+const FREE_SHIPPING_THRESHOLD = 300000;
 
 const colombiaCities = {
     "Amazonas": ["Leticia", "Puerto Nariño", "El Encanto", "La Chorrera", "Puerto Alegría", "Puerto Arica"],

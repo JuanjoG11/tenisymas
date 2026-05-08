@@ -2500,3 +2500,149 @@ body {
     }
 }
 
+/* ==================== JOMA INFINITE COLLAGE ==================== */
+.joma-collage-section {
+    position: relative;
+    height: 650px;
+    background: #000;
+    overflow: hidden;
+    cursor: pointer;
+    margin: 40px 0;
+}
+
+.collage-dynamic-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.collage-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    height: 200%;
+    transform: rotate(-5deg) translateY(-10%);
+    width: 110%;
+    margin-left: -5%;
+}
+
+.collage-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    animation: collageScroll 30s linear infinite;
+}
+
+.col-2 { animation-direction: reverse; animation-duration: 35s; }
+.col-3 { animation-duration: 40s; }
+
+.collage-img {
+    height: 350px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    filter: brightness(0.7);
+    transition: all 0.5s ease;
+}
+
+.joma-collage-section:hover .collage-img {
+    filter: brightness(0.9);
+}
+
+@keyframes collageScroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+}
+
+.collage-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+    z-index: 2;
+}
+
+.collage-floating-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    text-align: center;
+    width: 100%;
+    pointer-events: none;
+}
+
+.collage-floating-content .joma-badge {
+    background: #ff3333;
+    color: white;
+    padding: 8px 25px;
+    border-radius: 50px;
+    font-weight: 900;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    box-shadow: 0 5px 15px rgba(255,51,51,0.4);
+}
+
+.collage-floating-content .collage-title {
+    font-size: clamp(3rem, 10vw, 5.5rem);
+    font-weight: 950;
+    color: white;
+    letter-spacing: -3px;
+    line-height: 0.9;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    text-shadow: 0 0 30px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,1);
+}
+
+.collage-floating-content .collage-subtitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.collage-floating-content .collage-description {
+    font-size: 1.2rem;
+    color: #ff3333;
+    font-weight: 900;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.collage-floating-content .collage-btn {
+    display: inline-block;
+    padding: 18px 50px;
+    background: white;
+    color: black;
+    font-weight: 950;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .joma-collage-section { height: 500px; }
+    .collage-columns { grid-template-columns: repeat(2, 1fr); }
+    .col-3 { display: none; }
+    .collage-img { height: 250px; }
+}
+
+
+
+

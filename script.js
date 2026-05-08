@@ -315,12 +315,12 @@ function updateCartUI() {
 function updateShippingGoal(total) {
     const shippingMsg = document.getElementById('shippingMsg');
     const shippingProgress = document.getElementById('shippingProgress');
-    const FREE_SHIPPING_THRESHOLD = 250000;
+    const FREE_SHIPPING_THRESHOLD = 300000;
 
     if (!shippingMsg || !shippingProgress) return;
 
     if (total === 0) {
-        shippingMsg.innerHTML = `¡Estás a <strong>$250.000</strong> del <strong>ENVÍO GRATIS</strong>! 🚚`;
+        shippingMsg.innerHTML = `¡Estás a <strong>$300.000</strong> del <strong>ENVÍO GRATIS</strong>! 🚚`;
         shippingProgress.style.width = '0%';
         return;
     }
