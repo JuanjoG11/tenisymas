@@ -1001,7 +1001,7 @@ async function openProductModal(productId) {
                 const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
                 const displayLabel = isOutOfStock ? `${label} (Agotado)` : label;
                 const disabledClass = isOutOfStock ? 'disabled out-of-stock' : '';
-                const clickAction = isOutOfStock ? '' : `onclick="selectModalSize('${size}', this)"`;
+                const clickAction = isOutOfStock ? '' : `onclick="selectModalSize('${size}', this)" ontouchstart="selectModalSize('${size}', this)"`;
                 
                 return `<div class="pill ${disabledClass}" ${clickAction}>${displayLabel}</div>`;
             }).join('');
@@ -1063,8 +1063,7 @@ async function openProductModal(productId) {
             if (typeof addToCart === 'function') {
                 addToCart(product.id, selectedModalSize, selectedModalColor, modalQty);
                 closeProductModal();
-                // Redirigir al checkout directamente
-                window.location.href = 'checkout.html';
+                // Ya no redirige al checkout, se queda en el carrito como antes
             }
         };
     }
@@ -1111,6 +1110,9 @@ function renderModalThumbnails(images, productName) {
 }
 
 function selectModalSize(size, element) {
+    if (window.lastSizeClick && Date.now() - window.lastSizeClick < 100) return;
+    window.lastSizeClick = Date.now();
+
     selectedModalSize = size;
     // Usar la referencia directa al contenedor padre ya conocido para evitar búsquedas lentas en mobile
     const pills = element.parentElement.children;
