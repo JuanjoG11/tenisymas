@@ -247,6 +247,8 @@ function setupCheckoutForm() {
                 handleMercadoPagoCheckout(customerData);
             } else if (selectedMethod === 'whatsapp') {
                 handleWhatsAppFallback(customerData);
+            } else if (selectedMethod === 'nequi') {
+                handleNequiCheckout(customerData);
             } else {
                 alert('Método de pago en mantenimiento.');
             }
@@ -482,4 +484,65 @@ async function handleWhatsAppFallback(customer) {
 
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
+}
+
+async function handleNequiCheckout(customer) {
+    // CAMBIA ESTE NUMERO POR TU NEQUI REAL:
+    const NEQUI_NUMBER = '3204961453';
+    const WHATSAPP_NUMBER = '573204961453';
+
+    let subtotal = 0;
+    let itemsText = '';
+    checkoutCart.forEach(item => {
+        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
+        subtotal += price * item.quantity;
+        itemsText += `\n- ${item.quantity}x ${item.name}${item.size ? ` (Talla: ${item.size})` : ''} $${(price * item.quantity).toLocaleString('es-CO')}`;
+    });
+    const shipping = getShippingCost(subtotal);
+    const total = subtotal + shipping;
+
+    // Eliminar modal anterior si existe
+    const old = document.getElementById('nequiModal');
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'nequiModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    modal.innerHTML = `
+        <div style="background:#111;border:2px solid #ff3333;border-radius:20px;padding:30px;max-width:420px;width:100%;text-align:center;font-family:'Outfit',sans-serif;">
+            <div style="font-size:2.5rem;margin-bottom:10px;">&#128179;</div>
+            <h2 style="color:#fff;font-size:1.4rem;margin-bottom:5px;">Pago por Nequi / Daviplata</h2>
+            <p style="color:#aaa;font-size:0.85rem;margin-bottom:20px;">Transfiere el valor exacto y envianos el comprobante</p>
+            <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:15px;border:1px solid #333;">
+                <p style="color:#888;font-size:0.8rem;margin-bottom:5px;">Numero Nequi / Daviplata:</p>
+                <p style="color:#ff3333;font-size:2.2rem;font-weight:900;letter-spacing:3px;margin:0;">${NEQUI_NUMBER}</p>
+                <p style="color:#888;font-size:0.8rem;margin-top:5px;">A nombre de: <strong style="color:#fff">Jaider Henao</strong></p>
+            </div>
+            <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:20px;text-align:left;border:1px solid #333;">
+                <p style="color:#888;font-size:0.75rem;margin-bottom:5px;">TOTAL A TRANSFERIR:</p>
+                <p style="color:#2ecc71;font-size:2rem;font-weight:900;margin:0;">$${total.toLocaleString('es-CO')}</p>
+                <p style="color:#555;font-size:0.75rem;margin-top:3px;">Incluye envio: $${shipping.toLocaleString('es-CO')}</p>
+            </div>
+            <button id="nequiWABtn" style="background:#25D366;color:white;border:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;">
+                Ya pague - Enviar comprobante por WhatsApp
+            </button>
+            <button onclick="document.getElementById('nequiModal').remove()" style="background:transparent;color:#555;border:1px solid #333;border-radius:12px;padding:10px 20px;width:100%;font-size:0.9rem;cursor:pointer;">
+                Cancelar
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('nequiWABtn').addEventListener('click', () => {
+        const msg = `PAGO POR NEQUI - TENIS Y MAS\n\n` +
+            `Acabo de transferir $${total.toLocaleString('es-CO')} al Nequi ${NEQUI_NUMBER}\n\n` +
+            `Cliente: ${customer.firstName} ${customer.lastName}\n` +
+            `Ciudad: ${customer.city}, ${customer.department}\n` +
+            `Direccion: ${customer.address}\n` +
+            `Tel: ${customer.phone}\n\n` +
+            `Pedido:${itemsText}\n\n` +
+            `TOTAL: $${total.toLocaleString('es-CO')}\n\n` +
+            `Adjunto comprobante de pago.`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    });
 }
