@@ -6,35 +6,39 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
-serve(async (req) => {
-    // Handle OPTIONS request for CORS
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+const TELEGRAM_TOKEN = "8751458666:AAEEFXichBYpwLh2f86aaozkXZ8sGpnnhJw";
+const TELEGRAM_CHAT_ID = "7501484183";
+
+async function sendTelegram(msg: string) {
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+        await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: msg,
+                parse_mode: "Markdown"
+            })
+        });
+    } catch (e) {
+        console.error("❌ TELEGRAM ERROR:", e.message);
     }
+}
+
+serve(async (req) => {
+    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
         const { orderData } = await req.json()
-
-        // Credenciales dadas por soporte de Addi para pruebas
         const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
         const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
-
-        if (!CLIENT_ID || !CLIENT_SECRET) {
-            console.error("Faltan credenciales de Addi en los secrets de Supabase");
-            throw new Error("Addi credentials not configured");
-        }
-        
         const ALLY_SLUG = "tennisymasco-ecommerce"
-        const IS_SANDBOX = true; // STAGING - Requerido por soporte Addi
+        const IS_SANDBOX = true; 
         const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
         const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
         const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
 
-        console.log(`--- ADDI STAGING V3.1.5 ---`);
-        console.log(`[Addi] Auth URL: ${BASE_AUTH_URL}/oauth/token | Audience: ${AUDIENCE}`);
-        console.log(`[Addi] API endpoint: ${BASE_API_URL}/v1/online-applications`);
-
-        // 1. Obtener Token OAuth (V3 usa /oauth/token)
         const authRes = await fetch(`${BASE_AUTH_URL}/oauth/token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -46,35 +50,19 @@ serve(async (req) => {
             }),
         })
 
-        if (!authRes.ok) {
-            const error = await authRes.json()
-            console.error("Error Auth0:", error)
-            throw new Error(`Error autenticando con Addi: ${JSON.stringify(error)}`)
-        }
-
+        if (!authRes.ok) throw new Error("Addi Auth Error");
         const { access_token } = await authRes.json()
 
-        // Helper para limpieza de strings (Mayúsculas, sin tildes, trim)
-        const cleanStr = (str: string) => {
-            if (!str) return "";
-            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
-        };
-
-        // 2. Enviar Solicitud a Addi (endpoint: /v1/online-applications)
-        console.log(`[Addi] Enviando solicitud para OrderID: ${orderData.orderId}`)
+        const cleanStr = (str: string) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase() : "";
 
         const safeOrderId = String(orderData.orderId).replace(/[^a-zA-Z0-9-]/g, '');
-        // Siempre usar las URLs reales del dominio en producción para que Addi las acepte
-        const SITE_BASE = "https://tenisymas.com";
-        const successUrl = `${SITE_BASE}/success.html`;
-        const cancelUrl = `${SITE_BASE}/checkout.html`;
-
         const totalAmount = Math.round(Number(orderData.totalAmount));
         const items = orderData.items.map((item: any) => ({
             sku: String(item.sku || "REF001"),
             name: cleanStr(item.name || "PRODUCTO").slice(0, 100),
             quantity: Number(item.quantity || 1),
-            unitPrice: Math.round(Number(item.unitPrice))
+            unitPrice: Math.round(Number(item.unitPrice)),
+            size: item.size || 'N/A'
         }));
 
         const itemsTotal = items.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0);
@@ -103,130 +91,83 @@ serve(async (req) => {
             },
             allyUrlRedirection: {
                 logoUrl: "https://tennisymas.com/images/logo-tm.png",
-                callbackUrl: orderData.redirectionUrls?.callback || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
-                redirectionUrl: orderData.redirectionUrls?.success || "https://tennisymas.com/success.html"
+                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
+                redirectionUrl: "https://tennisymas.com/success.html"
             },
             items: items
         }
 
-        console.log("[Addi] Payload:", JSON.stringify(addiPayload, null, 2))
-
-        // La API responde con HTTP 301, necesitamos follow:false para capturar el Location header
-        const addiUrl = `${BASE_API_URL}/v1/online-applications`
-
-        const response = await fetch(addiUrl, {
+        const response = await fetch(`${BASE_API_URL}/v1/online-applications`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${access_token}`
-            },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${access_token}` },
             redirect: "manual",
             body: JSON.stringify(addiPayload)
         })
 
-        const responseStatus = response.status
-        console.log(`[Addi] Response status: ${responseStatus}`)
-
-        // Addi API v1 responde con 301 y el header Location contiene la URL de redireccion
-        if (responseStatus === 301 || responseStatus === 302) {
+        if (response.status === 301 || response.status === 302) {
             const locationUrl = response.headers.get("Location")
-            console.log(`✅ [Addi] Redirect URL: ${locationUrl}`)
-
-            if (!locationUrl) {
-                throw new Error("Addi retornó 301 pero sin header Location")
-            }
-
-            // Registrar el pedido en Supabase
-            try {
-                const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
-                const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-
-                if (SUPABASE_URL && SERVICE_ROLE) {
-                    const orderRecord = {
+            
+            // Registrar en Supabase
+            const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
+            const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+            if (SUPABASE_URL && SERVICE_ROLE) {
+                await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE, "Content-Type": "application/json" },
+                    body: JSON.stringify({
                         customer_info: {
                             firstName: orderData.client.firstName,
                             lastName: orderData.client.lastName,
                             email: orderData.client.email,
                             phone: orderData.client.cellphone,
+                            dni: orderData.client.idNumber,
                             address: orderData.shippingAddress.line1,
                             city: orderData.shippingAddress.city,
-                            department: orderData.shippingAddress.administrativeDivision,
-                            dni: orderData.client.idNumber
+                            department: orderData.shippingAddress.administrativeDivision
                         },
-                        items: orderData.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice })),
+                        items: orderData.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.unitPrice, size: i.size })),
                         total: orderData.totalAmount,
                         payment_method: 'addi',
                         status: 'pending',
                         external_reference: safeOrderId
-                    }
-
-                    await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${SERVICE_ROLE}`,
-                            "apikey": SERVICE_ROLE,
-                            "Content-Type": "application/json",
-                            "Prefer": "return=minimal"
-                        },
-                        body: JSON.stringify(orderRecord)
                     })
-                    console.log("✅ Pedido Addi registrado en la base de datos")
-                }
-            } catch (dbErr) {
-                console.error("❌ Error registrando pedido Addi (no bloqueante):", dbErr)
+                });
             }
 
-            // 3. (OPCIONAL/SILENCIOSO) Notificar a WATI sin bloquear el flujo principal
-            try {
-                const WATI_ENDPOINT = "https://live-mt-server.wati.io/10112908";
-                const WATI_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwibmFtZWlkIjoidGVubmlzeW1hc3BlcmVpcmFjb0BnbWFpbC5jb20iLCJlbWFpbCI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwiYXV0aF90aW1lIjoiMDUvMDgvMjAyNiAwMDoxMjoxMiIsInRlbmFudF9pZCI6IjEwMTEyOTA4IiwiZGJfbmFtZSI6Im10LXByb2QtVGVuYW50cyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFETUlOSVNUUkFUT1IiLCJleHAiOjI1MzQwMjMwMDgwMCwiaXNzIjoiQ2xhcmVfQUkiLCJhdWQiOiJDbGFyZV9BSSJ9.7ArKApwDNT5eqRT2dpiG-hHq0QaBEP_PUnKS8E1wuxU";
-                const total = items.reduce((s:number, i:any)=>s+(i.price*i.quantity),0);
-                const msg = `🛍️ *NUEVA INTENCIÓN DE COMPRA (ADDI)*\n\n👤 *Cliente:* ${customer.firstName} ${customer.lastName}\n📦 *Orden:* ${orderId}\n💰 *Monto:* $${total.toLocaleString('es-CO')}\n\nEl cliente ha sido enviado a Addi para la financiación.`;
-                
-                await fetch(`${WATI_ENDPOINT}/api/v1/sendSessionMessage/573204961453`, {
-                    method: "POST",
-                    headers: { 
-                        "Authorization": `Bearer ${WATI_TOKEN}`, 
-                        "Content-Type": "application/json" 
-                    },
-                    body: JSON.stringify({ messageText: msg })
-                }).catch(() => {});
-            } catch(e) {}
+            // --- DISEÑO DE NOTIFICACIÓN TELEGRAM (ESTILO MODAL) ---
+            let productsText = "";
+            orderData.items.forEach((i: any) => {
+                productsText += `• *${i.name}*\n  Talla: ${i.size || 'N/A'} | Cant: ${i.quantity} | $${Number(i.unitPrice).toLocaleString('es-CO')}\n`;
+            });
+
+            const msg = `📄 *DETALLES DEL PEDIDO (${safeOrderId})*\n` +
+                        `------------------------------------------\n` +
+                        `👤 *DATOS CLIENTE*\n` +
+                        `• *Nombre:* ${orderData.client.firstName} ${orderData.client.lastName}\n` +
+                        `• *Teléfono:* ${orderData.client.cellphone}\n` +
+                        `• *DNI/CC:* ${orderData.client.idNumber}\n\n` +
+                        `📍 *UBICACIÓN ENVÍO*\n` +
+                        `• *Ciudad:* ${orderData.shippingAddress.city}\n` +
+                        `• *Depto:* ${orderData.shippingAddress.administrativeDivision}\n` +
+                        `• *Dirección:* ${orderData.shippingAddress.line1}\n\n` +
+                        `🛍️ *PRODUCTOS SOLICITADOS*\n` +
+                        `${productsText}\n` +
+                        `💳 *MÉTODO:* ADDI\n` +
+                        `💰 *TOTAL:* *$${totalAmount.toLocaleString('es-CO')}*\n` +
+                        `------------------------------------------\n` +
+                        `_El cliente ha sido enviado a Addi._`;
+
+            await sendTelegram(msg);
 
             return new Response(JSON.stringify({ redirectionUrl: locationUrl }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,
             })
+        } else {
+            return new Response(JSON.stringify({ error: "Addi API Error" }), { status: 400, headers: corsHeaders });
         }
-        else {
-            const responseText = await response.text()
-            let errorBody;
-            try {
-                errorBody = JSON.parse(responseText);
-            } catch (e) {
-                errorBody = { message: responseText };
-            }
-
-            console.error(`❌ ERROR ADDI API: ${responseStatus}`, errorBody);
-
-            return new Response(JSON.stringify({
-                error: "Addi API V3 Error",
-                status: responseStatus,
-                details: errorBody,
-                called_url: addiUrl,
-                sent_payload: addiPayload
-            }), {
-                status: responseStatus,
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-        }
-
 
     } catch (err: any) {
-        console.error("Error Interno Edge Function:", err.message)
-        return new Response(JSON.stringify({ error: err.message, status: 500, type: "InternalError" }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-        })
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders })
     }
 })

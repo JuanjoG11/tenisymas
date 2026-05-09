@@ -6,84 +6,71 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const TELEGRAM_TOKEN = "8751458666:AAEEFXichBYpwLh2f86aaozkXZ8sGpnnhJw";
+const TELEGRAM_CHAT_ID = "7501484183";
+
+async function sendTelegram(msg: string) {
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+        await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: "Markdown" })
+        });
+    } catch (e) {}
+}
+
 serve(async (req) => {
-    // Manejo de CORS
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders, status: 200 })
-    }
+    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
         const url = new URL(req.url)
-        const topic = url.searchParams.get("topic") || url.searchParams.get("type")
         const id = url.searchParams.get("id") || url.searchParams.get("data.id")
-
-        console.log(`--- WEBHOOK MERCADO PAGO ---`)
-        console.log(`Topic: ${topic}, ID: ${id}`)
+        const topic = url.searchParams.get("topic") || url.searchParams.get("type")
 
         if (topic === 'payment' && id) {
-            const ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")
+            const ACCESS_TOKEN = "APP_USR-8626270631469210-022013-797bdb9a76a3d85b866049fb85eb4e38-3213704453";
             const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
             const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
-            if (!ACCESS_TOKEN) throw new Error("MP_ACCESS_TOKEN no configurado")
-
-            // 1. Consultar el estado del pago en Mercado Pago
             const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {
                 headers: { "Authorization": `Bearer ${ACCESS_TOKEN}` }
             })
 
-            if (!mpRes.ok) {
-                console.error("Error consultando pago en MP:", await mpRes.text())
-                return new Response("Error MP", { status: 400 })
-            }
+            if (mpRes.ok) {
+                const paymentData = await mpRes.json()
+                const status = paymentData.status
+                const metadata = paymentData.metadata
 
-            const paymentData = await mpRes.json()
-            const externalReference = paymentData.external_reference // Nuestro OrderID
-            const status = paymentData.status // 'approved', 'pending', 'rejected', etc.
-
-            console.log(`Pedido: ${externalReference}, Estado: ${status}`)
-
-            // 2. Actualizar el pedido en la base de datos de Supabase
-            if (SUPABASE_URL && SERVICE_ROLE && externalReference) {
-                // Mapear estados de MP a nuestros estados de pedido
-                let orderStatus = 'pending'
-                if (status === 'approved') orderStatus = 'pending' // Sigue pendiente de despacho pero pago aprobado
-                // Aquí podrías añadir lógica extra si quieres marcar específicamente como 'pagado'
-
-                const { error } = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=eq.${externalReference}`, {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": `Bearer ${SERVICE_ROLE}`,
-                        "apikey": SERVICE_ROLE,
-                        "Content-Type": "application/json",
-                        "Prefer": "return=minimal"
-                    },
-                    body: JSON.stringify({
-                        status_payment: status,
-                        paid_at: status === 'approved' ? new Date().toISOString() : null
-                    })
-                })
-
-                if (error) console.error("Error actualizando DB:", error)
-                else {
-                    console.log("✅ Pedido actualizado en DB");
+                // SOLO SI EL PAGO ESTÁ APROBADO, CREAMOS LA ORDEN EN LA DB
+                if (status === 'approved' && metadata && SUPABASE_URL && SERVICE_ROLE) {
                     
-                    // NOTIFICACIÓN WATI (Solo si el pago es aprobado)
-                    if (status === 'approved') {
-                        try {
-                            const WATI_ENDPOINT = "https://live-mt-server.wati.io/10112908";
-                            const WATI_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwibmFtZWlkIjoidGVubmlzeW1hc3BlcmVpcmFjb0BnbWFpbC5jb20iLCJlbWFpbCI6InRlbm5pc3ltYXNwZXJlaXJhY29AZ21haWwuY29tIiwiYXV0aF90aW1lIjoiMDUvMDgvMjAyNiAwMDoxMjoxMiIsInRlbmFudF9pZCI6IjEwMTEyOTA4IiwiZGJfbmFtZSI6Im10LXByb2QtVGVuYW50cyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFETUlOSVNUUkFUT1IiLCJleHAiOjI1MzQwMjMwMDgwMCwiaXNzIjoiQ2xhcmVfQUkiLCJhdWQiOiJDbGFyZV9BSSJ9.7ArKApwDNT5eqRT2dpiG-hHq0QaBEP_PUnKS8E1wuxU";
-                            const msg = `✅ *¡VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n📦 *Orden:* ${externalReference}\n💳 *Método:* Mercado Pago (${paymentData.payment_method_id})\n\n¡Es hora de preparar el envío! 🚀`;
-                            
-                            await fetch(`${WATI_ENDPOINT}/api/v1/sendSessionMessage/573204961453`, {
-                                method: "POST",
-                                headers: { 
-                                    "Authorization": `Bearer ${WATI_TOKEN}`, 
-                                    "Content-Type": "application/json" 
-                                },
-                                body: JSON.stringify({ messageText: msg })
-                            }).catch(() => {});
-                        } catch(e) {}
+                    const orderData = {
+                        external_reference: paymentData.external_reference,
+                        customer_info: metadata.customer,
+                        items: metadata.items,
+                        total: paymentData.transaction_amount,
+                        payment_method: 'mercadopago',
+                        status: 'pending', // Pendiente de despacho
+                        status_payment: 'approved',
+                        paid_at: new Date().toISOString()
+                    }
+
+                    // Insertar en la tabla de órdenes
+                    const dbRes = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${SERVICE_ROLE}`,
+                            "apikey": SERVICE_ROLE,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(orderData)
+                    })
+
+                    if (dbRes.ok) {
+                        console.log("✅ ORDEN CREADA TRAS PAGO EXITOSO");
+                        const msg = `✅ *¡NUEVA VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n👤 *Cliente:* ${metadata.customer.firstName} ${metadata.customer.lastName}\n📦 *Orden:* ${paymentData.external_reference}\n\n_El pedido ya aparece en tu panel de administración._`;
+                        await sendTelegram(msg);
                     }
                 }
             }
@@ -95,7 +82,6 @@ serve(async (req) => {
         })
 
     } catch (err: any) {
-        console.error("Error Webhook:", err.message)
         return new Response(JSON.stringify({ error: err.message }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" }

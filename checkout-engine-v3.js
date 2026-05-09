@@ -487,8 +487,6 @@ async function handleWhatsAppFallback(customer) {
 }
 
 async function handleNequiCheckout(customer) {
-    // TU NUMERO NEQUI - CAMBIA ESTO:
-    const NEQUI_NUMBER = '3204961453';
     const WHATSAPP_NUMBER = '573204961453';
 
     let subtotal = 0;
@@ -501,64 +499,116 @@ async function handleNequiCheckout(customer) {
     const shipping = getShippingCost(subtotal);
     const total = subtotal + shipping;
 
-    // =====================================================
-    // DEEP LINK: Abre Nequi app directamente con el monto
-    // En movil abre la app, en desktop cae al modal backup
-    // =====================================================
-    const nequiDeepLink = `nequi://transferencia?celular=${NEQUI_NUMBER}&monto=${total}`;
-    const nequiWebLink = `https://nequi.com.co/personas/hacer-transferencias/`;
+    // Registrar en la base de datos de pedidos
+    try {
+        if (window.supabaseClient) {
+            const orderItems = checkoutCart.map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: parseInt(item.price.replace(/[^0-9]/g, '')),
+                size: item.size || null,
+                color: item.color || null
+            }));
 
-    // Intentar abrir la app de Nequi
-    window.location.href = nequiDeepLink;
+            await window.supabaseClient.from('orders').insert([{
+                customer_info: customer,
+                items: orderItems,
+                total: total,
+                payment_method: 'transferencia',
+                status: 'pending'
+            }]);
+            console.log('✅ Pedido por transferencia registrado');
+        }
+    } catch (e) {
+        console.error('Error registrando pedido transferencia:', e);
+    }
 
-    // Modal backup (aparece mientras intenta abrir la app)
     const old = document.getElementById('nequiModal');
     if (old) old.remove();
 
     const modal = document.createElement('div');
     modal.id = 'nequiModal';
     modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    
+    window.showBankInfo = function(bankName, accountNumber) {
+        let deepLinkStr = "";
+        
+        if (bankName === 'NEQUI') {
+            const nequiDeepLink = `nequi://transferencia?celular=${accountNumber}&monto=${total}`;
+            deepLinkStr = `<a href="${nequiDeepLink}" style="display:block;background:#8B44FF;color:white;text-decoration:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:10px;box-sizing:border-box;text-align:center;">Abrir Nequi App</a>`;
+            window.location.href = nequiDeepLink;
+        } else if (bankName === 'DAVIPLATA') {
+            const daviplataLink = "daviplata://";
+            deepLinkStr = `<a href="${daviplataLink}" style="display:block;background:#D9281C;color:white;text-decoration:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:10px;box-sizing:border-box;text-align:center;">Abrir Daviplata App</a>`;
+            window.location.href = daviplataLink;
+        } else if (bankName === 'AHORROS BANCOLOMBIA') {
+            const bancolombiaLink = "bancolombia://";
+            deepLinkStr = `<a href="${bancolombiaLink}" style="display:block;background:#FFD100;color:#111;text-decoration:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:10px;box-sizing:border-box;text-align:center;">Abrir Bancolombia App</a>`;
+            window.location.href = bancolombiaLink;
+        }
+
+        const modalContent = `
+            <div style="background:#111;border:2px solid #8B44FF;border-radius:20px;padding:30px;max-width:420px;width:100%;text-align:center;font-family:'Outfit',sans-serif;">
+                <h2 style="color:#fff;font-size:1.4rem;margin-bottom:5px;">Pagar con ${bankName}</h2>
+                <p style="color:#aaa;font-size:0.85rem;margin-bottom:20px;">Transfiere el valor exacto a esta cuenta:</p>
+
+                <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:15px;border:1px solid #8B44FF44;">
+                    <p style="color:#888;font-size:0.8rem;margin-bottom:5px;">${bankName === 'AHORROS BANCOLOMBIA' ? 'Número de Cuenta:' : 'Número:'}</p>
+                    <p style="color:#8B44FF;font-size:2rem;font-weight:900;letter-spacing:1px;margin:0;">${accountNumber}</p>
+                    ${bankName === 'AHORROS BANCOLOMBIA' ? '<p style="color:#888;font-size:0.75rem;margin: 2px 0 0 0;">(Cuenta de Ahorros)</p>' : ''}
+                    <p style="color:#888;font-size:0.8rem;margin-top:5px;">A nombre de: <strong style="color:#fff">TENNISYMAS.CO (Jaider Henao)</strong></p>
+                </div>
+
+                <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:20px;border:1px solid #333;">
+                    <p style="color:#888;font-size:0.75rem;margin-bottom:5px;">VALOR EXACTO A TRANSFERIR:</p>
+                    <p style="color:#2ecc71;font-size:2rem;font-weight:900;margin:0;">$${total.toLocaleString('es-CO')}</p>
+                </div>
+
+                ${deepLinkStr}
+
+                <button id="nequiWABtn" style="background:#25D366;color:white;border:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;">
+                    Ya pague - Enviar comprobante
+                </button>
+                <button onclick="document.getElementById('nequiModal').remove()" style="background:transparent;color:#555;border:1px solid #333;border-radius:12px;padding:10px 20px;width:100%;font-size:0.9rem;cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        `;
+        document.getElementById('nequiModal').innerHTML = modalContent;
+
+        document.getElementById('nequiWABtn').addEventListener('click', () => {
+            const msg = `PAGO POR ${bankName} - TENIS Y MAS\n\n` +
+                `Acabo de transferir $${total.toLocaleString('es-CO')} a la cuenta ${accountNumber}\n\n` +
+                `Cliente: ${customer.firstName} ${customer.lastName}\n` +
+                `Ciudad: ${customer.city}, ${customer.department}\n` +
+                `Direccion: ${customer.address}\n` +
+                `Tel: ${customer.phone}\n\n` +
+                `Pedido:${itemsText}\n\n` +
+                `TOTAL: $${total.toLocaleString('es-CO')}\n\n` +
+                `Adjunto comprobante de pago.`;
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+        });
+    };
+
     modal.innerHTML = `
         <div style="background:#111;border:2px solid #8B44FF;border-radius:20px;padding:30px;max-width:420px;width:100%;text-align:center;font-family:'Outfit',sans-serif;">
-            <div style="background:#8B44FF;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:1.8rem;">N</div>
-            <h2 style="color:#fff;font-size:1.4rem;margin-bottom:5px;">Abriendo Nequi...</h2>
-            <p style="color:#aaa;font-size:0.85rem;margin-bottom:20px;">Si no se abrio automaticamente, transfiere manualmente:</p>
-
-            <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:15px;border:1px solid #8B44FF44;">
-                <p style="color:#888;font-size:0.8rem;margin-bottom:5px;">Numero Nequi:</p>
-                <p style="color:#8B44FF;font-size:2rem;font-weight:900;letter-spacing:3px;margin:0;">${NEQUI_NUMBER}</p>
-                <p style="color:#888;font-size:0.8rem;margin-top:5px;">A nombre de: <strong style="color:#fff">Jaider Henao</strong></p>
-            </div>
-
-            <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:20px;border:1px solid #333;">
-                <p style="color:#888;font-size:0.75rem;margin-bottom:5px;">VALOR EXACTO A TRANSFERIR:</p>
-                <p style="color:#2ecc71;font-size:2rem;font-weight:900;margin:0;">$${total.toLocaleString('es-CO')}</p>
-            </div>
-
-            <a href="${nequiDeepLink}" style="display:block;background:#8B44FF;color:white;text-decoration:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:10px;box-sizing:border-box;">
-                Abrir Nequi App
-            </a>
-
-            <button id="nequiWABtn" style="background:#25D366;color:white;border:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;">
-                Ya pague - Enviar comprobante por WhatsApp
+            <h2 style="color:#fff;font-size:1.4rem;margin-bottom:20px;">Selecciona tu Banco</h2>
+            
+            <button onclick="window.showBankInfo('NEQUI', '3122205647')" style="display:block;background:#320A59;border:1px solid #8B44FF;color:white;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:15px;cursor:pointer;">
+                NEQUI
             </button>
+            <button onclick="window.showBankInfo('DAVIPLATA', '3204961453')" style="display:block;background:#D9281C;border:1px solid #FF4D4D;color:white;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:15px;cursor:pointer;">
+                DAVIPLATA
+            </button>
+            <button onclick="window.showBankInfo('AHORROS BANCOLOMBIA', '91296851715')" style="display:block;background:#FFD100;border:1px solid #FFEA00;color:#111;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:20px;cursor:pointer;">
+                BANCOLOMBIA
+            </button>
+
             <button onclick="document.getElementById('nequiModal').remove()" style="background:transparent;color:#555;border:1px solid #333;border-radius:12px;padding:10px 20px;width:100%;font-size:0.9rem;cursor:pointer;">
                 Cancelar
             </button>
         </div>
     `;
     document.body.appendChild(modal);
-
-    document.getElementById('nequiWABtn').addEventListener('click', () => {
-        const msg = `PAGO POR NEQUI - TENIS Y MAS\n\n` +
-            `Acabo de transferir $${total.toLocaleString('es-CO')} al Nequi ${NEQUI_NUMBER}\n\n` +
-            `Cliente: ${customer.firstName} ${customer.lastName}\n` +
-            `Ciudad: ${customer.city}, ${customer.department}\n` +
-            `Direccion: ${customer.address}\n` +
-            `Tel: ${customer.phone}\n\n` +
-            `Pedido:${itemsText}\n\n` +
-            `TOTAL: $${total.toLocaleString('es-CO')}\n\n` +
-            `Adjunto comprobante de pago.`;
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-    });
 }
