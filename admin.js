@@ -614,6 +614,7 @@ async function loadOrders() {
         const { data, error } = await supabaseClient
             .from('orders')
             .select('*')
+            .eq('status_payment', 'approved') // 🎯 FILTRO: Solo pedidos pagados con éxito
             .order('created_at', { ascending: false });
 
         if (error) {
