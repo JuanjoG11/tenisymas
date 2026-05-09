@@ -487,7 +487,7 @@ async function handleWhatsAppFallback(customer) {
 }
 
 async function handleNequiCheckout(customer) {
-    // CAMBIA ESTE NUMERO POR TU NEQUI REAL:
+    // TU NUMERO NEQUI - CAMBIA ESTO:
     const NEQUI_NUMBER = '3204961453';
     const WHATSAPP_NUMBER = '573204961453';
 
@@ -501,7 +501,17 @@ async function handleNequiCheckout(customer) {
     const shipping = getShippingCost(subtotal);
     const total = subtotal + shipping;
 
-    // Eliminar modal anterior si existe
+    // =====================================================
+    // DEEP LINK: Abre Nequi app directamente con el monto
+    // En movil abre la app, en desktop cae al modal backup
+    // =====================================================
+    const nequiDeepLink = `nequi://transferencia?celular=${NEQUI_NUMBER}&monto=${total}`;
+    const nequiWebLink = `https://nequi.com.co/personas/hacer-transferencias/`;
+
+    // Intentar abrir la app de Nequi
+    window.location.href = nequiDeepLink;
+
+    // Modal backup (aparece mientras intenta abrir la app)
     const old = document.getElementById('nequiModal');
     if (old) old.remove();
 
@@ -509,20 +519,26 @@ async function handleNequiCheckout(customer) {
     modal.id = 'nequiModal';
     modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
     modal.innerHTML = `
-        <div style="background:#111;border:2px solid #ff3333;border-radius:20px;padding:30px;max-width:420px;width:100%;text-align:center;font-family:'Outfit',sans-serif;">
-            <div style="font-size:2.5rem;margin-bottom:10px;">&#128179;</div>
-            <h2 style="color:#fff;font-size:1.4rem;margin-bottom:5px;">Pago por Nequi / Daviplata</h2>
-            <p style="color:#aaa;font-size:0.85rem;margin-bottom:20px;">Transfiere el valor exacto y envianos el comprobante</p>
-            <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:15px;border:1px solid #333;">
-                <p style="color:#888;font-size:0.8rem;margin-bottom:5px;">Numero Nequi / Daviplata:</p>
-                <p style="color:#ff3333;font-size:2.2rem;font-weight:900;letter-spacing:3px;margin:0;">${NEQUI_NUMBER}</p>
+        <div style="background:#111;border:2px solid #8B44FF;border-radius:20px;padding:30px;max-width:420px;width:100%;text-align:center;font-family:'Outfit',sans-serif;">
+            <div style="background:#8B44FF;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:1.8rem;">N</div>
+            <h2 style="color:#fff;font-size:1.4rem;margin-bottom:5px;">Abriendo Nequi...</h2>
+            <p style="color:#aaa;font-size:0.85rem;margin-bottom:20px;">Si no se abrio automaticamente, transfiere manualmente:</p>
+
+            <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:15px;border:1px solid #8B44FF44;">
+                <p style="color:#888;font-size:0.8rem;margin-bottom:5px;">Numero Nequi:</p>
+                <p style="color:#8B44FF;font-size:2rem;font-weight:900;letter-spacing:3px;margin:0;">${NEQUI_NUMBER}</p>
                 <p style="color:#888;font-size:0.8rem;margin-top:5px;">A nombre de: <strong style="color:#fff">Jaider Henao</strong></p>
             </div>
-            <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:20px;text-align:left;border:1px solid #333;">
-                <p style="color:#888;font-size:0.75rem;margin-bottom:5px;">TOTAL A TRANSFERIR:</p>
+
+            <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:20px;border:1px solid #333;">
+                <p style="color:#888;font-size:0.75rem;margin-bottom:5px;">VALOR EXACTO A TRANSFERIR:</p>
                 <p style="color:#2ecc71;font-size:2rem;font-weight:900;margin:0;">$${total.toLocaleString('es-CO')}</p>
-                <p style="color:#555;font-size:0.75rem;margin-top:3px;">Incluye envio: $${shipping.toLocaleString('es-CO')}</p>
             </div>
+
+            <a href="${nequiDeepLink}" style="display:block;background:#8B44FF;color:white;text-decoration:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;margin-bottom:10px;box-sizing:border-box;">
+                Abrir Nequi App
+            </a>
+
             <button id="nequiWABtn" style="background:#25D366;color:white;border:none;border-radius:12px;padding:15px 20px;width:100%;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;">
                 Ya pague - Enviar comprobante por WhatsApp
             </button>
