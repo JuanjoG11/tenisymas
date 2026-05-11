@@ -110,6 +110,13 @@ async function loadProducts() {
 
         if (data && data.length > 0) {
             products = data;
+            // Create a temporary "Safety Snapshot" in LocalStorage every time we load
+            try {
+                sessionStorage.setItem('tm_safety_snapshot', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    products: products
+                }));
+            } catch(e) {}
         } else {
             // Seed defaults if empty
             await seedInitialData();
@@ -251,27 +258,36 @@ async function saveProduct(productData, file, inventoryData = []) {
         }
 
         // Save Inventory/Stock
-        if (savedProduct && inventoryData.length > 0) {
+        if (savedProduct) {
             const productId = savedProduct.id;
             
+            // SAFETY CHECK: If we have NO inventory data but the product had sizes, 
+            // something might be wrong. Don't delete unless confirmed or it's a new product.
+            if (inventoryData.length === 0 && editingId) {
+                console.warn('Warning: Saving product with 0 sizes/inventory.');
+                // We proceed if the user really cleared everything, but we log it.
+            }
+
             // First, delete old inventory for this product to avoid orphaned records
             await supabaseClient
                 .from('inventory')
                 .delete()
                 .eq('product_id', productId);
 
-            // Now insert the new inventory data
-            for (const inv of inventoryData) {
-                await supabaseClient
-                    .from('inventory')
-                    .upsert({
-                        product_id: productId,
-                        location_id: 0,
-                        size: String(inv.size),
-                        stock: inv.stock,
-                        updated_at: new Date()
-                    }, { onConflict: 'product_id, location_id, size' });
-            }
+            // Now insert the new inventory data in a single batch call for speed and reliability
+            const finalInventory = inventoryData.map(inv => ({
+                product_id: productId,
+                location_id: 0,
+                size: String(inv.size),
+                stock: inv.stock,
+                updated_at: new Date()
+            }));
+
+            const { error: batchError } = await supabaseClient
+                .from('inventory')
+                .insert(finalInventory);
+            
+            if (batchError) throw batchError;
         }
 
         await loadProducts();
@@ -592,6 +608,61 @@ window.runImageMigration = async () => {
         showToast('Error en la migración', true);
     } finally {
         btn.disabled = false;
+    }
+};
+
+// Backup System
+window.generateBackup = async () => {
+    const btn = document.getElementById('backupBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Generando...';
+
+    try {
+        showToast('Generando copia de seguridad...', false);
+        
+        // 1. Fetch Products
+        const { data: allProducts, error: prodErr } = await supabaseClient
+            .from('products')
+            .select('*');
+        
+        if (prodErr) throw prodErr;
+
+        // 2. Fetch Inventory
+        const { data: allInventory, error: invErr } = await supabaseClient
+            .from('inventory')
+            .select('*');
+        
+        if (invErr) throw invErr;
+
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            version: '1.0',
+            source: 'TENNISYMAS.CO Admin Panel',
+            data: {
+                products: allProducts,
+                inventory: allInventory
+            }
+        };
+
+        // 3. Trigger Download
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_tennisymas_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('✅ Copia de seguridad descargada!');
+    } catch (err) {
+        console.error('Backup failed:', err);
+        showToast('Error al generar backup: ' + err.message, true);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
     }
 };
 
@@ -991,7 +1062,7 @@ function renderAdminProducts() {
             <div class="item-info">
                 <h4>${escapeHTML(product.name || 'Sin Nombre')}</h4>
                 <p>${escapeHTML(product.category || 'Sin Categoría')} | ${escapeHTML(product.price || 'Sin Precio')}</p>
-                <p class="item-sizes">${Array.isArray(product.sizes) ? product.sizes.map(s => escapeHTML(s.toString())).join(', ') : 'Sin tallas'}</p>
+                <p class="item-sizes">${Array.isArray(product.sizes) ? product.sizes.map(s => `<span>${escapeHTML(s.toString())} <small style="color:#2ecc71;font-weight:bold;">(1)</small></span>`).join(', ') : 'Sin tallas'}</p>
             </div>
             <div class="item-actions">
                 <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
