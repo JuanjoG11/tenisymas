@@ -188,7 +188,7 @@ async function loadProducts() {
 
         ensureEssentialCollections();
 
-        const cached = localStorage.getItem('productsCache_v5');
+        const cached = localStorage.getItem('productsCache_v10');
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -199,7 +199,7 @@ async function loadProducts() {
                 }
             } catch(e) {
                 console.warn('Cache parse failed, clearing:', e);
-                localStorage.removeItem('productsCache_v5');
+                localStorage.removeItem('productsCache_v10');
             }
         }
 
@@ -275,7 +275,7 @@ async function loadProducts() {
 
             // Refresh cache
             try {
-                localStorage.setItem('productsCache_v5', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_v10', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
             } catch(_) {}
         }

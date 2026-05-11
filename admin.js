@@ -101,15 +101,23 @@ function showDashboard() {
 
 async function loadProducts() {
     try {
-        const { data, error } = await supabaseClient
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
+        // Fetch products and inventory in parallel for efficiency
+        const [prodRes, invRes] = await Promise.all([
+            supabaseClient.from('products').select('*').order('created_at', { ascending: false }),
+            supabaseClient.from('inventory').select('*')
+        ]);
 
-        if (error) throw error;
+        if (prodRes.error) throw prodRes.error;
 
-        if (data && data.length > 0) {
-            products = data;
+        const inventoryData = invRes.data || [];
+
+        if (prodRes.data && prodRes.data.length > 0) {
+            // Attach inventory to each product
+            products = prodRes.data.map(p => ({
+                ...p,
+                inventory: inventoryData.filter(inv => inv.product_id === p.id)
+            }));
+            
             // Create a temporary "Safety Snapshot" in LocalStorage every time we load
             try {
                 sessionStorage.setItem('tm_safety_snapshot', JSON.stringify({
@@ -1062,7 +1070,13 @@ function renderAdminProducts() {
             <div class="item-info">
                 <h4>${escapeHTML(product.name || 'Sin Nombre')}</h4>
                 <p>${escapeHTML(product.category || 'Sin Categoría')} | ${escapeHTML(product.price || 'Sin Precio')}</p>
-                <p class="item-sizes">${Array.isArray(product.sizes) ? product.sizes.map(s => `<span>${escapeHTML(s.toString())} <small style="color:#2ecc71;font-weight:bold;">(1)</small></span>`).join(', ') : 'Sin tallas'}</p>
+                <p class="item-sizes">
+                    ${Array.isArray(product.sizes) ? product.sizes.map(s => {
+                        const invItem = (product.inventory || []).find(inv => String(inv.size) === String(s));
+                        const stock = invItem ? invItem.stock : 0;
+                        return `<span>${escapeHTML(s.toString())} <small style="color:#2ecc71;font-weight:bold;">(${stock})</small></span>`;
+                    }).join(', ') : 'Sin tallas'}
+                </p>
             </div>
             <div class="item-actions">
                 <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
