@@ -774,10 +774,11 @@ function createProductCardHTML(product, absoluteIndex = 999) {
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
                          class="product-image ${idx === 0 ? 'active' : ''} ${idx === 1 ? 'hover-img' : ''}" 
-                         loading="${idx === 0 ? 'eager' : 'lazy'}"
+                         loading="${(absoluteIndex < 4 && idx === 0) ? 'eager' : 'lazy'}"
                          decoding="async"
                          width="300" 
-                         height="300">
+                         height="300"
+                         style="background: #111; aspect-ratio: 1/1; object-fit: cover;">
                 `).join('')}
                 <div class="product-actions">
                     <button class="action-btn quick-view" onclick="openQuickView('${product.id}')" aria-label="Vista Rápida">
@@ -850,11 +851,21 @@ async function openProductModal(productId) {
     const qtyValueDisplay = document.getElementById('modalQtyValue');
     if (qtyValueDisplay) qtyValueDisplay.textContent = '1';
 
+    // Show Modal IMMEDIATELY with cached data to avoid 'stuck button' feel
+    modal.classList.add('active');
+    
+    // iOS-Safe Scroll Lock
+    const scrollY = window.scrollY;
+    document.documentElement.style.setProperty('--scroll-y', `-${scrollY}px`);
+    document.body.classList.add('modal-open');
+    document.body.dataset.scrollY = scrollY;
+
     // Reset main image immediately to avoid showing previous product
     const mainImg = document.getElementById('currentModalImg');
     if (mainImg) {
         mainImg.src = 'images/logo-tm.png';
         mainImg.alt = 'Cargando...';
+        mainImg.style.opacity = '0.5';
     }
     currentMainModalImage = '';
 
@@ -909,22 +920,13 @@ async function openProductModal(productId) {
     // Dedup
     images = [...new Set(images)];
 
-    // Set main image immediately
+    // Set main image immediately if it's the cover
     if (mainImg) {
         mainImg.src = images[0];
         mainImg.alt = product.name;
+        mainImg.style.opacity = '1';
         currentMainModalImage = images[0];
     }
-
-    // Show Modal IMMEDIATELY with cached data to avoid 'stuck button' feel
-    modal.classList.add('active');
-    
-    // iOS-Safe Scroll Lock (does not break desktop)
-    const scrollY = window.scrollY;
-    // Set CSS variable so the mobile position:fixed rule keeps scroll position
-    document.documentElement.style.setProperty('--scroll-y', `-${scrollY}px`);
-    document.body.classList.add('modal-open');
-    document.body.dataset.scrollY = scrollY;
 
     // Show initial data
     document.getElementById('modalTitle').textContent = product.name;

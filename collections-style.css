@@ -661,6 +661,13 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+body.modal-open {
+    position: fixed;
+    width: 100%;
+    top: var(--scroll-y);
+    overflow: hidden;
+}
+
 /* Back Button */
 .view-details-tag {
     margin-top: 15px;
@@ -1047,6 +1054,7 @@ body {
 /* ==================== PROFESSIONAL PRODUCT MODAL ==================== */
 .product-modal {
     position: fixed;
+    will-change: opacity, transform;
     top: 0;
     left: 0;
     width: 100%;
@@ -1058,7 +1066,8 @@ body {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease, visibility 0.2s;
+    visibility: hidden;
     /* iOS scroll lock helper */
     -webkit-overflow-scrolling: touch;
 }
@@ -1066,6 +1075,7 @@ body {
 .product-modal.active {
     display: flex;
     opacity: 1;
+    visibility: visible;
 }
 
 /* ── SINGLE definition of modal container ── */
@@ -1084,15 +1094,13 @@ body {
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
-    animation: modalPop 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    overscroll-behavior: contain;
+    animation: modalPop 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    will-change: transform, opacity;
 }
 
 @keyframes modalPop {
-    from { transform: scale(0.92) translateY(16px); opacity: 0; }
-    to   { transform: scale(1)    translateY(0);    opacity: 1; }
+    from { transform: translate3d(0, 20px, 0) scale(0.95); opacity: 0; }
+    to   { transform: translate3d(0, 0, 0)    scale(1);    opacity: 1; }
 }
 
 .modal-close {
