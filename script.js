@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMobileMenu();
     setupSmoothScroll();
     setupHeroBackgroundSlider();
+    setupHomeSearch();
 
     // 4. Sync with Supabase (Singleton promise)
     window.productsLoaded = syncProducts();
@@ -66,6 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (waBtn) waBtn.classList.add('visible');
     }, 2000); // Reduced from 3500ms
 });
+
+function setupHomeSearch() {
+    const searchForm = document.getElementById('homeSearchForm');
+    const searchInput = document.getElementById('homeSearchInput');
+    
+    if (!searchForm || !searchInput) return;
+
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (query) {
+            window.location.href = `collections.html?search=${encodeURIComponent(query)}`;
+        }
+    });
+}
 
 // ==================== HERO BACKGROUND SLIDER ====================
 function setupHeroBackgroundSlider() {

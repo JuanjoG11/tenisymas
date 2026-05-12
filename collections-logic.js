@@ -36,7 +36,8 @@ if (typeof activeFilters === 'undefined') {
         brands: [],
         prices: [],
         sizes: [],
-        discount: false
+        discount: false,
+        search: ''
     };
 }
 
@@ -125,6 +126,17 @@ async function setupCollections() {
         activeFilters.brands = brandName.split(',').map(b => b.trim());
     }
     
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        activeFilters.search = searchParam;
+        const searchInput = document.getElementById('catalogSearch');
+        if (searchInput) {
+            searchInput.value = searchParam;
+            const clearBtn = document.getElementById('clearSearch');
+            if (clearBtn) clearBtn.style.display = 'flex';
+        }
+    }
+    
     updateCategoryTitle(categoryName);
     
     // 2. Setup Intersection Observer for infinite scroll
@@ -140,6 +152,36 @@ async function setupCollections() {
     // 4. Setup Event Listeners
     setupFilters();
     setupMobileFilters();
+    setupSearch();
+}
+
+function setupSearch() {
+    const searchInput = document.getElementById('catalogSearch');
+    const clearBtn = document.getElementById('clearSearch');
+    
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        activeFilters.search = value;
+        
+        if (clearBtn) {
+            clearBtn.style.display = value ? 'flex' : 'none';
+        }
+        
+        // Debounce is already handled in applyFilters()
+        applyFilters(true); 
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            activeFilters.search = '';
+            clearBtn.style.display = 'none';
+            applyFilters(true);
+            searchInput.focus();
+        });
+    }
 }
 
 // Update category title
@@ -472,6 +514,17 @@ function executeApplyFilters(shouldScroll = false) {
     // 2. Filter correctly with all sub-filters
     filteredProducts = allProducts.filter(product => {
         if (!product) return false;
+        
+        // --- 0. Search Filter ---
+        if (activeFilters.search) {
+            const query = normalize(activeFilters.search);
+            const pName = normalize(product.name || '');
+            const pBrand = normalize(product.brand || product.marca || '');
+            const pCat = normalize(product.category || product.categoria || '');
+            
+            const matchesQuery = pName.includes(query) || pBrand.includes(query) || pCat.includes(query);
+            if (!matchesQuery) return false;
+        }
         
         // --- 1. Category Filter ---
         if (fCat && !isSpecialCat) {
@@ -1470,8 +1523,17 @@ function clearAllFilters(shouldScroll = false) {
         brands: [],
         prices: [],
         sizes: [],
-        discount: false
+        discount: false,
+        search: ''
     };
+    
+    // Clear Search Input
+    const searchInput = document.getElementById('catalogSearch');
+    if (searchInput) searchInput.value = '';
+    
+    const clearSearchBtn = document.getElementById('clearSearch');
+    if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     for (let i = 0; i < checkboxes.length; i++) {
         checkboxes[i].checked = false;
