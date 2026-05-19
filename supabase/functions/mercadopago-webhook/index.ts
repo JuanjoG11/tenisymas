@@ -25,8 +25,21 @@ serve(async (req) => {
 
     try {
         const url = new URL(req.url)
-        const id = url.searchParams.get("id") || url.searchParams.get("data.id")
-        const topic = url.searchParams.get("topic") || url.searchParams.get("type")
+        let id = url.searchParams.get("id") || url.searchParams.get("data.id")
+        let topic = url.searchParams.get("topic") || url.searchParams.get("type")
+
+        // SI NO ESTÁN EN URL, INTENTAMOS LEER EL BODY JSON (WEBHOOK V2 DE MERCADO PAGO)
+        if (!id || !topic) {
+            try {
+                const body = await req.json()
+                if (body) {
+                    id = id || (body.data && String(body.data.id)) || (body.id && String(body.id))
+                    topic = topic || body.type || (body.action && body.action.split('.')[0])
+                }
+            } catch (e) {
+                console.error("Error al parsear body del webhook:", e)
+            }
+        }
 
         if (topic === 'payment' && id) {
             const ACCESS_TOKEN = "APP_USR-8626270631469210-022013-797bdb9a76a3d85b866049fb85eb4e38-3213704453";
@@ -45,9 +58,16 @@ serve(async (req) => {
                 // SOLO SI EL PAGO ESTÁ APROBADO, CREAMOS LA ORDEN EN LA DB
                 if (status === 'approved' && metadata && SUPABASE_URL && SERVICE_ROLE) {
                     
+                    const customer = metadata.customer || {}
+                    const customerInfo = {
+                        ...customer,
+                        firstName: customer.firstName || customer.first_name || '',
+                        lastName: customer.lastName || customer.last_name || ''
+                    }
+
                     const orderData = {
                         external_reference: paymentData.external_reference,
-                        customer_info: metadata.customer,
+                        customer_info: customerInfo,
                         items: metadata.items,
                         total: paymentData.transaction_amount,
                         payment_method: 'mercadopago',
@@ -69,7 +89,12 @@ serve(async (req) => {
 
                     if (dbRes.ok) {
                         console.log("✅ ORDEN CREADA TRAS PAGO EXITOSO");
-                        const msg = `✅ *¡NUEVA VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n👤 *Cliente:* ${metadata.customer.firstName} ${metadata.customer.lastName}\n📦 *Orden:* ${paymentData.external_reference}\n\n_El pedido ya aparece en tu panel de administración._`;
+                        const customer = metadata.customer || {}
+                        const firstName = customer.firstName || customer.first_name || 'N/A'
+                        const lastName = customer.lastName || customer.last_name || ''
+                        const fullName = `${firstName} ${lastName}`.trim()
+                        
+                        const msg = `✅ *¡NUEVA VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n👤 *Cliente:* ${fullName}\n📦 *Orden:* ${paymentData.external_reference}\n\n_El pedido ya aparece en tu panel de administración._`;
                         await sendTelegram(msg);
                     }
                 }

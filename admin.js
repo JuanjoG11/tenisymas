@@ -714,8 +714,8 @@ function renderOrders() {
     const searchTerm = searchOrdersInput.value.toLowerCase();
     const filtered = orders.filter(o => {
         const info = o.customer_info || {};
-        const firstName = (info.firstName || '').toLowerCase();
-        const lastName = (info.lastName || '').toLowerCase();
+        const firstName = (info.firstName || info.first_name || '').toLowerCase();
+        const lastName = (info.lastName || info.last_name || '').toLowerCase();
         const city = (info.city || '').toLowerCase();
         const paymentMethod = (o.payment_method || '').toLowerCase();
 
@@ -758,8 +758,8 @@ function renderOrders() {
             <tr>
                 <td class="order-date">${date}</td>
                 <td class="order-customer">
-                    <h4>${escapeHTML(order.customer_info.firstName)} ${escapeHTML(order.customer_info.lastName)}</h4>
-                    <p>${escapeHTML(order.customer_info.city)} | ${escapeHTML(order.customer_info.phone)}</p>
+                    <h4>${escapeHTML(order.customer_info.firstName || order.customer_info.first_name || '')} ${escapeHTML(order.customer_info.lastName || order.customer_info.last_name || '')}</h4>
+                    <p>${escapeHTML(order.customer_info.city || '')} | ${escapeHTML(order.customer_info.phone || '')}</p>
                 </td>
                 <td class="order-items-summary">${items}</td>
                 <td class="order-total">
@@ -960,7 +960,7 @@ window.viewOrderDetails = (id) => {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
             <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
                 <h4 style="color: #ff3333; margin-bottom: 12px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; font-weight: 800;">👤 Datos Cliente</h4>
-                <p style="margin-bottom: 5px;"><strong>Nombre:</strong> ${escapeHTML(customer.firstName || '')} ${escapeHTML(customer.lastName || '')}</p>
+                <p style="margin-bottom: 5px;"><strong>Nombre:</strong> ${escapeHTML(customer.firstName || customer.first_name || '')} ${escapeHTML(customer.lastName || customer.last_name || '')}</p>
                 <p style="margin-bottom: 5px;"><strong>Teléfono:</strong> ${escapeHTML(customer.phone || 'N/A')}</p>
                 <p style="margin-bottom: 0;"><strong>DNI/CC:</strong> ${escapeHTML(customer.dni || 'N/A')}</p>
             </div>
