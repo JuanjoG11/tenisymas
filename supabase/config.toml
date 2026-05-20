@@ -1,0 +1,7 @@
+project_id = "shbtmkeyarqppasdpzxv"
+
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+[functions.addi-callback]
+verify_jwt = false
