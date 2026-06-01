@@ -3,14 +3,17 @@ const fs = require('fs');
 // Credenciales hardcodeadas en el código actual
 const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk";
 const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4";
-const AUDIENCE = "https://api.addi.com";
+// Cambiar a false si quieres probar producción
+const IS_SANDBOX = true;
+const BASE_AUTH = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com";
+const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com";
 
 async function testAuth() {
     const log = {};
     log.testing = "Produccion auth: https://auth.addi.com/oauth/token";
     
     try {
-        const res = await fetch("https://auth.addi.com/oauth/token", {
+        const res = await fetch(`${BASE_AUTH}/oauth/token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

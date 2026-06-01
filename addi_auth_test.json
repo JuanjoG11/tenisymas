@@ -1,9 +1,11 @@
 {
   "testing": "Produccion auth: https://auth.addi.com/oauth/token",
-  "authStatus": 400,
+  "authStatus": 200,
   "authBody": {
-    "error": "invalid_request",
-    "error_description": "Invalid domain 'auth.addi.com' for client_id 'p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk'"
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9FRXhPVVE1UWprMU1EUXpNMFl4UVRVek56UkdRVU14TURZeU5FRTRPRGMxTTBFd09UWkZRdyJ9.eyJpc3MiOiJodHRwczovL2F1dGguYWRkaS1zdGFnaW5nLmNvbS8iLCJzdWIiOiJwNWlaNjF3Mk9DTlFsVDdxRkFsbWlha1NzWG5JOXlPa0BjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9hcGkuc3RhZ2luZy5hZGRpLmNvbSIsImlhdCI6MTc4MDMyNzA5NiwiZXhwIjoxNzgwNDEzNDk2LCJzY29wZSI6ImNsaWVudC1tYW5hZ2VtZW50OmNyZWF0ZS1vbmxpbmUtYXBwbGljYXRpb24iLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMiLCJhenAiOiJwNWlaNjF3Mk9DTlFsVDdxRkFsbWlha1NzWG5JOXlPayJ9.kCqQHqFOznll3mPqglNrBQyWX8sgNXcOae1kAIPspGcHRX1d1qu53esbTivlBskWD9RW8y6QS6ahqX0Ue5-Y31L9xMWpqttNXS4Od9xwuLedrbYmW2H834iPWqx3109nvK9kgsFlztMhB--zYkbhXUEvd3xKadI_U3Kfp2je8IyuuENzzIhu1L6s_KlZxzkUDAnOEgtcC0rCZdIGyYykJ9n6WAUmTwczpwkPMI1V5klvTQDK4I4jnN4Ys-DajsQO-V87kjqrTHHNrtsZOi5efMcfyWr6CGw1SI1Ic6HI4QpB6Eg7tG5U9PdEkB3RF-meFpXekwtCGUJvna-Ml2Jq7w",
+    "scope": "client-management:create-online-application",
+    "expires_in": 86400,
+    "token_type": "Bearer"
   },
-  "result": "AUTH FAILED"
+  "result": "AUTH OK - token obtained"
 }

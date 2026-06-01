@@ -31,13 +31,15 @@ serve(async (req) => {
 
     try {
         const { orderData } = await req.json()
-        const CLIENT_ID = "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk"
-        const CLIENT_SECRET = "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4"
-        const ALLY_SLUG = "tennisymasco-ecommerce"
-        const IS_SANDBOX = true; 
-        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com"
-        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com"
-        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com"
+
+        // Configuración por variables de entorno (Deno.env)
+        const CLIENT_ID = Deno.env.get("ADDI_CLIENT_ID") || "p5iZ61w2OCNQlT7qFAlmiakSsXnI9yOk";
+        const CLIENT_SECRET = Deno.env.get("ADDI_CLIENT_SECRET") || "NY1kdeqqk1fZ_nMn4kQjtYM9MYnDPB7dKRC8HmlTpQryCxqRhuYcXCnCCfZfyOY4";
+        const ALLY_SLUG = Deno.env.get("ADDI_ALLY_SLUG") || "tennisymasco-ecommerce";
+        const IS_SANDBOX = (Deno.env.get("ADDI_IS_SANDBOX") || "true").toLowerCase() === "true";
+        const BASE_AUTH_URL = IS_SANDBOX ? "https://auth.addi-staging.com" : "https://auth.addi.com";
+        const BASE_API_URL = IS_SANDBOX ? "https://api.addi-staging.com" : "https://api.addi.com";
+        const AUDIENCE = IS_SANDBOX ? "https://api.staging.addi.com" : "https://api.addi.com";
 
         const authRes = await fetch(`${BASE_AUTH_URL}/oauth/token`, {
             method: "POST",
@@ -68,6 +70,11 @@ serve(async (req) => {
         const itemsTotal = items.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0);
         const shippingAmount = Math.max(0, totalAmount - itemsTotal);
 
+        const redirectionInput = (orderData.redirectionUrls || {});
+        const successUrl = redirectionInput.success || redirectionInput.redirectionUrl || redirectionInput.successUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/success.html`;
+        const cancelUrl = redirectionInput.cancel || redirectionInput.failure || redirectionInput.cancelUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/checkout.html`;
+        const callbackUrl = redirectionInput.callback || redirectionInput.callbackUrl || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback";
+
         const addiPayload = {
             allySlug: ALLY_SLUG,
             orderId: safeOrderId,
@@ -91,11 +98,16 @@ serve(async (req) => {
             },
             allyUrlRedirection: {
                 logoUrl: "https://tennisymas.com/images/logo-tm.png",
-                callbackUrl: "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback",
-                redirectionUrl: "https://tennisymas.com/success.html"
+                callbackUrl: callbackUrl,
+                successUrl: successUrl,
+                cancelUrl: cancelUrl,
+                redirectionUrl: successUrl
             },
             items: items
         }
+
+        // Log payload (no credenciales). Útil para debugging.
+        console.log('📨 Addi payload:', JSON.stringify(addiPayload, null, 2));
 
         const response = await fetch(`${BASE_API_URL}/v1/online-applications`, {
             method: "POST",
@@ -164,7 +176,11 @@ serve(async (req) => {
                 status: 200,
             })
         } else {
-            return new Response(JSON.stringify({ error: "Addi API Error" }), { status: 400, headers: corsHeaders });
+            const respText = await response.text();
+            let respBody: any = respText;
+            try { respBody = JSON.parse(respText); } catch (e) {}
+            console.error('❌ Addi API returned non-redirect:', response.status, respBody);
+            return new Response(JSON.stringify({ error: "Addi API Error", status: response.status, body: respBody, called_url: `${BASE_API_URL}/v1/online-applications`, sent_payload: addiPayload }), { status: 400, headers: corsHeaders });
         }
 
     } catch (err: any) {
