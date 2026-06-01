@@ -4,6 +4,11 @@ console.log('%c🚀 ADDI CORE ENGINE V3.0 ACTIVATED', 'color: #00ff00; font-weig
 let checkoutCart = [];
 const DEFAULT_SHIPPING_COST = 16500;
 const FREE_SHIPPING_THRESHOLD = 300000;
+// Discount state
+let appliedDiscount = {
+    code: null,
+    percent: 0
+};
 
 const colombiaCities = {
     "Amazonas": ["Leticia", "Puerto Nariño", "El Encanto", "La Chorrera", "Puerto Alegría", "Puerto Arica"],
@@ -98,8 +103,110 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCheckoutCart();
     setupPaymentSelectors();
     setupCheckoutForm();
+    setupDiscountCode();
     setupLocationSelectors();
 });
+
+function getDiscountPercentForCode(code) {
+    if (!code) return 0;
+    const clean = String(code).trim().toUpperCase();
+    if (clean === 'BURIGOL10') return 10;
+    return 0;
+}
+
+function setupDiscountCode() {
+    const input = document.getElementById('discountCode');
+    const btn = document.querySelector('.discount-code-row .btn');
+    if (!input || !btn) return;
+
+    // Load previously applied discount from sessionStorage
+    try {
+        const saved = sessionStorage.getItem('tm_discount');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            appliedDiscount = parsed;
+        }
+    } catch (e) {
+        appliedDiscount = { code: null, percent: 0 };
+    }
+
+    // Update UI placeholder if applied
+    if (appliedDiscount && appliedDiscount.code) {
+        input.value = appliedDiscount.code;
+    }
+
+    btn.addEventListener('click', () => {
+        const code = input.value || '';
+        const percent = getDiscountPercentForCode(code);
+        if (percent > 0) {
+            appliedDiscount = { code: code.trim().toUpperCase(), percent };
+            sessionStorage.setItem('tm_discount', JSON.stringify(appliedDiscount));
+            showToast(`Código aplicado: ${appliedDiscount.code} (${appliedDiscount.percent}%)`, 'success');
+        } else {
+            appliedDiscount = { code: null, percent: 0 };
+            sessionStorage.removeItem('tm_discount');
+            showToast('Código inválido o no aplicable', 'error');
+        }
+        renderCheckoutSummary();
+    });
+}
+
+// Simple toast notification helper (inline styles to avoid touching CSS files)
+function ensureToastContainer() {
+    if (document.getElementById('tm_toast_container')) return;
+    const c = document.createElement('div');
+    c.id = 'tm_toast_container';
+    c.style.position = 'fixed';
+    c.style.zIndex = 999999;
+    c.style.right = '20px';
+    c.style.top = '20px';
+    c.style.display = 'flex';
+    c.style.flexDirection = 'column';
+    c.style.gap = '10px';
+    document.body.appendChild(c);
+}
+
+function showToast(message, type = 'info', duration = 3500) {
+    ensureToastContainer();
+    const container = document.getElementById('tm_toast_container');
+    const t = document.createElement('div');
+    t.className = 'tm_toast';
+    t.style.minWidth = '220px';
+    t.style.maxWidth = '360px';
+    t.style.padding = '12px 16px';
+    t.style.borderRadius = '10px';
+    t.style.boxShadow = '0 6px 18px rgba(0,0,0,0.35)';
+    t.style.color = '#fff';
+    t.style.fontFamily = "'Outfit', system-ui, sans-serif";
+    t.style.fontSize = '14px';
+    t.style.opacity = '0';
+    t.style.transition = 'transform 220ms ease, opacity 220ms ease';
+    t.style.transform = 'translateY(-6px)';
+
+    if (type === 'success') {
+        t.style.background = 'linear-gradient(90deg,#2ecc71,#16a34a)';
+    } else if (type === 'error') {
+        t.style.background = 'linear-gradient(90deg,#ff5f6d,#d90429)';
+    } else {
+        t.style.background = 'linear-gradient(90deg,#2b6cb0,#3b82f6)';
+    }
+
+    t.textContent = message;
+    container.appendChild(t);
+
+    // animate in
+    requestAnimationFrame(() => {
+        t.style.opacity = '1';
+        t.style.transform = 'translateY(0)';
+    });
+
+    // remove after duration
+    setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(-6px)';
+        setTimeout(() => t.remove(), 250);
+    }, duration);
+}
 
 function setupLocationSelectors() {
     const deptSelect = document.getElementById('department');
@@ -175,7 +282,12 @@ function renderCheckoutSummary() {
 
     // Dynamic Shipping
     const currentShipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_COST;
-    const total = subtotal + currentShipping;
+
+    // Apply discount if any
+    const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
+    const discountAmount = Math.round(subtotal * (discountPercent / 100));
+
+    const total = Math.round(subtotal - discountAmount + currentShipping);
 
     if (subtotalEl) subtotalEl.textContent = `$${subtotal.toLocaleString('es-CO')}`;
     
@@ -186,7 +298,26 @@ function renderCheckoutSummary() {
             shippingEl.textContent = `$${currentShipping.toLocaleString('es-CO')}`;
         }
     }
-    
+
+    // Inject/Update discount row in the summary if necessary
+    const summaryTotals = document.querySelector('.summary-totals');
+    if (summaryTotals) {
+        let discountRow = summaryTotals.querySelector('.summary-row.discount-row');
+        if (discountPercent > 0) {
+            if (!discountRow) {
+                discountRow = document.createElement('div');
+                discountRow.className = 'summary-row discount-row';
+                discountRow.innerHTML = `<span>Descuento (${appliedDiscount.code})</span><span id="summaryDiscount">-$0</span>`;
+                const totalRow = summaryTotals.querySelector('.total-row');
+                totalRow.parentNode.insertBefore(discountRow, totalRow);
+            }
+            const discountEl = document.getElementById('summaryDiscount');
+            if (discountEl) discountEl.textContent = `-$${discountAmount.toLocaleString('es-CO')}`;
+        } else {
+            if (discountRow) discountRow.remove();
+        }
+    }
+
     if (totalEl) totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
 }
 
@@ -276,7 +407,9 @@ async function handleAddiCheckout(customer) {
         // Calcular total real
         const subtotal = checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0);
         const currentShipping = getShippingCost(subtotal);
-        const totalAmount = Math.round(subtotal + currentShipping);
+        const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
+        const discountAmount = Math.round(subtotal * (discountPercent / 100));
+        const totalAmount = Math.round(subtotal - discountAmount + currentShipping);
 
         // Mapear items reales para Addi
         const addiItems = checkoutCart.map(item => ({
@@ -316,7 +449,12 @@ async function handleAddiCheckout(customer) {
                     cancel: window.location.origin + "/checkout.html",
                     origin: window.location.origin
                 },
-                items: addiItems
+                items: addiItems,
+                discount: {
+                    code: appliedDiscount?.code || null,
+                    percent: appliedDiscount?.percent || 0,
+                    amount: discountAmount
+                }
             }
         };
 
@@ -397,12 +535,23 @@ async function handleMercadoPagoCheckout(customer) {
 
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const currentShipping = getShippingCost(subtotal);
+        const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
+        const discountAmount = Math.round(subtotal * (discountPercent / 100));
 
         items.push({
             name: "Costo de Envío",
             price: currentShipping,
             quantity: 1
         });
+
+        // Si hay descuento, agregar como item negativo para reflejarlo en el total
+        if (discountAmount > 0) {
+            items.push({
+                name: `Descuento ${appliedDiscount.code || ''}`,
+                price: -Math.abs(discountAmount),
+                quantity: 1
+            });
+        }
 
         const payload = {
             orderId: "TM-" + Date.now(),
@@ -461,10 +610,14 @@ async function handleWhatsAppFallback(customer) {
             color: item.color || null
         };
     });
-
     const currentShipping = getShippingCost(total);
-    const finalTotal = total + currentShipping;
-    message += `\n💰 *TOTAL: $${finalTotal.toLocaleString('es-CO')}*`;
+    const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
+    const discountAmount = Math.round(total * (discountPercent / 100));
+    const finalTotal = total - discountAmount + currentShipping;
+    if (discountAmount > 0) {
+        message += `\n\nDescuento (${appliedDiscount.code}): -$${discountAmount.toLocaleString('es-CO')}`;
+    }
+    message += `\n\n💰 *TOTAL: $${finalTotal.toLocaleString('es-CO')}*`;
 
     // (NUEVO) Registrar en la base de datos de pedidos
     try {
@@ -497,7 +650,9 @@ async function handleNequiCheckout(customer) {
         itemsText += `\n- ${item.quantity}x ${item.name}${item.size ? ` (Talla: ${item.size})` : ''} $${(price * item.quantity).toLocaleString('es-CO')}`;
     });
     const shipping = getShippingCost(subtotal);
-    const total = subtotal + shipping;
+    const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
+    const discountAmount = Math.round(subtotal * (discountPercent / 100));
+    const total = subtotal - discountAmount + shipping;
 
     // Registrar en la base de datos de pedidos
     try {

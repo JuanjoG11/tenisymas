@@ -76,6 +76,47 @@ serve(async (req) => {
 
                 const respText = await res.text()
                 console.log('🔁 Supabase patch response:', res.status, respText)
+
+                // If the exact-match patch didn't update (non-2xx/204), try a fallback search
+                if (!(res.status === 204 || (res.ok && res.status >= 200 && res.status < 300))) {
+                    console.warn('⚠️ Exact external_reference patch did not succeed, trying ilike fallback')
+                    try {
+                        const getRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=ilike.*${orderId}*&select=id,external_reference`, {
+                            method: 'GET',
+                            headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE }
+                        })
+
+                        const getText = await getRes.text()
+                        let candidates: any[] = []
+                        try { candidates = JSON.parse(getText || '[]') } catch(e){ candidates = [] }
+
+                        if (candidates.length > 0) {
+                            const first = candidates[0]
+                            console.log('🔎 Fallback found order:', first)
+                            // Patch by primary key id
+                            try {
+                                const patchById = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${first.id}`, {
+                                    method: 'PATCH',
+                                    headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE, "Content-Type": "application/json" },
+                                    body: JSON.stringify({ status: newStatus, status_payment: statusPayment, paid_at: paidAt })
+                                })
+                                const patchText = await patchById.text()
+                                console.log('🔁 Supabase fallback patch response:', patchById.status, patchText)
+
+                                // Inform if fallback succeeded
+                                if (patchById.status === 204 || (patchById.ok && patchById.status >= 200 && patchById.status < 300)) {
+                                    await sendTelegram(`ℹ️ *ADDI FALLBACK*\n\nSe actualizó la orden (fallback) encontrada: ${first.external_reference} (id: ${first.id})\nNuevo estado: ${incomingStatus}`)
+                                }
+                            } catch (e) {
+                                console.error('❌ Error patching by id (fallback):', e.message)
+                            }
+                        } else {
+                            console.warn('⚠️ No orders found with ilike fallback for', orderId)
+                        }
+                    } catch (e) {
+                        console.error('❌ Error during fallback search:', e.message)
+                    }
+                }
             } catch (e) {
                 console.error('❌ Error patching order:', e.message)
             }
