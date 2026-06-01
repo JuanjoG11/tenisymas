@@ -71,8 +71,10 @@ serve(async (req) => {
         const shippingAmount = Math.max(0, totalAmount - itemsTotal);
 
         const redirectionInput = (orderData.redirectionUrls || {});
-        const successUrl = redirectionInput.success || redirectionInput.redirectionUrl || redirectionInput.successUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/success.html`;
-        const cancelUrl = redirectionInput.cancel || redirectionInput.failure || redirectionInput.cancelUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/checkout.html`;
+        const successUrlRaw = redirectionInput.success || redirectionInput.redirectionUrl || redirectionInput.successUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/success.html`;
+        const cancelUrlRaw = redirectionInput.cancel || redirectionInput.failure || redirectionInput.cancelUrl || `${req.headers.get("origin") || "https://tennisymas.com"}/checkout.html`;
+        const successUrl = successUrlRaw.includes('?') ? `${successUrlRaw}&orderId=${safeOrderId}` : `${successUrlRaw}?orderId=${safeOrderId}`;
+        const cancelUrl = cancelUrlRaw.includes('?') ? `${cancelUrlRaw}&orderId=${safeOrderId}` : `${cancelUrlRaw}?orderId=${safeOrderId}`;
         const callbackUrl = redirectionInput.callback || redirectionInput.callbackUrl || "https://shbtmkeyarqppasdpzxv.supabase.co/functions/v1/addi-callback";
 
         const addiPayload = {
