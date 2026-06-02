@@ -57,6 +57,26 @@ serve(async (req) => {
 
                 // SOLO SI EL PAGO ESTÁ APROBADO, CREAMOS LA ORDEN EN LA DB
                 if (status === 'approved' && metadata && SUPABASE_URL && SERVICE_ROLE) {
+                    const externalRef = paymentData.external_reference;
+
+                    // 1. Verificar si la orden ya existe para evitar duplicación
+                    const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=eq.${externalRef}&select=id`, {
+                        headers: {
+                            "Authorization": `Bearer ${SERVICE_ROLE}`,
+                            "apikey": SERVICE_ROLE
+                        }
+                    });
+
+                    if (checkRes.ok) {
+                        const existingOrders = await checkRes.json();
+                        if (existingOrders && existingOrders.length > 0) {
+                            console.log(`⚠️ MP Webhook: La orden con referencia ${externalRef} ya existe. Evitando duplicación.`);
+                            return new Response(JSON.stringify({ received: true, already_processed: true }), {
+                                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                                status: 200,
+                            });
+                        }
+                    }
                     
                     const customer = metadata.customer || {}
                     const customerInfo = {
@@ -66,7 +86,7 @@ serve(async (req) => {
                     }
 
                     const orderData = {
-                        external_reference: paymentData.external_reference,
+                        external_reference: externalRef,
                         customer_info: customerInfo,
                         items: metadata.items,
                         total: paymentData.transaction_amount,
@@ -89,13 +109,6 @@ serve(async (req) => {
 
                     if (dbRes.ok) {
                         console.log("✅ ORDEN CREADA TRAS PAGO EXITOSO");
-                        const customer = metadata.customer || {}
-                        const firstName = customer.firstName || customer.first_name || 'N/A'
-                        const lastName = customer.lastName || customer.last_name || ''
-                        const fullName = `${firstName} ${lastName}`.trim()
-                        
-                        const msg = `✅ *¡NUEVA VENTA CONFIRMADA!*\n\n💰 *Monto:* $${paymentData.transaction_amount.toLocaleString('es-CO')}\n👤 *Cliente:* ${fullName}\n📦 *Orden:* ${paymentData.external_reference}\n\n_El pedido ya aparece en tu panel de administración._`;
-                        await sendTelegram(msg);
                     }
                 }
             }

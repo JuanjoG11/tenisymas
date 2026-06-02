@@ -148,30 +148,7 @@ serve(async (req) => {
                 });
             }
 
-            // --- DISEÑO DE NOTIFICACIÓN TELEGRAM (ESTILO MODAL) ---
-            let productsText = "";
-            orderData.items.forEach((i: any) => {
-                productsText += `• *${i.name}*\n  Talla: ${i.size || 'N/A'} | Cant: ${i.quantity} | $${Number(i.unitPrice).toLocaleString('es-CO')}\n`;
-            });
 
-            const msg = `📄 *DETALLES DEL PEDIDO (${safeOrderId})*\n` +
-                        `------------------------------------------\n` +
-                        `👤 *DATOS CLIENTE*\n` +
-                        `• *Nombre:* ${orderData.client.firstName} ${orderData.client.lastName}\n` +
-                        `• *Teléfono:* ${orderData.client.cellphone}\n` +
-                        `• *DNI/CC:* ${orderData.client.idNumber}\n\n` +
-                        `📍 *UBICACIÓN ENVÍO*\n` +
-                        `• *Ciudad:* ${orderData.shippingAddress.city}\n` +
-                        `• *Depto:* ${orderData.shippingAddress.administrativeDivision}\n` +
-                        `• *Dirección:* ${orderData.shippingAddress.line1}\n\n` +
-                        `🛍️ *PRODUCTOS SOLICITADOS*\n` +
-                        `${productsText}\n` +
-                        `💳 *MÉTODO:* ADDI\n` +
-                        `💰 *TOTAL:* *$${totalAmount.toLocaleString('es-CO')}*\n` +
-                        `------------------------------------------\n` +
-                        `_El cliente ha sido enviado a Addi._`;
-
-            await sendTelegram(msg);
 
             return new Response(JSON.stringify({ redirectionUrl: locationUrl }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -46,6 +46,46 @@ serve(async (req) => {
 
         if (SUPABASE_URL && SERVICE_ROLE) {
             const incomingStatus = (body.status || '').toString().toUpperCase()
+
+            // 1. Verificar si la orden ya existe (por referencia exacta o fallback) y su status_payment
+            let orderExists = false;
+            let currentStatusPayment = '';
+            try {
+                const getOrderRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=eq.${orderId}&select=status_payment`, {
+                    headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE }
+                });
+                if (getOrderRes.ok) {
+                    const existingOrders = await getOrderRes.json();
+                    if (existingOrders && existingOrders.length > 0) {
+                        orderExists = true;
+                        currentStatusPayment = existingOrders[0].status_payment || '';
+                    } else {
+                        // Intentar buscar por fallback ilike
+                        const fallbackRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=ilike.*${orderId}*&select=status_payment`, {
+                            headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE }
+                        });
+                        if (fallbackRes.ok) {
+                            const fallbackOrders = await fallbackRes.json();
+                            if (fallbackOrders && fallbackOrders.length > 0) {
+                                orderExists = true;
+                                currentStatusPayment = fallbackOrders[0].status_payment || '';
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("❌ Error verificando estado actual de la orden:", e.message);
+            }
+
+            // Si ya tiene el estado solicitado, evitar procesar y notificar por duplicado
+            if (orderExists && currentStatusPayment.toUpperCase() === incomingStatus) {
+                console.log(`⚠️ Addi Callback: La orden ${orderId} ya tiene el estado ${incomingStatus}. Omitiendo.`);
+                return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                    status: 200,
+                });
+            }
+
             let newStatus = 'pending'
             let statusPayment = incomingStatus || 'PENDING'
             let paidAt: string | null = null

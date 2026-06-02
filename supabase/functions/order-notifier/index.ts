@@ -24,17 +24,35 @@ serve(async (req) => {
         const totalFormatted = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(order.total)
         
         // 1. CONSTRUIR MENSAJE PARA TELEGRAM
+        let title = "🚀 *¡NUEVO PEDIDO RECIBIDO!*"
+        const method = (order.payment_method || '').toLowerCase()
+        const isPaid = order.status_payment === 'approved' || order.status === 'paid'
+
+        if (method === 'mercadopago') {
+            title = "✅ *¡NUEVA VENTA CONFIRMADA (Mercado Pago)!*"
+        } else if (method === 'addi') {
+            if (isPaid) {
+                title = "✅ *¡NUEVA VENTA CONFIRMADA (Addi)!*"
+            } else {
+                title = "⏳ *¡NUEVO INTENTO DE COMPRA (Addi)!*"
+            }
+        } else if (method === 'whatsapp') {
+            title = "📱 *¡NUEVO PEDIDO POR WHATSAPP!*"
+        } else if (method === 'transferencia' || method === 'transfer' || method === 'nequi') {
+            title = "💰 *¡NUEVO PEDIDO POR TRANSFERENCIA/NEQUI!*"
+        }
+
         const telegramMessage = `
-🚀 *¡NUEVO PEDIDO RECIBIDO!*
+${title}
 ----------------------------
-👤 *Cliente:* ${customer.firstName} ${customer.lastName}
-📍 *Ciudad:* ${customer.city}
+👤 *Cliente:* ${customer.firstName || ''} ${customer.lastName || ''}
+📍 *Ciudad:* ${customer.city || 'No especificada'}
 💰 *Total:* ${totalFormatted}
-💳 *Método:* ${order.payment_method.toUpperCase()}
-📱 *Teléfono:* ${customer.phone}
+💳 *Método:* ${order.payment_method ? order.payment_method.toUpperCase() : 'N/A'}
+📱 *Teléfono:* ${customer.phone || 'N/A'}
 
 📦 *Productos:*
-${order.items.map((i: any) => `- ${i.quantity}x ${i.name}`).join('\n')}
+${(order.items || []).map((i: any) => `- ${i.quantity}x ${i.name || 'Producto'} (Talla: ${i.size || 'N/A'})`).join('\n')}
 
 [Ver en el Panel Admin](https://tenisymas.co/admin.html)
 `.trim()
