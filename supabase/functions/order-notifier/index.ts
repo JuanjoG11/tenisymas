@@ -1,5 +1,27 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+// Telegram configuration with fallback to hardcoded credentials
+const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_TOKEN") || "8751458666:AAEEFXichBYpwLh2f86aaozkXZ8sGpnnhJw"
+const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID") || "7501484183"
+
+/**
+ * Sends a message to Telegram using the configured token and chat ID.
+ * Logs success or error for debugging.
+ */
+async function sendTelegram(msg) {
+  try {
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: "Markdown" })
+    })
+    console.log("✅ Telegram enviado")
+  } catch (e) {
+    console.error("❌ Telegram error:", e)
+  }
+}
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -59,16 +81,7 @@ ${(order.items || []).map((i: any) => `- ${i.quantity}x ${i.name || 'Producto'} 
 
         // 2. ENVIAR A TELEGRAM
         if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
-            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: telegramMessage,
-                    parse_mode: 'Markdown'
-                })
-            })
-            console.log("✅ Telegram enviado")
+            await sendTelegram(telegramMessage)
         }
 
         // 3. ENVIAR EMAIL (Vía Resend)

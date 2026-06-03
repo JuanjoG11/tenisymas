@@ -6,8 +6,8 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TELEGRAM_TOKEN = "8751458666:AAEEFXichBYpwLh2f86aaozkXZ8sGpnnhJw";
-const TELEGRAM_CHAT_ID = "7501484183";
+const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_TOKEN") || "8751458666:AAEEFXichBYpwLh2f86aaozkXZ8sGpnnhJw";
+const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID") || "7501484183";
 
 async function sendTelegram(msg: string) {
     try {
@@ -58,6 +58,7 @@ serve(async (req) => {
                 // SOLO SI EL PAGO ESTÁ APROBADO, CREAMOS LA ORDEN EN LA DB
                 if (status === 'approved' && metadata && SUPABASE_URL && SERVICE_ROLE) {
                     const externalRef = paymentData.external_reference;
+                    const customer = metadata.customer || {};
 
                     // 1. Verificar si la orden ya existe para evitar duplicación
                     const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?external_reference=eq.${externalRef}&select=id`, {
@@ -71,6 +72,11 @@ serve(async (req) => {
                         const existingOrders = await checkRes.json();
                         if (existingOrders && existingOrders.length > 0) {
                             console.log(`⚠️ MP Webhook: La orden con referencia ${externalRef} ya existe. Evitando duplicación.`);
+                            try {
+                                const msgExist = `✅ *PAGO APROBADO*\n\n📦 *Orden ya registrada:* ${externalRef}\n👤 *Cliente:* ${customer.firstName || customer.first_name || ''} ${customer.lastName || customer.last_name || ''}\n💰 *Monto:* $${paymentData.transaction_amount?.toLocaleString ? paymentData.transaction_amount.toLocaleString('es-CO') : paymentData.transaction_amount}\n\n_Nota: la orden ya existe en la base de datos._`;
+                                await sendTelegram(msgExist);
+                            } catch (e) {}
+
                             return new Response(JSON.stringify({ received: true, already_processed: true }), {
                                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                                 status: 200,
@@ -78,7 +84,7 @@ serve(async (req) => {
                         }
                     }
                     
-                    const customer = metadata.customer || {}
+                    // Reuse the earlier `customer` variable defined above
                     const customerInfo = {
                         ...customer,
                         firstName: customer.firstName || customer.first_name || '',
@@ -109,6 +115,10 @@ serve(async (req) => {
 
                     if (dbRes.ok) {
                         console.log("✅ ORDEN CREADA TRAS PAGO EXITOSO");
+                        try {
+                            const msg = `✅ *PAGO APROBADO - ORDEN CREADA*\n\n📦 *Ref:* ${externalRef}\n👤 *Cliente:* ${customer.firstName || customer.first_name || ''} ${customer.lastName || customer.last_name || ''}\n💰 *Monto:* $${paymentData.transaction_amount?.toLocaleString ? paymentData.transaction_amount.toLocaleString('es-CO') : paymentData.transaction_amount}\n\nRevisa el panel administrativo para más detalles.`;
+                            await sendTelegram(msg);
+                        } catch (e) {}
                     }
                 }
             }
