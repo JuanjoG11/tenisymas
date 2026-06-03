@@ -702,7 +702,22 @@ async function loadOrders() {
         }
 
         if (data) {
-            orders = data;
+            // Eliminar duplicados simples: construir una firma por cliente+total+items+metodo
+            const seen = new Set();
+            orders = data.filter(o => {
+                try {
+                    const phone = (o.customer_info && (o.customer_info.phone || o.customer_info.phone_number)) || '';
+                    const itemsSig = (o.items || []).map(i => `${i.name}:${i.quantity}:${i.price}`).join('|');
+                    const sig = `${phone}::${o.total}::${itemsSig}::${o.payment_method || ''}`;
+                    if (seen.has(sig)) return false;
+                    seen.add(sig);
+                    return true;
+                } catch (e) {
+                    // Si falla el calculo de la firma, conservar el registro para no perder datos
+                    return true;
+                }
+            });
+
             renderOrders();
         }
     } catch (err) {
