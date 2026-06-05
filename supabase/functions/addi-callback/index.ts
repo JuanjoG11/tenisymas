@@ -87,19 +87,19 @@ serve(async (req) => {
             }
 
             let newStatus = 'pending'
-            let statusPayment = incomingStatus || 'PENDING'
+            let statusPayment = (incomingStatus || 'PENDING').toLowerCase()
             let paidAt: string | null = null
 
             if (incomingStatus === 'APPROVED') {
                 newStatus = 'paid'
-                statusPayment = 'APPROVED'
+                statusPayment = 'approved'
                 paidAt = new Date().toISOString()
             } else if (['REJECTED', 'DECLINED', 'ABANDONED'].includes(incomingStatus)) {
                 newStatus = 'cancelled'
-                statusPayment = incomingStatus
+                statusPayment = incomingStatus.toLowerCase()
             } else {
                 newStatus = 'pending'
-                statusPayment = incomingStatus || 'PENDING'
+                statusPayment = (incomingStatus || 'PENDING').toLowerCase()
             }
 
             // Patch only when necessary (idempotent-ish)

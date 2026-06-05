@@ -693,7 +693,7 @@ async function loadOrders() {
         const { data, error } = await supabaseClient
             .from('orders')
             .select('*')
-            .eq('status_payment', 'approved') // 🎯 FILTRO: Solo pedidos pagados con éxito
+            .or('status_payment.eq.approved,status_payment.eq.APPROVED,payment_method.not.in.(mercadopago,addi)') // 🎯 FILTRO: Solo pedidos pagados con éxito o métodos manuales
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -746,9 +746,12 @@ function renderOrders() {
         const date = new Date(order.created_at).toLocaleString('es-CO');
         const items = order.items.map(i => `${i.quantity}x ${i.name}`).join('<br>');
         const methodClass = `method-${order.payment_method}`;
-        const statusClass = `status-${order.status || 'pending'}`;
+        const isPending = ['pending', 'paid'].includes(order.status);
+        const statusClass = `status-${isPending ? 'pending' : (order.status || 'pending')}`;
 
         const translateStatus = (status) => {
+            if (!status) return '';
+            const statusKey = status.toLowerCase();
             const map = {
                 'approved': 'Aprobado',
                 'pending': 'Pendiente',
@@ -757,7 +760,7 @@ function renderOrders() {
                 'cancelled': 'Cancelado',
                 'in_mediation': 'En Mediación'
             };
-            return map[status] || status;
+            return map[statusKey] || status;
         };
 
         const translateMethod = (method) => {
@@ -779,13 +782,13 @@ function renderOrders() {
                 <td class="order-items-summary">${items}</td>
                 <td class="order-total">
                     $${Number(order.total).toLocaleString('es-CO')}
-                    ${order.status_payment ? `<br><span class="payment-status-badge p-status-${order.status_payment}">${translateStatus(order.status_payment)}</span>` : ''}
+                    ${order.status_payment ? `<br><span class="payment-status-badge p-status-${order.status_payment.toLowerCase()}">${translateStatus(order.status_payment)}</span>` : ''}
                     ${order.paid_at ? `<br><small style="color: #666; font-size: 10px;">Pagado: ${new Date(order.paid_at).toLocaleDateString()}</small>` : ''}
                 </td>
                 <td><span class="method-badge ${methodClass}">${translateMethod(order.payment_method)}</span></td>
                 <td>
                     <select class="status-select ${statusClass}" onchange="updateOrderStatus('${order.id}', this.value)">
-                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                        <option value="pending" ${isPending ? 'selected' : ''}>Pendiente</option>
                         <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Despachado</option>
                         <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Entregado</option>
                     </select>

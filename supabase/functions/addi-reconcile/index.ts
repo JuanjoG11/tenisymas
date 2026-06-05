@@ -63,9 +63,9 @@ serve(async (req) => {
         const appJson = await appRes.json().catch(() => ({}))
         const remoteStatus = (appJson.status || '').toString().toUpperCase()
 
-        let mapped = { status: 'pending', status_payment: remoteStatus }
-        if (remoteStatus === 'APPROVED') mapped = { status: 'paid', status_payment: 'APPROVED', paid_at: new Date().toISOString() }
-        else if (['REJECTED', 'DECLINED', 'ABANDONED'].includes(remoteStatus)) mapped = { status: 'cancelled', status_payment: remoteStatus }
+        let mapped = { status: 'pending', status_payment: remoteStatus.toLowerCase() }
+        if (remoteStatus === 'APPROVED') mapped = { status: 'paid', status_payment: 'approved', paid_at: new Date().toISOString() }
+        else if (['REJECTED', 'DECLINED', 'ABANDONED'].includes(remoteStatus)) mapped = { status: 'cancelled', status_payment: remoteStatus.toLowerCase() }
 
         results.push({ external_reference: o.external_reference, remoteStatus, mapped })
 
