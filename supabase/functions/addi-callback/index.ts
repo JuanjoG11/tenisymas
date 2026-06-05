@@ -80,6 +80,7 @@ serve(async (req) => {
             // Si ya tiene el estado solicitado, evitar procesar y notificar por duplicado
             if (orderExists && currentStatusPayment.toUpperCase() === incomingStatus) {
                 console.log(`⚠️ Addi Callback: La orden ${orderId} ya tiene el estado ${incomingStatus}. Omitiendo.`);
+                await sendTelegram(`ℹ️ *ACTUALIZACIÓN ADDI*\n\n📦 Orden ${orderId} ya está en estado ${incomingStatus}`);
                 return new Response(JSON.stringify({ ok: true, duplicate: true }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" },
                     status: 200,
