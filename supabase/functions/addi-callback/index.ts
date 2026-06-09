@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+// In-memory cache to avoid processing duplicate notifications within a short window
+const processedNotifications = new Set<string>();
+const CLEANUP_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -30,22 +34,35 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
-        const body = await req.json()
+        const body = await req.json();
+        const orderId = body.orderId || body.order_id || body.externalReference || body.external_reference || body.orderReference || body.order_reference;
+        const incomingStatus = (body.status || '').toString().toUpperCase();
+        if (!orderId) {
+            console.warn('⚠️ Addi callback missing order id');
+            return new Response(JSON.stringify({ error: 'missing order id' }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const duplicateKey = `${orderId}:${incomingStatus}`;
+        if (processedNotifications.has(duplicateKey)) {
+            console.log(`⚠️ Duplicate notification ignored for ${duplicateKey}`);
+            await sendTelegram(`ℹ️ *ACTUALIZACIÓN DUPLICADA*\n\n📦 Orden ${orderId} ya recibió el estado ${incomingStatus}`);
+            return new Response(JSON.stringify({ ok: true, duplicate: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+        }
+        processedNotifications.add(duplicateKey);
+        // Schedule removal after timeout to prevent memory leak
+        setTimeout(() => processedNotifications.delete(duplicateKey), CLEANUP_TIMEOUT_MS);
+
+        // Continue with existing logic (original body parsing moved below)
+
+        // body already parsed above
         const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
         const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
         console.log('📥 Addi callback received:', JSON.stringify(body))
 
-        // Normalize possible order id fields
-        const orderId = body.orderId || body.order_id || body.externalReference || body.external_reference || body.orderReference || body.order_reference
-
-        if (!orderId) {
-            console.warn('⚠️ Addi callback missing order id')
-            return new Response(JSON.stringify({ error: 'missing order id' }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } })
-        }
+        // orderId and incomingStatus already extracted above
 
         if (SUPABASE_URL && SERVICE_ROLE) {
-            const incomingStatus = (body.status || '').toString().toUpperCase()
+            // incomingStatus already extracted earlier
 
             // 1. Verificar si la orden ya existe (por referencia exacta o fallback) y su status_payment
             let orderExists = false;
