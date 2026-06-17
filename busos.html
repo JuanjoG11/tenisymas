@@ -174,11 +174,31 @@
         .next-btn { right: 20px; }
 
         @media (max-width: 768px) {
-            .buy-panel { padding: 12px 16px; gap: 10px; }
-            .buy-panel .price-tag { font-size: 1.2rem; }
-            .buy-panel select { font-size: 0.85rem; padding: 9px 10px; padding-right: 28px; }
-            .buy-panel .btn-buy { padding: 11px 20px; font-size: 0.9rem; }
-            .gallery-dots { bottom: 110px; }
+            .buy-panel {
+                padding: 14px 20px;
+                gap: 16px;
+                justify-content: center;
+                flex-wrap: nowrap;
+            }
+            .buy-panel .price-tag {
+                font-size: 1.3rem;
+                font-weight: 900;
+            }
+            .buy-panel select {
+                font-size: 0.85rem;
+                padding: 9px 10px;
+                padding-right: 28px;
+            }
+            .buy-panel .btn-buy {
+                padding: 12px 24px;
+                font-size: 0.95rem;
+                flex: 1;
+                max-width: 240px;
+                justify-content: center;
+            }
+            .gallery-dots {
+                bottom: 110px;
+            }
         }
 
         /* Override buritica-style: fix slides showing correctly */
@@ -562,10 +582,64 @@
             
             .modal-gallery {
                 border-right: none;
+                height: 45vh; /* Prevents gallery from pushing modal info off screen */
             }
 
             .modal-title {
                 font-size: 1.6rem;
+            }
+        }
+
+        /* Mobile / iPhone fixes for image visibility and buy panel */
+        @media (max-width: 768px) {
+            /* Show full product image without cropping on mobile */
+            .gallery-slide {
+                background-size: contain !important;
+                background-repeat: no-repeat !important;
+                background-position: center center !important;
+                background-color: #111 !important;
+            }
+
+            /* Ensure buy panel is always visible and centered */
+            .buy-panel {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 9999 !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 14px !important;
+                padding: 16px 20px !important;
+                flex-wrap: nowrap !important;
+                background: rgba(10, 10, 10, 0.97) !important;
+                backdrop-filter: blur(15px) !important;
+                -webkit-backdrop-filter: blur(15px) !important;
+                border-top: 1px solid rgba(255,255,255,0.08) !important;
+            }
+
+            .buy-panel .price-tag {
+                font-size: 1.25rem !important;
+                font-weight: 900 !important;
+                white-space: nowrap;
+                color: #fff !important;
+            }
+
+            .buy-panel .btn-buy {
+                padding: 13px 22px !important;
+                font-size: 0.9rem !important;
+                white-space: nowrap;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                border-radius: 50px !important;
+                background: #ff3333 !important;
+                color: #fff !important;
+                font-weight: 800 !important;
+                text-decoration: none !important;
+                letter-spacing: 0.5px !important;
             }
         }
     </style>
