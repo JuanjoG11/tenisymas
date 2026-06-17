@@ -44,6 +44,26 @@ window.getImagesFromFolder = getImagesFromFolder;
 
 // Initial Load
 document.addEventListener('DOMContentLoaded', () => {
+    // Auto-fix: limpia caché si tiene URLs con extensión doble (.jpg.jpeg)
+    try {
+        const cached = localStorage.getItem('productsCache_v10');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            const data = parsed.data || parsed;
+            if (Array.isArray(data)) {
+                const hasBadUrls = data.some(p => 
+                    (p.image && p.image.includes('.jpg.jpeg')) ||
+                    (Array.isArray(p.images) && p.images.some(img => img && img.includes('.jpg.jpeg')))
+                );
+                if (hasBadUrls) {
+                    console.log('⚠️ Cache con URLs corruptas detectado, limpiando...');
+                    localStorage.removeItem('productsCache_v10');
+                    localStorage.removeItem('productsCache_Time');
+                }
+            }
+        }
+    } catch(e) { /* ignore */ }
+
     // 1. Initialize State
     loadCart();
 

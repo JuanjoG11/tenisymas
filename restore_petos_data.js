@@ -17,14 +17,14 @@ const PETOS_DATA = [
     {
         name: 'Colección La Pesada',
         price: '$65.000',
-        image: 'images/petos2_portada.jpg.jpeg',
+        image: 'images/petos2_portada.jpg',
         category: 'Petos y Camisetas',
-        images: ['images/petos2_portada.jpg.jpeg', 'images/petos2_blanco_azul_frente.jpg.jpeg', 'images/petos2_blanco_azul_atras.jpg.jpeg', 'images/petos2_negro_verde.jpg.jpeg', 'images/petos2_comparacion.jpg.jpeg']
+        images: ['images/petos2_portada.jpg', 'images/petos2_blanco_azul_frente.jpg', 'images/petos2_blanco_azul_atras.jpg', 'images/petos2_negro_verde.jpg', 'images/petos2_comparacion.jpg']
     },
     {
         name: 'Colección La Grasa',
         price: '$65.000',
-        image: 'images/petos3_grasa_portada.jpg.jpeg',
+        image: 'images/petos3_grasa_portada.jpg',
         category: 'Petos y Camisetas'
     }
 ];

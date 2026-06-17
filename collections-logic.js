@@ -1624,6 +1624,35 @@ function ensureEssentialCollections() {
         }
     }
 
+    // Inject Busos Marca Propia
+    const busosExist = allProducts.filter(p => p && normalize(p.category || p.categoria).includes('busos'));
+    if (busosExist.length < 1 && !allProducts.some(p => p.id === 'v-busos-1')) {
+        console.log('[DEBUG] Injecting virtual Busos Marca Propia...');
+        allProducts.push({
+            id: 'v-busos-1',
+            name: '🫠 Buso Marca Propia TENNISYMAS',
+            category: 'busos',
+            price: '$120.000',
+            badge: '⚡ NUEVO',
+            image: 'images/buso1.jpeg',
+            sizes: ['S', 'M', 'L', 'XL', '2XL'],
+            colors: ['BLANCO', 'NEGRO'],
+            images: [
+                'images/buso1.jpeg',
+                'images/buso2.jpeg',
+                'images/buso3.jpeg',
+                'images/buso4.jpeg',
+                'images/buso5.jpeg',
+                'images/buso6.jpeg',
+                'images/buso7.jpeg',
+                'images/buso8.jpeg',
+                'images/buso9.jpeg',
+                'images/buso10.jpeg',
+                'images/buso11.jpeg'
+            ]
+        });
+    }
+
     // Inject missing Camisetas (Expected: 1 collection at $75.000)
     if (camisetasExist.length < 1) {
         const hasGrasa = camisetasExist.some(p => p.name.includes('Grasa'));

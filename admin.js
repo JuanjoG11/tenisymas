@@ -1039,12 +1039,12 @@ function resetForm() {
 window.addSizeRow = (size = '', stock = 0, color = '') => {
     const container = document.getElementById('sizeManagerContainer');
     const category = document.getElementById('category').value;
-    const isUniform = category === 'petos,camisetas';
+    const showColor = category === 'petos,camisetas' || category === 'busos';
     
     const row = document.createElement('div');
     row.className = 'size-row';
     row.innerHTML = `
-        <input type="text" class="color-input" placeholder="Color" value="${color}" style="flex: 1.5; display: ${isUniform ? 'block' : 'none'};">
+        <input type="text" class="color-input" placeholder="Color" value="${color}" style="flex: 1.5; display: ${showColor ? 'block' : 'none'};">
         <input type="text" class="size-input" placeholder="Talla" value="${size}" style="flex: 1;">
         <input type="number" class="stock-input" placeholder="Cant" value="${stock}" min="0" style="flex: 0.8;">
         <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">
@@ -1059,9 +1059,9 @@ window.addSizeRow = (size = '', stock = 0, color = '') => {
 
 // Update existing rows when category changes
 document.getElementById('category').addEventListener('change', (e) => {
-    const isUniform = e.target.value === 'petos,camisetas';
+    const showColor = e.target.value === 'petos,camisetas' || e.target.value === 'busos';
     document.querySelectorAll('.color-input').forEach(input => {
-        input.style.display = isUniform ? 'block' : 'none';
+        input.style.display = showColor ? 'block' : 'none';
     });
 });
 

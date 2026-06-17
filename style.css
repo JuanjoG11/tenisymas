@@ -2643,6 +2643,97 @@ body {
     .collage-img { height: 250px; }
 }
 
+/* ==================== MUNDIAL BANNER MODAL ==================== */
+.mundial-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.mundial-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mundial-modal-container {
+    position: relative;
+    max-width: 800px; /* Wider for horizontal layout */
+    width: 92%;
+    background: #0a0a0a;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.25); /* Subtle gold glow */
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    overflow: visible; /* Allows the close button to float outside */
+    transform: scale(0.8);
+    transition: transform var(--transition-normal);
+}
+
+.mundial-modal-overlay.active .mundial-modal-container {
+    transform: scale(1);
+}
+
+.mundial-modal-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    background: var(--color-red);
+    border: 2px solid var(--color-white);
+    color: var(--color-white);
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10100;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: all var(--transition-fast);
+    padding: 0;
+    line-height: 1;
+    font-weight: bold;
+}
+
+.mundial-modal-close:hover {
+    background: var(--color-white);
+    color: var(--color-red);
+    transform: rotate(90deg) scale(1.1);
+}
+
+.mundial-modal-img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: var(--radius-lg);
+}
+
+/* Adjust close button on mobile to stay within screen boundaries */
+@media (max-width: 550px) {
+    .mundial-modal-close {
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1.5px solid rgba(255, 255, 255, 0.6);
+        font-size: 18px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
 
 
 
