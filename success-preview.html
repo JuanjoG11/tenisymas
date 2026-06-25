@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Pedido Confirmado! - TENNISYMAS.COM</title>
-    <link rel="shortcut icon" href="images/favicon.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <title>PREVIEW - Pedido Confirmado</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,6 +16,17 @@
             min-height: 100vh;
         }
 
+        /* PREVIEW BANNER */
+        .preview-bar {
+            background: linear-gradient(90deg, #ff6b00, #ff3333);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
         .success-header {
             padding: 20px 0;
             border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -26,9 +34,15 @@
             text-align: center;
         }
 
-        .success-header img {
+        .logo-placeholder {
             height: 45px;
-            filter: drop-shadow(0 0 10px rgba(255,51,51,0.3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ff3333;
         }
 
         .success-wrapper {
@@ -37,7 +51,6 @@
             padding: 40px 20px 80px;
         }
 
-        /* Checkmark animado */
         .success-icon {
             width: 80px;
             height: 80px;
@@ -47,7 +60,7 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 24px;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             box-shadow: 0 0 40px rgba(46, 204, 113, 0.35);
         }
 
@@ -95,7 +108,6 @@
             letter-spacing: 1px;
         }
 
-        /* Card de confirmación */
         .confirm-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.07);
@@ -113,7 +125,6 @@
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
-        /* Items del pedido */
         .order-item {
             display: flex;
             align-items: center;
@@ -136,7 +147,7 @@
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
-            background: #1a1a1a;
+            background: #222;
         }
 
         .order-item-qty {
@@ -174,7 +185,6 @@
             white-space: nowrap;
         }
 
-        /* Totales */
         .totals-row {
             display: flex;
             justify-content: space-between;
@@ -198,7 +208,6 @@
             font-size: 1.2rem;
         }
 
-        /* Info del cliente */
         .info-row {
             display: flex;
             gap: 10px;
@@ -219,7 +228,6 @@
 
         .info-value { color: #e0e0e0; }
 
-        /* Botones */
         .btn-success {
             display: block;
             width: 100%;
@@ -249,7 +257,6 @@
             color: #ccc;
         }
 
-        /* Banner de envío */
         .shipping-banner {
             background: linear-gradient(135deg, rgba(46,204,113,0.1), rgba(22,163,74,0.08));
             border: 1px solid rgba(46,204,113,0.25);
@@ -276,30 +283,29 @@
 
         .shipping-banner strong { color: #2ecc71; }
 
-        /* Estado vacío / error */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-
-        .empty-state a {
-            color: #ff3333;
-            text-decoration: none;
+        /* Imagen placeholder de producto */
+        .img-placeholder {
+            width: 58px;
+            height: 58px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
         }
     </style>
 </head>
 <body>
 
+    <div class="preview-bar">⚠️ ESTO ES UN PREVIEW — Así se ve success.html con datos reales del cliente</div>
+
     <header class="success-header">
-        <a href="index.html">
-            <img src="images/logo-tm.png" alt="Tennis y Mas">
-        </a>
+        <div class="logo-placeholder">TENNISYMAS.CO</div>
     </header>
 
     <main class="success-wrapper">
 
-        <!-- Ícono animado -->
         <div class="success-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -308,9 +314,8 @@
 
         <h1 class="success-title">¡Pedido Confirmado!</h1>
         <p class="success-subtitle">Gracias por tu compra. Estamos preparando tu pedido.</p>
-        <p class="order-id-badge"><span id="orderIdDisplay">—</span></p>
+        <p class="order-id-badge"><span>TM-1750870412938</span></p>
 
-        <!-- Banner de tiempo de envío -->
         <div class="shipping-banner">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="3" width="15" height="13"></rect>
@@ -322,161 +327,82 @@
         </div>
 
         <!-- Resumen del pedido -->
-        <div class="confirm-card" id="itemsCard">
+        <div class="confirm-card">
             <h3>Resumen del pedido</h3>
-            <div id="orderItemsList">
-                <!-- Renderizado por JS -->
+
+            <div class="order-item">
+                <div class="order-item-img">
+                    <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1782180079325_IMG_2735.jpeg" alt="JOMA DRIBLING">
+                    <span class="order-item-qty">1</span>
+                </div>
+                <div class="order-item-info">
+                    <h4>JOMA DRIBLING NEGRO AMARILLO ORIGINAL</h4>
+                    <small>Talla: 41</small>
+                </div>
+                <div class="order-item-price">$250.000</div>
             </div>
+
+            <div class="order-item">
+                <div class="order-item-img">
+                    <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1781826360890_IMG_2445.jpeg" alt="FUTSAL GATO">
+                    <span class="order-item-qty">2</span>
+                </div>
+                <div class="order-item-info">
+                    <h4>FUTSAL GATO SUPREME NEGRO CHULO VERDE NARANJA</h4>
+                    <small>Talla: 40</small>
+                </div>
+                <div class="order-item-price">$380.000</div>
+            </div>
+
             <div style="margin-top: 16px;">
                 <div class="totals-row">
                     <span>Subtotal</span>
-                    <span id="displaySubtotal">—</span>
-                </div>
-                <div class="totals-row" id="discountRowWrapper" style="display:none;">
-                    <span id="discountLabel">Descuento</span>
-                    <span id="displayDiscount" style="color: #2ecc71;">—</span>
+                    <span>$630.000</span>
                 </div>
                 <div class="totals-row">
                     <span>Envío</span>
-                    <span id="displayShipping">—</span>
+                    <span style="color:#2ecc71;font-weight:700;">GRATIS</span>
                 </div>
                 <div class="totals-row total-final">
                     <span>Total</span>
-                    <span class="total-amount" id="displayTotal">—</span>
+                    <span class="total-amount">$630.000</span>
                 </div>
             </div>
         </div>
 
-        <!-- Datos de contacto / envío -->
-        <div class="confirm-card" id="customerCard" style="display:none;">
+        <!-- Info del cliente -->
+        <div class="confirm-card">
             <h3>Información de envío</h3>
-            <div id="customerInfo"><!-- Renderizado por JS --></div>
+            <div class="info-row">
+                <span class="info-label">Nombre</span>
+                <span class="info-value">Juan José Colorado Gutiérrez</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cédula</span>
+                <span class="info-value">1089380738</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Dirección</span>
+                <span class="info-value">Carrera 37b #28-87 palmar de villa verde</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Ciudad</span>
+                <span class="info-value">Pereira, Risaralda</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Teléfono</span>
+                <span class="info-value">3117100880</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Correo</span>
+                <span class="info-value">juanjosecolorado266@gmail.com</span>
+            </div>
         </div>
 
-        <!-- Botones de acción -->
-        <a href="collections.html" class="btn-success btn-primary-success">Seguir comprando</a>
-        <a href="https://wa.me/573204961453" target="_blank" rel="noopener" class="btn-success btn-secondary-success">
-            Contactar por WhatsApp
-        </a>
+        <a href="#" class="btn-success btn-primary-success">Seguir comprando</a>
+        <a href="#" class="btn-success btn-secondary-success">Contactar por WhatsApp</a>
 
     </main>
 
-    <script>
-        const SHIPPING_COST = 16500;
-        const FREE_SHIPPING_THRESHOLD = 300000;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Leer orderId de la URL
-            const params = new URLSearchParams(window.location.search);
-            const orderId = params.get('orderId') || params.get('order_id') || params.get('preference_id') || null;
-
-            if (orderId) {
-                document.getElementById('orderIdDisplay').textContent = orderId;
-            } else {
-                document.getElementById('orderIdDisplay').textContent = 'Pedido registrado';
-            }
-
-            // Cargar datos del carrito guardados en localStorage
-            const savedCart = localStorage.getItem('tm_cart');
-            const savedCustomer = localStorage.getItem('tm_last_customer');
-            const savedDiscount = sessionStorage.getItem('tm_discount');
-
-            if (savedCart) {
-                try {
-                    const cart = JSON.parse(savedCart);
-                    renderItems(cart, savedDiscount ? JSON.parse(savedDiscount) : null);
-                } catch (e) {
-                    console.warn('No se pudo parsear el carrito:', e);
-                }
-            }
-
-            if (savedCustomer) {
-                try {
-                    const customer = JSON.parse(savedCustomer);
-                    renderCustomer(customer);
-                } catch (e) {
-                    console.warn('No se pudo parsear el cliente:', e);
-                }
-            }
-
-            // Limpiar carrito después de mostrar la confirmación
-            localStorage.removeItem('tm_cart');
-            sessionStorage.removeItem('tm_discount');
-        });
-
-        function renderItems(cart, discount) {
-            const listEl = document.getElementById('orderItemsList');
-            if (!cart || cart.length === 0) return;
-
-            let subtotal = 0;
-
-            listEl.innerHTML = cart.map(item => {
-                let priceValue = typeof item.price === 'number'
-                    ? item.price
-                    : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
-
-                const itemTotal = priceValue * item.quantity;
-                subtotal += itemTotal;
-
-                return `
-                    <div class="order-item">
-                        <div class="order-item-img">
-                            <img src="${item.image || 'images/placeholder.png'}" alt="${item.name}" onerror="this.src='images/logo-tm.png'">
-                            <span class="order-item-qty">${item.quantity}</span>
-                        </div>
-                        <div class="order-item-info">
-                            <h4>${item.name}</h4>
-                            <small>${item.size ? 'Talla: ' + item.size : ''}${item.size && item.color ? ' · ' : ''}${item.color ? 'Color: ' + item.color : ''}</small>
-                        </div>
-                        <div class="order-item-price">$${itemTotal.toLocaleString('es-CO')}</div>
-                    </div>
-                `;
-            }).join('');
-
-            const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-            const discountPercent = (discount && discount.percent) ? discount.percent : 0;
-            const discountAmount = Math.round(subtotal * (discountPercent / 100));
-            const total = subtotal - discountAmount + shipping;
-
-            document.getElementById('displaySubtotal').textContent = `$${subtotal.toLocaleString('es-CO')}`;
-
-            if (discountAmount > 0) {
-                const drw = document.getElementById('discountRowWrapper');
-                drw.style.display = 'flex';
-                document.getElementById('discountLabel').textContent = `Descuento (${discount.code})`;
-                document.getElementById('displayDiscount').textContent = `-$${discountAmount.toLocaleString('es-CO')}`;
-            }
-
-            document.getElementById('displayShipping').innerHTML = shipping === 0
-                ? '<span style="color:#2ecc71;font-weight:700;">GRATIS</span>'
-                : `$${shipping.toLocaleString('es-CO')}`;
-
-            document.getElementById('displayTotal').textContent = `$${total.toLocaleString('es-CO')}`;
-            document.getElementById('itemsCard').style.display = 'block';
-        }
-
-        function renderCustomer(c) {
-            const el = document.getElementById('customerInfo');
-            const rows = [
-                { label: 'Nombre', value: `${c.firstName || ''} ${c.lastName || ''}`.trim() },
-                { label: 'Cédula', value: c.dni || '—' },
-                { label: 'Dirección', value: c.address || '—' },
-                { label: 'Ciudad', value: c.city && c.department ? `${c.city}, ${c.department}` : (c.city || c.department || '—') },
-                { label: 'Teléfono', value: c.phone || '—' },
-                { label: 'Correo', value: c.email || '—' },
-            ];
-
-            el.innerHTML = rows
-                .filter(r => r.value && r.value !== '—' && r.value.trim() !== '')
-                .map(r => `
-                    <div class="info-row">
-                        <span class="info-label">${r.label}</span>
-                        <span class="info-value">${r.value}</span>
-                    </div>
-                `).join('');
-
-            document.getElementById('customerCard').style.display = 'block';
-        }
-    </script>
 </body>
 </html>

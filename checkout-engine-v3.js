@@ -476,6 +476,8 @@ async function handleAddiCheckout(customer) {
 
         if (redirectUrl) {
             console.log('✅ Redirigiendo a Addi:', redirectUrl);
+            // Guardar datos del cliente para mostrarlos en la página de confirmación
+            localStorage.setItem('tm_last_customer', JSON.stringify(customer));
             window.location.href = redirectUrl;
         } else {
             console.error('❌ [V3] Error Crítico de Addi:', result);
@@ -574,6 +576,8 @@ async function handleMercadoPagoCheckout(customer) {
 
         if (result.init_point) {
             console.log('✅ Redirigiendo a Mercado Pago...');
+            // Guardar datos del cliente para mostrarlos en la página de confirmación
+            localStorage.setItem('tm_last_customer', JSON.stringify(customer));
             // Redirección directa — permite pago como invitado sin necesidad de login
             window.location.href = result.init_point;
         } else {

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { sendOrderConfirmationEmail } from "../_shared/send-email.ts"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -115,6 +116,36 @@ serve(async (req) => {
 
                     if (dbRes.ok) {
                         console.log("✅ ORDEN CREADA TRAS PAGO EXITOSO");
+
+                        // Enviar email de confirmación al cliente
+                        try {
+                            const emailItems = (metadata.items || []).map((i: any) => ({
+                                name: i.name || i.title || "Producto",
+                                quantity: Number(i.quantity || 1),
+                                price: Number(i.price || i.unit_price || 0),
+                                size: i.size || null,
+                                color: i.color || null,
+                                image: i.image || i.picture_url || null,
+                            }));
+                            await sendOrderConfirmationEmail({
+                                orderId: externalRef || "TM-MP",
+                                customer: {
+                                    firstName: customerInfo.firstName,
+                                    lastName: customerInfo.lastName,
+                                    email: customerInfo.email,
+                                    phone: customerInfo.phone || "",
+                                    address: customerInfo.address || "",
+                                    city: customerInfo.city || "",
+                                    department: customerInfo.department || "",
+                                },
+                                items: emailItems,
+                                total: paymentData.transaction_amount,
+                                paymentMethod: "mercadopago",
+                            });
+                        } catch (emailErr: any) {
+                            console.error("❌ Error enviando email confirmación MP:", emailErr.message);
+                        }
+
                         try {
                             const msg = `✅ *PAGO APROBADO - ORDEN CREADA*\n\n📦 *Ref:* ${externalRef}\n👤 *Cliente:* ${customer.firstName || customer.first_name || ''} ${customer.lastName || customer.last_name || ''}\n💰 *Monto:* $${paymentData.transaction_amount?.toLocaleString ? paymentData.transaction_amount.toLocaleString('es-CO') : paymentData.transaction_amount}\n\nRevisa el panel administrativo para más detalles.`;
                             await sendTelegram(msg);

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { sendOrderConfirmationEmail } from "../_shared/send-email.ts"
 
 // In-memory cache to avoid processing duplicate notifications within a short window
 const processedNotifications = new Set<string>();
@@ -183,6 +184,50 @@ serve(async (req) => {
             const icon = incomingStatus === 'APPROVED' ? '✅' : 'ℹ️';
             const msg = `${icon} *ACTUALIZACIÓN ADDI*\n\n📦 *Orden:* ${orderId}\n📈 *Nuevo Estado:* ${incomingStatus}\n\nRevisa el panel administrativo para más detalles.`;
             await sendTelegram(msg);
+
+            // EMAIL DE CONFIRMACIÓN — solo cuando Addi aprueba
+            if (incomingStatus === 'APPROVED' && SUPABASE_URL && SERVICE_ROLE) {
+                try {
+                    const orderRes = await fetch(
+                        `${SUPABASE_URL}/rest/v1/orders?external_reference=eq.${orderId}&select=customer_info,items,total,payment_method`,
+                        { headers: { "Authorization": `Bearer ${SERVICE_ROLE}`, "apikey": SERVICE_ROLE } }
+                    );
+                    if (orderRes.ok) {
+                        const orders = await orderRes.json();
+                        if (orders && orders.length > 0) {
+                            const o = orders[0];
+                            const c = o.customer_info || {};
+                            const emailItems = (o.items || []).map((i: any) => ({
+                                name: i.name || "Producto",
+                                quantity: Number(i.quantity || 1),
+                                price: Number(i.price || i.unitPrice || 0),
+                                size: i.size || null,
+                                color: i.color || null,
+                                image: i.image || null,
+                            }));
+                            if (c.email) {
+                                await sendOrderConfirmationEmail({
+                                    orderId,
+                                    customer: {
+                                        firstName: c.firstName || c.first_name || "",
+                                        lastName: c.lastName || c.last_name || "",
+                                        email: c.email,
+                                        phone: c.phone || c.cellphone || "",
+                                        address: c.address || "",
+                                        city: c.city || "",
+                                        department: c.department || "",
+                                    },
+                                    items: emailItems,
+                                    total: Number(o.total || 0),
+                                    paymentMethod: o.payment_method || "addi",
+                                });
+                            }
+                        }
+                    }
+                } catch (emailErr: any) {
+                    console.error("❌ Error enviando email confirmación Addi:", emailErr.message);
+                }
+            }
         }
 
         return new Response(JSON.stringify({ ok: true }), {
