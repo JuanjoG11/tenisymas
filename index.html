@@ -556,11 +556,11 @@
                     </div>
                 </div>
                 <!-- Mobile Single Image -->
-                <div class="banner-slide" style="background-image: url('images/buso1.jpeg')"></div>
+                <div class="banner-slide" style="background-image: url('images/buso1.jpeg'); position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center top;"></div>
             </div>
-            <div class="banner-overlay" style="background: linear-gradient(to right, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.3) 100%);"></div>
+            <div class="banner-overlay"></div>
             <div class="banner-content">
-                <span class="banner-badge" style="background: #fff; color: #000; font-weight: 900; letter-spacing: 2px;">⚡ NUEVO LANZAMIENTO</span>
+                <span class="banner-badge">⚡ NUEVO LANZAMIENTO</span>
                 <h2 class="banner-title">BUSOS<br>MARCA PROPIA</h2>
                 <p class="banner-text">Primera colección de la mejor marca del Eje <span class="highlight">desde $120.000</span></p>
                 <div class="banner-cta">VER COLECCIÓN</div>
@@ -951,6 +951,84 @@
     <script src="script.js?v=15.0"></script>
     <!-- Addi Widget Script (Standard Loader) -->
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
-</body>
+
+    <!-- Botón flotante: Tenis para salir -->
+    <a href="https://catalogo-tenis.tennisymas.com/" target="_blank" rel="noopener" id="floatTenisBtn"
+        aria-label="Ver tenis para salir">
+        <span class="float-icon">
+            <svg width="26" height="26" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 42c0 0 6-2 10-2s8 3 14 3 10-2 14-2 10 2 10 2v4c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-4z" fill="#ff3333"/>
+                <path d="M4 42s2-10 6-14c3-3 7-4 11-4 3 0 5 1 7 3l4-4c2-2 5-3 8-2l8 3c2 .7 3 3 2 5l-2 5" fill="#1a1a1a" stroke="#ff3333" stroke-width="1.5"/>
+                <path d="M18 24l4 8M26 21l3 9" stroke="#ff3333" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </span>
+        <span class="float-text">¿Tenis para salir?<br><strong>Ver catálogo →</strong></span>
+    </a>
+
+    <style>
+        #floatTenisBtn {
+            position: fixed;
+            bottom: 28px;
+            left: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #1a1a1a, #111);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 12px 18px 12px 14px;
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            line-height: 1.35;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,51,51,0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            animation: floatPulse 3s ease-in-out infinite;
+            max-width: 210px;
+        }
+
+        #floatTenisBtn:hover {
+            transform: translateY(-3px) scale(1.03);
+            border-color: rgba(255, 51, 51, 0.5);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 51, 51, 0.15);
+            animation: none;
+        }
+
+        #floatTenisBtn .float-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        #floatTenisBtn .float-text {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        #floatTenisBtn .float-text strong {
+            color: #ff3333;
+            font-size: 13px;
+        }
+
+        @keyframes floatPulse {
+            0%, 100% { transform: translateY(0px); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,51,51,0.15); }
+            50% { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.55), 0 0 18px rgba(255,51,51,0.2); }
+        }
+
+        /* Móvil: más compacto */
+        @media (max-width: 480px) {
+            #floatTenisBtn {
+                bottom: 20px;
+                left: 14px;
+                padding: 10px 14px 10px 12px;
+            }
+            #floatTenisBtn .float-icon { font-size: 18px; }
+            #floatTenisBtn .float-text { font-size: 11px; }
+            #floatTenisBtn .float-text strong { font-size: 12px; }
+        }
+    </style>
 
 </html>
