@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function getDiscountPercentForCode(code) {
     if (!code) return 0;
     const clean = String(code).trim().toUpperCase();
-    if (clean === 'BURIGOL10') return 10;
+    if (clean === 'BURIGOL') return 10;
     return 0;
 }
 
