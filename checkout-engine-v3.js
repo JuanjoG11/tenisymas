@@ -2,7 +2,7 @@ console.log('%c🚀 ADDI CORE ENGINE V3.0 ACTIVATED', 'color: #00ff00; font-weig
 // ==================== CHECKOUT LOGIC FOR ADDI ====================
 
 let checkoutCart = [];
-const DEFAULT_SHIPPING_COST = 16500;
+const DEFAULT_SHIPPING_COST = 20000;
 const FREE_SHIPPING_THRESHOLD = 300000;
 // Discount state
 let appliedDiscount = {

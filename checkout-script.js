@@ -2,7 +2,7 @@ console.log('🚀 ADDICore Engine V2.0 ACTIVE');
 console.log('%c🚀 ADDICore Engine V2.0 ACTIVE (Build: 1771357651)', 'color: #0088ff; font-weight: bold; font-size: 14px;');
 // Checkout Logic
 let checkoutCart = [];
-const SHIPPING_COST = 16500;
+const SHIPPING_COST = 20000;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadCheckoutCart();
