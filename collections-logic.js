@@ -1166,6 +1166,8 @@ function renderModalThumbnails(images, productName) {
 
 function selectModalSize(size, element) {
     if (window.lastSizeClick && Date.now() - window.lastSizeClick < 100) return;
+    // Guard: do not allow selecting unavailable sizes
+    if (element.classList.contains('disabled') || element.classList.contains('out-of-stock')) return;
     window.lastSizeClick = Date.now();
 
     selectedModalSize = size;
@@ -1448,6 +1450,9 @@ function handleAddToCart(productId, requiresSize, requiresColor, btnElement) {
 
 // Global function (moved out of handleAddToCart)
 function selectSize(productId, size, element) {
+    // Guard: do not allow selecting unavailable sizes
+    if (element.classList.contains('disabled') || element.classList.contains('out-of-stock')) return;
+
     // 1. Update hidden input
     const productCard = element.closest('.product-card');
     if (!productCard) return;
