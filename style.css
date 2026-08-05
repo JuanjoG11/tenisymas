@@ -2637,11 +2637,35 @@ body {
     pointer-events: none;
 }
 
+/* ---- Panel derecho: fade entre logo y foto collab ---- */
+
 /* Marco del logo con efecto glitch */
 .ms-logo-frame {
     position: relative;
     width: 70%;
     max-width: 340px;
+}
+
+/* Las dos imágenes apiladas, se muestran de a una */
+.ms-img-fade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    object-fit: cover;
+}
+
+.ms-img-fade.active {
+    opacity: 1;
+    position: relative; /* la activa ocupa el espacio del frame */
+}
+
+/* La segunda (collab) usa cover para verse completa */
+.ms-img-fade:nth-child(2) {
+    object-fit: cover;
+    border-radius: 12px;
 }
 
 /* Borde rojo pulsante alrededor del logo */
@@ -2910,12 +2934,14 @@ body {
         top: 0;
         left: 0;
         width: 100%;
-        height: 50px;
+        height: 60px;
         background: linear-gradient(to bottom, #080808, transparent);
         z-index: 3;
     }
 
     .ms-logo-frame { width: 58%; }
+
+    .ms-floating-logo { width: clamp(120px, 48%, 200px); }
 
     .ms-vertical-tag { display: none; }
 

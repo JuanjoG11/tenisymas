@@ -494,7 +494,8 @@
 
             <div class="ms-right-panel">
                 <div class="ms-logo-frame">
-                    <img src="images/logo max.jpg" alt="Max Sport" class="ms-logo-img">
+                    <img src="images/logo max.jpg" alt="Max Sport" class="ms-logo-img ms-img-fade active">
+                    <img src="images/tymxmax.jpg"  alt="TennisYMas x Max Sport" class="ms-logo-img ms-img-fade">
                     <div class="ms-logo-glitch" aria-hidden="true">
                         <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-1">
                         <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-2">
@@ -536,6 +537,18 @@
                 document.getElementById('msModal').classList.remove('active');
                 document.body.style.overflow = '';
             }
+
+            // Fade entre logo y foto collab cada 3.5s
+            (function() {
+                var imgs = document.querySelectorAll('.ms-img-fade');
+                if (imgs.length < 2) return;
+                var current = 0;
+                setInterval(function() {
+                    imgs[current].classList.remove('active');
+                    current = (current + 1) % imgs.length;
+                    imgs[current].classList.add('active');
+                }, 3500);
+            })();
         </script>
 
         <!-- Joma Collage Section (Infinite Style) -->
