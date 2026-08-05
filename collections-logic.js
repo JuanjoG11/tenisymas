@@ -193,7 +193,8 @@ function updateCategoryTitle(category) {
         'guayos': { title: 'GUAYOS', subtitle: 'Domina el campo con el mejor calzado' },
         'futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' },
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
-        'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' }
+        'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' },
+        'max-sport': { title: 'MAX SPORT', subtitle: 'Distribuidores autorizados · Pereira' }
     };
 
     let info = titles[category];
@@ -230,7 +231,7 @@ async function loadProducts() {
 
         ensureEssentialCollections();
 
-        const cached = localStorage.getItem('productsCache_v10');
+        const cached = localStorage.getItem('productsCache_v11');
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -241,7 +242,7 @@ async function loadProducts() {
                 }
             } catch(e) {
                 console.warn('Cache parse failed, clearing:', e);
-                localStorage.removeItem('productsCache_v10');
+                localStorage.removeItem('productsCache_v11');
             }
         }
 
@@ -317,7 +318,7 @@ async function loadProducts() {
 
             // Refresh cache
             try {
-                localStorage.setItem('productsCache_v10', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_v11', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
             } catch(_) {}
         }
@@ -612,35 +613,42 @@ function executeApplyFilters(shouldScroll = false) {
         return true;
     });
 
-    // --- SORTING: Richer content first (More images > At least one image > Placeholders) ---
+    // --- SORTING: 1° Con stock (más reciente primero) → 2° Agotados (más reciente primero) ---
     filteredProducts.sort((a, b) => {
-        // Count real images for A
-        const aExtraCount = (Array.isArray(a.images) ? a.images.filter(img => img && !img.includes('logo-tm')).length : 0);
-        const aHasMain = (a.image && typeof a.image === 'string' && a.image.length > 20 && !a.image.includes('logo-tm')) ? 1 : 0;
-        const aTotalImages = Math.max(aHasMain, aExtraCount + (aHasMain ? 0 : 0)); 
-        // Actually simpler: just check total unique non-placeholder images
-        const aSet = new Set();
-        if (aHasMain) aSet.add(a.image);
-        if (Array.isArray(a.images)) a.images.forEach(img => { if(img && !img.includes('logo-tm')) aSet.add(img); });
-        const aCount = aSet.size;
+        // Misma lógica exacta que createProductCardHTML usa para el badge AGOTADO
+        const getOutOfStock = (p) => {
+            const inventory = p.inventory || [];
+            const totalStock = inventory.reduce((sum, inv) => sum + Number(inv.stock || 0), 0);
 
-        const bHasMain = (b.image && typeof b.image === 'string' && b.image.length > 20 && !b.image.includes('logo-tm')) ? 1 : 0;
-        const bSet = new Set();
-        if (bHasMain) bSet.add(b.image);
-        if (Array.isArray(b.images)) b.images.forEach(img => { if(img && !img.includes('logo-tm')) bSet.add(img); });
-        const bCount = bSet.size;
+            const rawSizes = p.sizes || p.tallas;
+            let hasSizes = false;
+            if (rawSizes) {
+                if (Array.isArray(rawSizes)) hasSizes = rawSizes.map(s => String(s).trim()).filter(Boolean).length > 0;
+                else if (typeof rawSizes === 'string') {
+                    try {
+                        const parsed = rawSizes.startsWith('[') ? JSON.parse(rawSizes) : rawSizes.split(',');
+                        hasSizes = parsed.map(s => String(s).trim()).filter(Boolean).length > 0;
+                    } catch(e) { hasSizes = rawSizes.trim().length > 0; }
+                }
+            }
 
-        // Tier 1: More than 1 photo
-        // Tier 2: 1 photo
-        // Tier 3: 0 photos
-        if (aCount !== bCount) {
-            // First, prioritize having ANY photo
-            if ((aCount > 0) !== (bCount > 0)) return bCount - aCount;
-            // Then prioritize MORE photos
-            return bCount - aCount;
-        }
-        
-        return 0; // Maintain database order
+            const isFootwear = ['guayos','tenis-guayos','futsal','tenis','running','tenis-running','ninos',
+                                 'tenis-futbol','fútbol-sala','fútbol sala','futbol sala']
+                                .includes((p.category || p.categoria || '').toLowerCase().trim());
+
+            return (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes);
+        };
+
+        const aOut = getOutOfStock(a) ? 1 : 0;
+        const bOut = getOutOfStock(b) ? 1 : 0;
+
+        // Primero disponibles, luego agotados
+        if (aOut !== bOut) return aOut - bOut;
+
+        // Dentro del mismo grupo: más reciente primero
+        const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bDate - aDate;
     });
 
     // 3. Populate Filters only on first substantial load to avoid wiping user selection during interaction?
