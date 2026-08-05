@@ -189,6 +189,9 @@
                     <span class="ticker-item">
                         💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
                     </span>
+                    <span class="ticker-item ticker-maxsport">
+                        🏅 ¡SOMOS DISTRIBUIDORES AUTORIZADOS DE MAX SPORT! — Calidad certificada directo al Eje Cafetero ⚽
+                    </span>
                     <!-- Duplicate for seamless loop -->
                     <span class="ticker-item">
                         ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
@@ -207,6 +210,9 @@
                     </span>
                     <span class="ticker-item">
                         💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
+                    </span>
+                    <span class="ticker-item ticker-maxsport">
+                        🏅 ¡SOMOS DISTRIBUIDORES AUTORIZADOS DE MAX SPORT! — Calidad certificada directo al Eje Cafetero ⚽
                     </span>
                 </div>
             </div>
@@ -462,6 +468,74 @@
                 <div class="decoration-pixels"></div>
             </div>
         </section>
+
+        <!-- MAX SPORT DROP SECTION -->
+        <section class="maxsport-drop-section" id="maxsportSection">
+            <!-- Fondo split: izquierda oscura / derecha imagen con blend -->
+            <div class="ms-left-panel">
+                <div class="ms-left-noise"></div>
+                <!-- Texto vertical izquierda -->
+                <span class="ms-vertical-tag">DISTRIBUIDORES AUTORIZADOS · PEREIRA ·</span>
+                <!-- Contenido principal -->
+                <div class="ms-left-content">
+                    <div class="ms-eyebrow">
+                        <span class="ms-dot-live"></span>
+                        NUEVO · 2026
+                    </div>
+                    <h2 class="ms-big-title">MAX<br><span class="ms-outline">SPORT</span></h2>
+                    <p class="ms-desc">Lo que tanto esperaban<br><strong>ya llegó.</strong> No se sorprendan.</p>
+                    <button class="ms-cta" onclick="openMaxSportModal()">
+                        VER COLECCIÓN
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ms-right-panel">
+                <div class="ms-logo-frame">
+                    <img src="images/logo max.jpg" alt="Max Sport" class="ms-logo-img">
+                    <div class="ms-logo-glitch" aria-hidden="true">
+                        <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-1">
+                        <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-2">
+                    </div>
+                </div>
+                <div class="ms-coming-tag">COMING SOON</div>
+            </div>
+        </section>
+
+        <!-- Modal Muy Pronto Max Sport -->
+        <div class="ms-modal-overlay" id="msModal" onclick="closeMaxSportModal()">
+            <div class="ms-modal" onclick="event.stopPropagation()">
+                <button class="ms-modal-close" onclick="closeMaxSportModal()">✕</button>
+                <div class="ms-modal-inner">
+                    <p class="ms-modal-eyebrow">TENNISYMAS × MAX SPORT</p>
+                    <div class="ms-modal-logo">
+                        <img src="images/logo max.jpg" alt="Max Sport">
+                    </div>
+                    <div class="ms-coming-wrap">
+                        <span class="ms-coming-bar"></span>
+                        <span class="ms-coming-label">COMING SOON</span>
+                        <span class="ms-coming-bar"></span>
+                    </div>
+                    <h2 class="ms-coming-title">MUY<br><em>PRONTO.</em></h2>
+                    <p class="ms-modal-text">La colección está en camino.<br>Prepárate, va a ser distinto.</p>
+                    <a href="https://wa.me/573204961453?text=Quiero%20saber%20m%C3%A1s%20de%20Max%20Sport%20en%20TennisYMas" target="_blank" class="ms-modal-notify">
+                        🔔 &nbsp;Avisame cuando llegue
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openMaxSportModal() {
+                document.getElementById('msModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeMaxSportModal() {
+                document.getElementById('msModal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        </script>
 
         <!-- Joma Collage Section (Infinite Style) -->
         <section class="joma-collage-section" onclick="window.location.href='collections.html?brand=Joma'">
@@ -971,5 +1045,242 @@
             #floatTenisBtn .float-text strong { font-size: 12px; }
         }
     </style>
+
+    <!-- ===== MODAL BIENVENIDA MAX SPORT ===== -->
+    <div class="ms-welcome-overlay" id="msWelcomeModal">
+        <div class="ms-welcome-modal">
+            <!-- Línea roja top -->
+            <div class="ms-welcome-redline"></div>
+
+            <button class="ms-welcome-close" onclick="closeWelcomeModal()" aria-label="Cerrar">✕</button>
+
+            <div class="ms-welcome-inner">
+                <p class="ms-welcome-eyebrow">
+                    <span class="ms-dot-live" style="width:8px;height:8px;"></span>
+                    TENNISYMAS · PEREIRA
+                </p>
+
+                <img src="images/logo max.jpg" alt="Max Sport" class="ms-welcome-logo">
+
+                <h2 class="ms-welcome-title">YA<br><span class="ms-welcome-outline">LLEGÓ.</span></h2>
+
+                <p class="ms-welcome-text">
+                    Somos distribuidores autorizados de <strong>Max Sport</strong> en el Eje Cafetero.<br>
+                    La colección viene en camino. No te la pierdas.
+                </p>
+
+                <div class="ms-welcome-actions">
+                    <button class="ms-welcome-cta" onclick="closeWelcomeModal(); document.getElementById('maxsportSection').scrollIntoView({behavior:'smooth'})">
+                        VER SECCIÓN
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                    <button class="ms-welcome-skip" onclick="closeWelcomeModal()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ---- WELCOME MODAL MAX SPORT ---- */
+        .ms-welcome-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .ms-welcome-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .ms-welcome-modal {
+            position: relative;
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 420px;
+            overflow: hidden;
+            transform: scale(0.85) translateY(30px);
+            transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,51,51,0.15);
+        }
+
+        .ms-welcome-overlay.show .ms-welcome-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Barra roja superior */
+        .ms-welcome-redline {
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #ff3333, #ff6666, #ff3333);
+            background-size: 200% 100%;
+            animation: redlineSlide 2s linear infinite;
+        }
+
+        @keyframes redlineSlide {
+            0%   { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .ms-welcome-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.06);
+            border: none;
+            color: rgba(255,255,255,0.4);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            z-index: 2;
+        }
+
+        .ms-welcome-close:hover { background: rgba(255,51,51,0.2); color: #ff3333; }
+
+        .ms-welcome-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 28px 32px 36px;
+            gap: 16px;
+        }
+
+        .ms-welcome-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .ms-welcome-logo {
+            width: 160px;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .ms-welcome-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3.2rem, 14vw, 4.5rem);
+            font-weight: 950;
+            color: #fff;
+            line-height: 0.85;
+            letter-spacing: -3px;
+            margin: 0;
+        }
+
+        .ms-welcome-outline {
+            -webkit-text-stroke: 2px #ff3333;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(255,51,51,0.4);
+        }
+
+        .ms-welcome-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.65;
+        }
+
+        .ms-welcome-text strong {
+            color: rgba(255,255,255,0.75);
+            font-weight: 700;
+        }
+
+        .ms-welcome-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .ms-welcome-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #ff3333;
+            color: #fff;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 15px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(255,51,51,0.4);
+            width: 100%;
+        }
+
+        .ms-welcome-cta:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(255,51,51,0.5);
+        }
+
+        .ms-welcome-skip {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.25);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 4px;
+            letter-spacing: 1px;
+        }
+
+        .ms-welcome-skip:hover { color: rgba(255,255,255,0.5); }
+    </style>
+
+    <script>
+        // Modal bienvenida Max Sport — se muestra una vez por sesión
+        (function() {
+            if (!sessionStorage.getItem('msWelcomeShown')) {
+                // Esperar a que cargue la página completa
+                window.addEventListener('load', function() {
+                    setTimeout(function() {
+                        var modal = document.getElementById('msWelcomeModal');
+                        if (modal) modal.classList.add('show');
+                    }, 1800); // aparece 1.8s después de cargar
+                });
+                sessionStorage.setItem('msWelcomeShown', 'true');
+            }
+        })();
+
+        function closeWelcomeModal() {
+            var modal = document.getElementById('msWelcomeModal');
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(function() { modal.style.display = 'none'; }, 400);
+            }
+        }
+    </script>
 
 </html>
