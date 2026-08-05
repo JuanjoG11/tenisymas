@@ -1263,14 +1263,12 @@
         // Modal bienvenida Max Sport — se muestra una vez por sesión
         (function() {
             if (!sessionStorage.getItem('msWelcomeShown')) {
-                // Esperar a que cargue la página completa
-                window.addEventListener('load', function() {
-                    setTimeout(function() {
-                        var modal = document.getElementById('msWelcomeModal');
-                        if (modal) modal.classList.add('show');
-                    }, 1800); // aparece 1.8s después de cargar
-                });
                 sessionStorage.setItem('msWelcomeShown', 'true');
+                // Aparece rápido, sin esperar que cargue todo
+                setTimeout(function() {
+                    var modal = document.getElementById('msWelcomeModal');
+                    if (modal) modal.classList.add('show');
+                }, 600);
             }
         })();
 
