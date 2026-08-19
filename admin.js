@@ -381,7 +381,6 @@ function setupEventListeners() {
             const productData = {
                 name: document.getElementById('name').value.toUpperCase(),
                 category: document.getElementById('category').value,
-                brand: (document.getElementById('brand').value || '').trim() || null,
                 price: document.getElementById('price').value,
                 oldprice: document.getElementById('oldPrice').value,
                 image: imageInput.value || 'images/placeholder.png',
