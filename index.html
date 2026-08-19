@@ -445,6 +445,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Card 7: Max Sport -->
+                    <div class="carousel-card" data-index="6" data-url="collections.html?category=max-sport">
+                        <div class="card-image">
+                            <img src="images/logo max.jpg" alt="Max Sport" loading="lazy" decoding="async" style="object-fit: contain; background: #0a0a0a; padding: 20px;">
+                            <div class="card-overlay">
+                                <h3>MAX SPORT ⭐</h3>
+                                <div class="btn-fake">Ver Colección</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="carousel-controls">
@@ -485,10 +496,10 @@
                     </div>
                     <h2 class="ms-big-title">MAX<br><span class="ms-outline">SPORT</span></h2>
                     <p class="ms-desc">Lo que tanto esperaban<br><strong>ya llegó.</strong> No se sorprendan.</p>
-                    <button class="ms-cta" onclick="openMaxSportModal()">
+                    <a class="ms-cta" href="collections.html?category=max-sport">
                         VER COLECCIÓN
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -501,11 +512,11 @@
                         <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-2">
                     </div>
                 </div>
-                <div class="ms-coming-tag">COMING SOON</div>
+                <div class="ms-coming-tag" style="display:none;"></div>
             </div>
         </section>
 
-        <!-- Modal Muy Pronto Max Sport -->
+        <!-- Modal Max Sport - Ver Colección -->
         <div class="ms-modal-overlay" id="msModal" onclick="closeMaxSportModal()">
             <div class="ms-modal" onclick="event.stopPropagation()">
                 <button class="ms-modal-close" onclick="closeMaxSportModal()">✕</button>
@@ -514,15 +525,10 @@
                     <div class="ms-modal-logo">
                         <img src="images/logo max.jpg" alt="Max Sport">
                     </div>
-                    <div class="ms-coming-wrap">
-                        <span class="ms-coming-bar"></span>
-                        <span class="ms-coming-label">COMING SOON</span>
-                        <span class="ms-coming-bar"></span>
-                    </div>
-                    <h2 class="ms-coming-title">MUY<br><em>PRONTO.</em></h2>
-                    <p class="ms-modal-text">La colección está en camino.<br>Prepárate, va a ser distinto.</p>
-                    <a href="https://wa.me/573204961453?text=Quiero%20saber%20m%C3%A1s%20de%20Max%20Sport%20en%20TennisYMas" target="_blank" class="ms-modal-notify">
-                        🔔 &nbsp;Avisame cuando llegue
+                    <h2 class="ms-coming-title" style="margin: 18px 0 10px;">YA<br><em>LLEGÓ.</em></h2>
+                    <p class="ms-modal-text">Distribuidores autorizados en el Eje Cafetero.<br>Calidad certificada Max Sport.</p>
+                    <a href="collections.html?category=max-sport" class="ms-modal-notify" style="background: #fff; color: #000; font-weight: 900; letter-spacing: 1px; text-decoration: none; padding: 14px 28px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        ⭐ &nbsp;Ver Colección Max Sport
                     </a>
                 </div>
             </div>
@@ -1085,14 +1091,14 @@
 
                 <p class="ms-welcome-text">
                     Somos distribuidores autorizados de <strong>Max Sport</strong> en el Eje Cafetero.<br>
-                    La colección viene en camino. No te la pierdas.
+                    Ya tenemos la colección disponible. ¡Explórala ahora!
                 </p>
 
                 <div class="ms-welcome-actions">
-                    <button class="ms-welcome-cta" onclick="closeWelcomeModal(); document.getElementById('maxsportSection').scrollIntoView({behavior:'smooth'})">
-                        VER SECCIÓN
+                    <a href="collections.html?category=max-sport" class="ms-welcome-cta" style="text-decoration:none;">
+                        VER COLECCIÓN MAX SPORT
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </button>
+                    </a>
                     <button class="ms-welcome-skip" onclick="closeWelcomeModal()">Cerrar</button>
                 </div>
             </div>

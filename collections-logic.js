@@ -231,7 +231,7 @@ async function loadProducts() {
 
         ensureEssentialCollections();
 
-        const cached = localStorage.getItem('productsCache_v11');
+        const cached = localStorage.getItem('productsCache_v12');
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -242,7 +242,7 @@ async function loadProducts() {
                 }
             } catch(e) {
                 console.warn('Cache parse failed, clearing:', e);
-                localStorage.removeItem('productsCache_v11');
+                localStorage.removeItem('productsCache_v12');
             }
         }
 
@@ -318,7 +318,7 @@ async function loadProducts() {
 
             // Refresh cache
             try {
-                localStorage.setItem('productsCache_v11', JSON.stringify(allProducts));
+                localStorage.setItem('productsCache_v12', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
             } catch(_) {}
         }
@@ -545,6 +545,25 @@ function executeApplyFilters(shouldScroll = false) {
                 }
             }
 
+            // MAX SPORT: los productos max-sport también aparecen en futsal
+            const isTargetingFutsal = allowedCats.some(c => c === 'futsal');
+            if (isTargetingFutsal && !matches) {
+                if (pCat === 'maxsport' || pCat === 'max-sport' ||
+                    normalize(product.brand || product.marca || '').includes('max') ||
+                    normalize(product.name || '').includes('maxsport')) {
+                    matches = true;
+                }
+            }
+
+            // MAX SPORT: cuando se filtra por max-sport, incluir también por nombre/brand
+            const isTargetingMaxSport = allowedCats.some(c => c === 'maxsport');
+            if (isTargetingMaxSport && !matches) {
+                const searchStr = normalize((product.name || '') + ' ' + (product.brand || product.marca || ''));
+                if (searchStr.includes('max')) {
+                    matches = true;
+                }
+            }
+
             if (!matches) return false;
         }
 
@@ -633,7 +652,7 @@ function executeApplyFilters(shouldScroll = false) {
             }
 
             const isFootwear = ['guayos','tenis-guayos','futsal','tenis','running','tenis-running','ninos',
-                                 'tenis-futbol','fútbol-sala','fútbol sala','futbol sala']
+                                 'tenis-futbol','fútbol-sala','fútbol sala','futbol sala','max-sport']
                                 .includes((p.category || p.categoria || '').toLowerCase().trim());
 
             return (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes);
@@ -821,7 +840,7 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     const mainImage = coverImage;
 
     // Determine correct selector type (Chips vs Dropdown)
-    const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala'].includes(category);
+    const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala', 'max-sport'].includes(category);
 
     const inventory = product.inventory || [];
     const totalStock = inventory.reduce((sum, inv) => sum + (inv.stock || 0), 0);
@@ -829,7 +848,13 @@ function createProductCardHTML(product, absoluteIndex = 999) {
 
     return `
         <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}" data-category="${product.category}">
-            ${isOutOfStock ? `<div class="product-badge out-of-stock-badge">AGOTADO</div>` : (product.badge || product.etiqueta ? `<div class="product-badge">${product.badge || product.etiqueta}</div>` : '')}
+            ${isOutOfStock ? `<div class="product-badge out-of-stock-badge">AGOTADO</div>` : (() => {
+                // Auto-badge for Max Sport products
+                const isMaxSport = (product.category === 'max-sport') || 
+                    ((product.brand || product.marca || '').toLowerCase().includes('max'));
+                const badgeText = isMaxSport ? '⭐ MAX SPORT' : (product.badge || product.etiqueta || '');
+                return badgeText ? `<div class="product-badge">${badgeText}</div>` : '';
+            })()}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
                 ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 

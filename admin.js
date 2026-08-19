@@ -381,6 +381,7 @@ function setupEventListeners() {
             const productData = {
                 name: document.getElementById('name').value.toUpperCase(),
                 category: document.getElementById('category').value,
+                brand: (document.getElementById('brand').value || '').trim() || null,
                 price: document.getElementById('price').value,
                 oldprice: document.getElementById('oldPrice').value,
                 image: imageInput.value || 'images/placeholder.png',
@@ -1026,6 +1027,7 @@ function resetForm() {
     imagePreview.style.display = 'none';
     imagePreviewText.style.display = 'block';
     
+    document.getElementById('brand').value = '';
     document.getElementById('extraImages').value = '';
     document.getElementById('galleryFiles').value = '';
     renderGalleryPreview();
@@ -1087,7 +1089,7 @@ function renderAdminProducts() {
             <img src="${product.image}" class="item-img" onerror="this.src='https://via.placeholder.com/60?text=Error'">
             <div class="item-info">
                 <h4>${escapeHTML(product.name || 'Sin Nombre')}</h4>
-                <p>${escapeHTML(product.category || 'Sin Categoría')} | ${escapeHTML(product.price || 'Sin Precio')}</p>
+                <p>${escapeHTML(product.category || 'Sin Categoría')}${product.brand || product.marca ? ` · <span style="color:#ff9900;font-weight:700;">${escapeHTML(product.brand || product.marca)}</span>` : ''} | ${escapeHTML(product.price || 'Sin Precio')}</p>
                 <p class="item-sizes">
                     ${Array.isArray(product.sizes) ? product.sizes.map(s => {
                         const invItem = (product.inventory || []).find(inv => String(inv.size) === String(s));
@@ -1121,6 +1123,7 @@ window.editProduct = async (id) => {
     editingId = id;
     document.getElementById('name').value = product.name;
     document.getElementById('category').value = product.category;
+    document.getElementById('brand').value = product.brand || product.marca || '';
     document.getElementById('price').value = product.price;
     document.getElementById('oldPrice').value = product.oldprice || '';
     document.getElementById('image').value = product.image;
