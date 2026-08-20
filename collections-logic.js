@@ -59,26 +59,39 @@ window.modalQty = window.modalQty || 1;
 window.currentMainModalImage = window.currentMainModalImage || '';
 
 // ==================== COL → EUR SIZE CONVERSION ====================
-// Colombian talla → European size mapping (based on official size guide)
-// For sizes ≤37 (youth/niño): EUR = COL + 1
-// For sizes ≥38 (adult): EUR = COL + 2
-const COL_TO_EUR = {
-    '28':'29','29':'30','30':'31','31':'32','32':'33','33':'34',
-    '34':'35','35':'36','36':'37','37':'38',
-    '38':'40','39':'41','40':'42','41':'43','42':'44','43':'45',
-    '44':'46','45':'47'
+// EUR → COL size mapping (admin saves in EUR; this maps to Colombian equivalent)
+const EUR_TO_COL = {
+    '35': '34',
+    '36': '35',
+    '37': '36',
+    '38': '37',
+    '39': '37',
+    '40': '38',
+    '41': '39',
+    '42': '40',
+    '43': '41',
+    '44': '42',
+    '45': '43'
 };
-// Reverse: EUR → COL (for filter matching)
-const EUR_TO_COL = {};
-Object.entries(COL_TO_EUR).forEach(([col, eur]) => { EUR_TO_COL[eur] = col; });
+// Reverse: COL → EUR
+const COL_TO_EUR = {};
+Object.entries(EUR_TO_COL).forEach(([eur, col]) => { COL_TO_EUR[col] = COL_TO_EUR[col] || eur; });
 
-function colToEur(size) {
-    const s = String(size).trim();
-    return COL_TO_EUR[s] || s; // fallback: return as-is if not in map
-}
 function eurToCol(size) {
     const s = String(size).trim();
     return EUR_TO_COL[s] || s;
+}
+function colToEur(size) {
+    const s = String(size).trim();
+    return COL_TO_EUR[s] || s;
+}
+
+// Returns "39EUR/37COL" label for numeric sizes, or plain value for clothing sizes
+function eurSizeLabel(size) {
+    const s = String(size).trim();
+    if (isNaN(parseFloat(s))) return s; // clothing (S/M/L/XL)
+    const col = EUR_TO_COL[s];
+    return col ? `${s}EUR/${col}COL` : `${s}EUR`;
 }
 
 // GLOBAL ERROR LOGGER (FOR MOBILE DEBUGGING)
@@ -431,7 +444,7 @@ function populateSizeFilters() {
     const container = document.getElementById('sizeFilters');
     if (container) {
         const newHTML = sizesArray.map(size => {
-            const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
+            const label = eurSizeLabel(size);
             return `
             <label class="filter-checkbox">
                 <input type="checkbox" value="${size}" data-filter="size" ${activeFilters.sizes.includes(size) ? 'checked' : ''}>
@@ -1086,7 +1099,7 @@ async function openProductModal(productId) {
                 const stockCount = stockItem ? stockItem.stock : (inventory.length === 0 ? 1 : 0);
                 const isOutOfStock = stockCount <= 0;
                 
-                const label = !isNaN(parseFloat(size)) ? `EUR ${size}` : size;
+                const label = eurSizeLabel(size);
                 const displayLabel = isOutOfStock ? `${label} (Agotado)` : label;
                 const disabledClass = isOutOfStock ? 'disabled out-of-stock' : '';
                 const clickAction = isOutOfStock ? '' : `onclick="selectModalSize('${size}', this)" ontouchstart="selectModalSize('${size}', this)"`;
