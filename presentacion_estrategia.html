@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propuesta de Crecimiento Digital | Tennis y Mas.co</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --meta-navy: #080D1A;
+            --meta-surface: #0E1626;
+            --meta-card: #141E33;
+            --meta-card-hover: #1A2742;
+            --meta-border: rgba(255, 255, 255, 0.1);
+            --meta-border-subtle: rgba(255, 255, 255, 0.06);
+            
+            --meta-blue: #0866FF;
+            --meta-cyan: #00F0FF;
+            --meta-green: #00E676;
+            --meta-whatsapp: #25D366;
+            --meta-amber: #FFB703;
+            
+            --text-title: #FFFFFF;
+            --text-body: #E2E8F0;
+            --text-muted: #94A3B8;
+            --text-dim: #64748B;
+            
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            
+            --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--meta-navy);
+            color: var(--text-body);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                radial-gradient(circle at 8% 18%, rgba(8, 102, 255, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 92% 82%, rgba(0, 240, 255, 0.07) 0%, transparent 45%);
+        }
+
+        /* HEADER */
+        header.meta-suite-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(14, 22, 38, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--meta-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+
+        .meta-logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .meta-account-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .meta-author-tag {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .meta-live-pill {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--meta-green);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-deck-indicator {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--meta-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .meta-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--meta-border);
+            color: #FFF;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+        .meta-btn:hover { background: rgba(255, 255, 255, 0.12); }
+        .meta-btn.btn-primary-blue {
+            background: var(--meta-blue);
+            border-color: var(--meta-blue);
+            color: #FFF;
+            font-weight: 700;
+        }
+
+        /* PROGRESS LINE */
+        .meta-progress-line {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 1000;
+        }
+        .meta-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--meta-blue), var(--meta-cyan));
+            width: 10%;
+            transition: width 0.3s ease;
+        }
+
+        /* WRAPPER */
+        .deck-wrapper {
+            position: relative;
+            width: 100vw;
+            height: calc(100vh - 59px);
+            margin-top: 59px;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            padding: 24px 38px 28px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            z-index: 10;
+        }
+
+        /* SUBHEADER */
+        .meta-sub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--meta-border-subtle);
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+        }
+        .meta-campaign-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--meta-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .meta-slide-h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: #FFF;
+            margin-top: 2px;
+        }
+
+        /* GRIDS & LAYOUTS */
+        .slide-body-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .slide-grid-split {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            align-items: stretch;
+            flex: 1;
+        }
+
+        .slide-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            align-items: stretch;
+            flex: 1;
+        }
+
+        .slide-grid-2-even {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: stretch;
+            flex: 1;
+        }
+
+        /* CARDS */
+        .meta-card-box {
+            background: var(--meta-card);
+            border: 1px solid var(--meta-border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            transition: var(--transition);
+        }
+        .meta-card-box:hover {
+            background: var(--meta-card-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .product-img-box {
+            width: 100%;
+            height: 220px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: #080D1A;
+            position: relative;
+        }
+        .product-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+        .meta-card-box:hover .product-img-box img { transform: scale(1.04); }
+
+        .badge-pill-float {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(14, 22, 38, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #FFF;
+            backdrop-filter: blur(8px);
+        }
+
+        /* MOCKUP AD PREVIEWS */
+        .meta-ad-preview-box {
+            width: 100%;
+            max-width: 430px;
+            background: #182234;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-ad-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .meta-ad-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .meta-ad-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--meta-blue);
+        }
+        .meta-ad-copy {
+            padding: 10px 14px;
+            color: var(--text-body);
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+        .meta-ad-media {
+            width: 100%;
+            height: 250px;
+            background: #080D1A;
+            position: relative;
+            overflow: hidden;
+        }
+        .meta-ad-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .meta-price-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(8, 13, 26, 0.92);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 8px;
+            padding: 5px 10px;
+            backdrop-filter: blur(6px);
+        }
+        .meta-ad-cta-bar {
+            background: #202b3d;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .meta-cta-btn-green {
+            background: var(--meta-whatsapp);
+            color: #000;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .meta-cta-btn-blue {
+            background: var(--meta-blue);
+            color: #FFF;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        /* BOTTOM CONTROLS */
+        .meta-deck-controls {
+            position: fixed;
+            bottom: 16px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(14, 22, 38, 0.95);
+            padding: 6px 14px;
+            border-radius: 30px;
+            border: 1px solid var(--meta-border);
+            z-index: 1000;
+        }
+        .ctrl-arrow-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--meta-border);
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .ctrl-arrow-btn:hover { background: var(--meta-blue); }
+
+        /* DRAWER */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+        .drawer-sidebar {
+            position: absolute;
+            top: 0;
+            right: -380px;
+            width: 360px;
+            height: 100%;
+            background: #0E1626;
+            border-left: 1px solid var(--meta-border);
+            padding: 20px;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .drawer-overlay.open .drawer-sidebar { right: 0; }
+        .drawer-item {
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--meta-border);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+        .drawer-item.active, .drawer-item:hover {
+            background: rgba(8, 102, 255, 0.2);
+            border-color: var(--meta-blue);
+            color: #FFF;
+        }
+
+        /* SLIDER RANGE */
+        .meta-range {
+            width: 100%;
+            height: 7px;
+            border-radius: 4px;
+            background: #1e293b;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .meta-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--meta-cyan);
+            box-shadow: 0 0 10px var(--meta-cyan);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="meta-suite-nav">
+        <div class="meta-logo-wrap">
+            <img src="images/logo-tm.png" style="height: 32px; object-fit: contain;">
+            <div>
+                <div class="meta-account-name">
+                    PROPUESTA DE CRECIMIENTO DIGITAL • Tennis y Mas.co
+                </div>
+                <div class="meta-author-tag">Por: Juan José Colorado Gutiérrez (Dev & Analista)</div>
+            </div>
+        </div>
+
+        <div class="meta-nav-center">
+            <span class="meta-deck-indicator" id="slideBadge">01 / 10</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="meta-btn" id="btnToggleSound"><i class="fa-solid fa-volume-high" id="soundIcon"></i> Audio</button>
+            <button class="meta-btn" id="btnOpenIndex"><i class="fa-solid fa-bars"></i> Menú</button>
+            <a href="https://wa.me/573204961453?text=Hola%20Juan%20José,%20revisé%20la%20propuesta%20de%20crecimiento%20digital%20para%20Tennis%20Y%20Más" target="_blank" class="meta-btn btn-primary-blue">
+                <i class="fa-brands fa-whatsapp"></i> Hablar con Juan José
+            </a>
+        </div>
+    </header>
+
+    <!-- PROGRESS LINE -->
+    <div class="meta-progress-line">
+        <div class="meta-progress-fill" id="progressBar"></div>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <main class="deck-wrapper">
+
+        <!-- ================= SLIDE 1: PORTADA OFICIAL ================= -->
+        <section class="slide active" data-slide="1">
+            <div class="slide-body-wrap">
+                <div class="slide-grid-split">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <span class="meta-live-pill"><i class="fa-solid fa-check"></i> Desarrollador de la Plataforma</span>
+                            <span class="meta-live-pill" style="color: #6097ff; border-color: rgba(0, 82, 255, 0.4);">Junio 2026</span>
+                        </div>
+
+                        <h1 style="font-family: 'Outfit'; font-size: 38px; line-height: 1.15; font-weight: 900; color: #FFF; margin-bottom: 12px;">
+                            PROPUESTA DE CRECIMIENTO DIGITAL Y EVOLUCIÓN DEL CANAL DE VENTAS ONLINE
+                        </h1>
+
+                        <div style="background: rgba(8, 102, 255, 0.1); border-left: 3px solid var(--meta-blue); padding: 10px 14px; border-radius: 4px; margin-bottom: 16px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #FFF;">Preparado para: <span style="color: var(--meta-cyan);">Tennis y Mas.co</span></div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Preparado por: <strong>Juan José Colorado Gutiérrez</strong> (Desarrollador de Software y Analista de Tecnología)</div>
+                        </div>
+
+                        <p style="font-size: 14px; color: var(--text-body); line-height: 1.5; margin-bottom: 18px;">
+                            Como fui el encargado del desarrollo de la página web de Tennis y Mas.co, conozco completamente su estructura, código y posibilidades de crecimiento. <strong>La idea no es solo administrar pauta: es convertir la web en un canal digital que genere clientes, pedidos y ventas continuas.</strong>
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <div class="meta-card-box" style="padding: 12px;">
+                                <div style="font-size: 11px; color: var(--text-muted);">CANAL DUAL</div>
+                                <div style="font-size: 15px; font-weight: 800; color: #FFF;">Web + WhatsApp</div>
+                                <div style="font-size: 11px; color: var(--meta-cyan);">Compras & Cierre Directo</div>
+                            </div>
+                            <div class="meta-card-box" style="padding: 12px;">
+                                <div style="font-size: 11px; color: var(--text-muted);">PRODUCTOS BASE</div>
+                                <div style="font-size: 15px; font-weight: 800; color: #FFF;">Joma & Max Sport</div>
+                                <div style="font-size: 11px; color: var(--meta-amber);">Modelos Oficiales Reales</div>
+                            </div>
+                            <div class="meta-card-box" style="padding: 12px;">
+                                <div style="font-size: 11px; color: var(--text-muted);">INVERSIÓN EN ADS</div>
+                                <div style="font-size: 15px; font-weight: 800; color: var(--meta-green);">Desde $100.000 COP</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">Campaña Continua</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 16px; align-items: center; justify-content: center;">
+                        <img src="images/tymxmax.jpg" alt="TYM x MAX" style="width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 6px;">
+                            Ecosistema digital activo: Web e-commerce + Tienda Física Cra 7 # 15-44 Pereira
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 2: ANUNCIO INSTAGRAM A LA WEB ================= -->
+        <section class="slide" data-slide="2">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-brands fa-instagram"></i> Meta Ads Instagram Feed (Conversión Web)</div>
+                    <h2 class="meta-slide-h1">Anuncio de Instagram Redirigiendo a la Web Oficial</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">El cliente toca el anuncio y compra directamente en tennisymas.com</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-split">
+                    <!-- Instagram Ad Mockup -->
+                    <div style="display: flex; justify-content: center;">
+                        <div class="meta-ad-preview-box">
+                            <div class="meta-ad-header">
+                                <div class="meta-ad-profile">
+                                    <img src="images/logo-tm.png" class="meta-ad-avatar" alt="Tennis Y Más">
+                                    <div>
+                                        <div style="color: #FFF; font-weight: 700; font-size: 13px;">tennisymas_co <i class="fa-solid fa-circle-check" style="color: var(--meta-blue); font-size: 11px;"></i></div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Publicidad • tennisymas.com</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-ellipsis" style="color: var(--text-muted);"></i>
+                            </div>
+
+                            <div class="meta-ad-media">
+                                <img src="images/joma_topflex_rebound.jpg" alt="Joma Top Flex Rebound">
+                                <div class="meta-price-badge">
+                                    <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 14px; color: var(--meta-green);">$360.000 COP</div>
+                                    <div style="font-size: 10px; color: #FFF;">4 cuotas de $90.000 con Addi</div>
+                                </div>
+                            </div>
+
+                            <!-- Boton Oficial de Accion hacia la Web -->
+                            <div class="meta-ad-cta-bar" style="background: var(--meta-blue);">
+                                <div>
+                                    <div style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase;">TENNISYMAS.COM</div>
+                                    <div style="font-weight: 800; color: #FFF; font-size: 13px;">Comprar en el Sitio Web</div>
+                                </div>
+                                <a href="https://tennisymas.com/" target="_blank" class="meta-btn" style="background: #FFF; color: #000; font-weight: 800; padding: 6px 14px; border: none; text-decoration: none;">
+                                    Comprar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i>
+                                </a>
+                            </div>
+
+                            <div class="meta-ad-copy">
+                                <strong>tennisymas_co</strong> ⚽ Ya disponibles en nuestra tienda online oficial los <strong>JOMA TOP FLEX REBOUND</strong>.
+                                <br><br>
+                                👟 Amortiguación Rebound 2.0 y cuero natural de máxima duración.<br>
+                                💳 <strong>Paga en 4 cuotas de $90.000 con ADDI sin tarjeta de crédito.</strong><br>
+                                📦 Envíos asegurados a toda Colombia desde nuestra tienda en Pereira.<br>
+                                👉 Toca el botón para elegir tu talla en la web.
+                            </div>
+
+                            <div style="padding: 8px 14px; font-size: 11px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between;">
+                                <span><i class="fa-solid fa-heart" style="color: #FA383E;"></i> 1.480 Me gusta</span>
+                                <span>164 comentarios</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de la Ruta de Conversion Web -->
+                    <div class="meta-card-box">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span class="meta-live-pill" style="background: rgba(8, 102, 255, 0.2); color: #4da3ff;"><i class="fa-solid fa-bolt"></i> Flujo E-Commerce 100% Automático</span>
+                            </div>
+                            <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin-bottom: 12px;">
+                                Cómo Funciona la Venta Directa en la Web
+                            </h3>
+
+                            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                    <div style="background: var(--meta-blue); color: #FFF; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">1</div>
+                                    <div>
+                                        <strong style="color: #FFF;">El usuario hace clic en el anuncio de Instagram:</strong> Redirige de inmediato a la ficha del calzado en <em>tennisymas.com</em> con carga ultrarrápida.
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                    <div style="background: var(--meta-cyan); color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">2</div>
+                                    <div>
+                                        <strong style="color: #FFF;">Selecciona talla y agrega al carrito:</strong> El cliente ve las fotos reales, la guía de centímetros y las cuotas de Addi sin intermediarios.
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                    <div style="background: var(--meta-green); color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">3</div>
+                                    <div>
+                                        <strong style="color: #FFF;">Pago inmediato y registro de pedido:</strong> Paga con Addi a 4 cuotas o Wompi. La tienda recibe el pedido y genera la orden lista para empacar.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(0, 230, 118, 0.08); border-left: 3px solid var(--meta-green); padding: 12px; border-radius: 6px; font-size: 12.5px; color: #FFF; margin-top: 16px; line-height: 1.5;">
+                                🚀 <strong>Gran ventaja para Tennis y Mas:</strong> La web vende en automático las 24 horas del día mientras el equipo duerme, sin saturar al vendedor con cientos de mensajes repetitivos.
+                            </div>
+                        </div>
+
+                        <button class="meta-btn" style="justify-content: center; padding: 10px;" onclick="goToSlide(3)">
+                            Ver Anuncio de Facebook Redirigiendo a la Web <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 3: ANUNCIO FACEBOOK A LA WEB ================= -->
+        <section class="slide" data-slide="3">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-brands fa-facebook"></i> Meta Ads Facebook Desktop / Mobile Feed</div>
+                    <h2 class="meta-slide-h1">Anuncio de Facebook con Enlace Directo al Catálogo Web</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Formato de enlace enriquecido con botón de compra de Facebook</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-split">
+                    <!-- Facebook Rich Link Post Mockup -->
+                    <div style="display: flex; justify-content: center;">
+                        <div class="meta-ad-preview-box">
+                            <div class="meta-ad-header">
+                                <div class="meta-ad-profile">
+                                    <img src="images/logo-tm.png" class="meta-ad-avatar" alt="Tennis Y Más">
+                                    <div>
+                                        <div style="color: #FFF; font-weight: 700; font-size: 13px;">Tennis y Más Pereira <i class="fa-solid fa-circle-check" style="color: var(--meta-blue); font-size: 11px;"></i></div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Publicidad • <i class="fa-solid fa-earth-americas"></i> tennisymas.com</div>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-ellipsis" style="color: var(--text-muted);"></i>
+                            </div>
+
+                            <div class="meta-ad-copy">
+                                🔥 <strong>NUEVA COLECCIÓN JOMA INVICTO & MAX SPORT 2026</strong>
+                                <br><br>
+                                ¿Buscas calzado resistente para fútbol sala y cancha sintética? Entra a nuestra tienda online oficial y estrena con <strong>ADDI a 4 cuotas sin tarjeta de crédito</strong>.
+                                <br><br>
+                                ✅ Envíos asegurados a toda Colombia desde Pereira<br>
+                                ✅ Garantía de cambio de talla sin complicaciones<br>
+                                👇 Toca el enlace para ver todas las tallas disponibles en la web:
+                            </div>
+
+                            <!-- Rich Link Image -->
+                            <div class="meta-ad-media" style="height: 230px;">
+                                <img src="images/joma_invicto_white.jpg" alt="Joma Invicto Grafiti">
+                            </div>
+
+                            <!-- Facebook Rich Link Preview Footer -->
+                            <div style="background: #202b3d; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-family: 'JetBrains Mono';">TENNISYMAS.COM</span>
+                                    <span style="font-weight: 800; color: #FFF; font-size: 13px;">JOMA Invicto Grafiti - $340.000 COP</span>
+                                    <span style="font-size: 11px; color: var(--meta-green); font-weight: 600;">Paga 4 cuotas de $85.000 con Addi</span>
+                                </div>
+                                <a href="https://tennisymas.com/" target="_blank" class="meta-btn btn-primary-blue" style="font-size: 12px; padding: 7px 16px; text-decoration: none;">
+                                    Comprar
+                                </a>
+                            </div>
+
+                            <div style="padding: 8px 14px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                <span><i class="fa-solid fa-thumbs-up" style="color: var(--meta-blue);"></i> <i class="fa-solid fa-heart" style="color: #FA383E;"></i> 890 reacciones</span>
+                                <span>124 comentarios • 68 compartidos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Retargeting y Pixel -->
+                    <div class="meta-card-box">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span class="meta-live-pill"><i class="fa-solid fa-chart-line"></i> Seguimiento con Meta Pixel</span>
+                            </div>
+                            <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin-bottom: 12px;">
+                                El Poder de Llevar Tráfico a la Web
+                            </h3>
+
+                            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                                <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--meta-cyan); padding: 10px 12px; border-radius: 4px;">
+                                    <strong style="color: #FFF;">El Pixel Aprende Quién Compra:</strong> Cada vez que alguien entra a la web y finaliza su pedido con Addi, el Pixel de Meta detecta el perfil del comprador y busca personas idénticas en Colombia para mostrarles los anuncios.
+                                </div>
+
+                                <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--meta-amber); padding: 10px 12px; border-radius: 4px;">
+                                    <strong style="color: #FFF;">Recuperación de Visitantes (Retargeting):</strong> Si 100 personas entran a la web a ver los tenis Joma y 90 se van sin comprar, Meta les muestra automáticamente anuncios de recordatorio con foto del calzado para que terminen su pedido.
+                                </div>
+
+                                <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--meta-green); padding: 10px 12px; border-radius: 4px;">
+                                    <strong style="color: #FFF;">Integración con Addi en el Checkout:</strong> Al estar la pasarela Addi ya implementada en el código de tennisymas.com, el cliente no tiene que esperar a que un asesor le mande el link por chat.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="meta-btn" style="justify-content: center; padding: 10px;" onclick="goToSlide(4)">
+                            Ver Estrategia Dual Web + WhatsApp <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 4: ESTRATEGIA DE TRÁFICO DUAL (WEB + WHATSAPP) ================= -->
+        <section class="slide" data-slide="4">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-arrows-split-up-and-left"></i> Estrategia de Conversión</div>
+                    <h2 class="meta-slide-h1">Tráfico Dual: Compras en la Web + Cierre en WhatsApp</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Aprovechamos ambos canales según la preferencia del cliente</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-2-even">
+                    <!-- Ruta 1: Directo a la Web -->
+                    <div class="meta-card-box">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="background: rgba(8, 102, 255, 0.2); color: #4da3ff; border: 1px solid var(--meta-blue); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;">
+                                    <i class="fa-solid fa-globe"></i> CANAL 1: E-COMMERCE WEB
+                                </span>
+                                <span style="font-size: 11px; color: var(--text-muted);">tennisymas.com</span>
+                            </div>
+
+                            <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin-top: 10px;">Publicidad que Redirige a la Web</h3>
+                            <p style="font-size: 13px; color: var(--text-body); line-height: 1.5; margin-top: 6px;">
+                                Anuncios de catálogo dinámico y carruseles donde el cliente hace clic y entra directamente a la ficha del producto en la página web.
+                            </p>
+
+                            <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-cyan);"></i> El cliente selecciona su talla directamente en el carrito.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-cyan);"></i> Paga a 4 cuotas en línea con Addi o tarjeta Wompi sin asesor.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-cyan);"></i> El Pixel registra la compra automáticamente para optimizar anuncios.</div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 11.5px; color: var(--text-muted);">
+                            <strong>Ideal para:</strong> Clientes que ya compran por internet y prefieren pagar rápido sin chatear.
+                        </div>
+                    </div>
+
+                    <!-- Ruta 2: Cierre por WhatsApp -->
+                    <div class="meta-card-box">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="background: rgba(37, 211, 102, 0.2); color: var(--meta-whatsapp); border: 1px solid var(--meta-whatsapp); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;">
+                                    <i class="fa-brands fa-whatsapp"></i> CANAL 2: WHATSAPP ASISTIDO
+                                </span>
+                                <span style="font-size: 11px; color: var(--text-muted);">+57 320 496 1453</span>
+                            </div>
+
+                            <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin-top: 10px;">Publicidad Click to WhatsApp</h3>
+                            <p style="font-size: 13px; color: var(--text-body); line-height: 1.5; margin-top: 6px;">
+                                Anuncios orientados a conversación. El cliente toca el botón del anuncio y entra al chat con mensaje prellenado del producto que vio.
+                            </p>
+
+                            <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Atención cercana para clientes que tienen dudas de su talla.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Asesoría para clientes de Pereira que quieren pasar al local.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Envío directo del link de aprobación Addi en el chat.</div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 11.5px; color: var(--text-muted);">
+                            <strong>Ideal para:</strong> Clientes que piden contraentrega o quieren confirmar medidas de plantilla.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(8, 102, 255, 0.08); border: 1px solid rgba(8, 102, 255, 0.25); border-radius: 8px; padding: 10px 18px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>🔥 Ambos canales se retroalimentan: quien entra a la web y no compra, lo retargeteamos con WhatsApp, y viceversa.</span>
+                    <button class="meta-btn" onclick="goToSlide(6)">Ver Vista Previa de Anuncios</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 5: CATÁLOGO REAL EN CAMPAÑA (JOMA & MAX SPORT) ================= -->
+        <section class="slide" data-slide="5">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-shoe-prints"></i> Inventario Real de la Tienda</div>
+                    <h2 class="meta-slide-h1">Productos Oficiales JOMA & MAX SPORT</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Calzados de la web con precios colombianos y Addi a 4 cuotas</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-3">
+                    <div class="meta-card-box">
+                        <div>
+                            <div class="product-img-box">
+                                <span class="badge-pill-float">Élite Profesional</span>
+                                <img src="images/joma_topflex_rebound.jpg" alt="Joma Top Flex">
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #FFF; margin-top: 10px;">JOMA TOP FLEX REBOUND</div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                                <span style="font-family: 'JetBrains Mono'; font-size: 17px; font-weight: 800; color: var(--meta-green);">$360.000 COP</span>
+                                <span style="font-size: 11px; color: #4da3ff; font-weight: 700;">4 x $90.000 Addi</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                                Amortiguación Rebound 2.0 y cuero natural. El preferido de microfútbol para evitar impacto en rodillas.
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--meta-cyan); font-weight: 700;">✔ Disponible en Web y Tienda Pereira</div>
+                    </div>
+
+                    <div class="meta-card-box">
+                        <div>
+                            <div class="product-img-box">
+                                <span class="badge-pill-float">Edición Grafiti</span>
+                                <img src="images/joma_invicto_white.jpg" alt="Joma Invicto White">
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #FFF; margin-top: 10px;">JOMA INVICTO GRAFITI WHITE</div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                                <span style="font-family: 'JetBrains Mono'; font-size: 17px; font-weight: 800; color: var(--meta-green);">$340.000 COP</span>
+                                <span style="font-size: 11px; color: #4da3ff; font-weight: 700;">4 x $85.000 Addi</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                                Suela de goma caramelo antideslizante con diseño urbano para canchas de baldosa y coliseo.
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--meta-cyan); font-weight: 700;">✔ Disponible en Web y Tienda Pereira</div>
+                    </div>
+
+                    <div class="meta-card-box">
+                        <div>
+                            <div class="product-img-box">
+                                <span class="badge-pill-float" style="background: rgba(255, 183, 3, 0.9); color: #000;">Alianza Max Sport</span>
+                                <img src="images/max_future_aqua.jpg" alt="Max Future Aqua">
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #FFF; margin-top: 10px;">MAX FUTURE BLANCO AQUA</div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+                                <span style="font-family: 'JetBrains Mono'; font-size: 17px; font-weight: 800; color: var(--meta-green);">$190.000 COP</span>
+                                <span style="font-size: 11px; color: #4da3ff; font-weight: 700;">4 x $47.500 Addi</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                                Línea oficial Max Sport. Comodidad, durabilidad en cancha sintética/sala y precio accesible.
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--meta-amber); font-weight: 700;">✔ Modelo de alta rotación comercial</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(8, 102, 255, 0.08); border: 1px solid rgba(8, 102, 255, 0.25); border-radius: 8px; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+                    <div><i class="fa-solid fa-store" style="color: var(--meta-cyan);"></i> Stock verificado en Pereira: Cra 7 # 15-44 Local 07</div>
+                    <div style="color: var(--meta-green); font-weight: 700;"><i class="fa-solid fa-bolt"></i> Compra a 4 cuotas con Addi sin tarjeta</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 6: VISTA PREVIA DE ANUNCIOS (WEB VS WHATSAPP) ================= -->
+        <section class="slide" data-slide="6">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-brands fa-meta"></i> Mockups Reales de Anuncio</div>
+                    <h2 class="meta-slide-h1">Cómo se Ven los Anuncios de Meta Ads</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Compara el anuncio con llamado a la Web y el anuncio con llamado a WhatsApp</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-split">
+                    <!-- Anuncio 1: Hacia la Web -->
+                    <div style="display: flex; justify-content: center;">
+                        <div class="meta-ad-preview-box">
+                            <div class="meta-ad-header">
+                                <div class="meta-ad-profile">
+                                    <img src="images/logo-tm.png" class="meta-ad-avatar" alt="Tennis Y Más">
+                                    <div>
+                                        <div style="color: #FFF; font-weight: 700; font-size: 13px;">Tennis Y Más <i class="fa-solid fa-circle-check" style="color: var(--meta-blue); font-size: 11px;"></i></div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Publicidad • tennisymas.com</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="meta-ad-copy">
+                                ⚽ ¿Buscas los nuevos <strong>JOMA TOP FLEX REBOUND</strong> en Colombia?
+                                <br>Compralos en nuestra tienda online con <strong>ADDI a 4 cuotas sin tarjeta</strong> y recíbelos en tu casa con despacho asegurado.
+                            </div>
+
+                            <div class="meta-ad-media">
+                                <img src="images/joma_topflex_rebound.jpg" alt="Joma Top Flex">
+                                <div class="meta-price-badge">
+                                    <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 14px; color: var(--meta-green);">$360.000 COP</div>
+                                    <div style="font-size: 10px; color: #FFF;">4 cuotas de $90.000 Addi</div>
+                                </div>
+                            </div>
+
+                            <div class="meta-ad-cta-bar">
+                                <div>
+                                    <div style="font-size: 10px; color: var(--text-muted);">TENNISYMAS.COM</div>
+                                    <div style="font-weight: 700; color: #FFF; font-size: 12.5px;">Comprar en la Web</div>
+                                </div>
+                                <a href="https://tennisymas.com/" target="_blank" class="meta-cta-btn-blue">
+                                    <i class="fa-solid fa-bag-shopping"></i> Comprar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Anuncio 2: Hacia WhatsApp -->
+                    <div style="display: flex; justify-content: center;">
+                        <div class="meta-ad-preview-box">
+                            <div class="meta-ad-header">
+                                <div class="meta-ad-profile">
+                                    <img src="images/logo max.jpg" class="meta-ad-avatar" alt="Max Sport">
+                                    <div>
+                                        <div style="color: #FFF; font-weight: 700; font-size: 13px;">Tennis Y Más x MAX SPORT <i class="fa-solid fa-circle-check" style="color: var(--meta-blue); font-size: 11px;"></i></div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Publicidad • Pereira</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="meta-ad-copy">
+                                🔥 <strong>MAX FUTURE BLANCO AQUA ($190.000 COP)</strong>
+                                <br>El calzado más resistente para fútbol sala.
+                                <br>💬 Chatea con un asesor para apartar tu talla y pagar con Addi a 4 cuotas de $47.500 sin tarjeta.
+                            </div>
+
+                            <div class="meta-ad-media">
+                                <img src="images/max_future_aqua.jpg" alt="Max Future">
+                                <div class="meta-price-badge">
+                                    <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 14px; color: var(--meta-green);">$190.000 COP</div>
+                                    <div style="font-size: 10px; color: #FFF;">4 cuotas de $47.500 Addi</div>
+                                </div>
+                            </div>
+
+                            <div class="meta-ad-cta-bar">
+                                <div>
+                                    <div style="font-size: 10px; color: var(--text-muted);">WHATSAPP OFICIAL</div>
+                                    <div style="font-weight: 700; color: #FFF; font-size: 12.5px;">Chatear con Asesor</div>
+                                </div>
+                                <a href="https://wa.me/573204961453?text=Hola,%20quiero%20los%20Max%20Future%20Aqua%20de%20$190.000" target="_blank" class="meta-cta-btn-green">
+                                    <i class="fa-brands fa-whatsapp"></i> Chatear
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 7: RESPONSABILIDADES MENSUALES ================= -->
+        <section class="slide" data-slide="7">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-list-check"></i> Alcance del Servicio</div>
+                    <h2 class="meta-slide-h1">Responsabilidades del Acompañamiento Continuo</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Todo lo que Juan José gestiona mes a mes para Tennis y Mas.co</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-3">
+                    <div class="meta-card-box">
+                        <div style="font-size: 22px; color: var(--meta-cyan);"><i class="fa-solid fa-bullhorn"></i></div>
+                        <h3 style="font-size: 15px; font-weight: 800; color: #FFF;">Gestión Publicitaria</h3>
+                        <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 8px; color: var(--text-muted); line-height: 1.4;">
+                            <div>• Integración completa con Meta Ads (Facebook, Instagram y TikTok).</div>
+                            <div>• Creación de nuevas campañas publicitarias cada mes.</div>
+                            <div>• Campañas orientadas a nuevos clientes en Pereira y el país.</div>
+                            <div>• Optimización permanente de anuncios y presupuestos.</div>
+                        </div>
+                    </div>
+
+                    <div class="meta-card-box">
+                        <div style="font-size: 22px; color: var(--meta-green);"><i class="fa-solid fa-rotate"></i></div>
+                        <h3 style="font-size: 15px; font-weight: 800; color: #FFF;">Retargeting & Conversión</h3>
+                        <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 8px; color: var(--text-muted); line-height: 1.4;">
+                            <div>• Configuración y seguimiento de eventos y conversiones.</div>
+                            <div>• Sincronización automática del catálogo de productos.</div>
+                            <div>• Campañas de recuperación de usuarios que visitaron la web y no compraron.</div>
+                            <div>• Análisis de métricas y comportamiento de clientes.</div>
+                        </div>
+                    </div>
+
+                    <div class="meta-card-box">
+                        <div style="font-size: 22px; color: var(--meta-amber);"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <h3 style="font-size: 15px; font-weight: 800; color: #FFF;">Soporte & Estrategia Web</h3>
+                        <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 8px; color: var(--text-muted); line-height: 1.4;">
+                            <div>• Recomendaciones estratégicas continuas para aumentar ventas.</div>
+                            <div>• Soporte técnico directo relacionado con la plataforma.</div>
+                            <div>• Ajustes y mejoras en la página web según las necesidades.</div>
+                            <div>• Comunicación directa y ágil con el equipo de la tienda.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(8, 102, 255, 0.08); border: 1px solid rgba(8, 102, 255, 0.25); border-radius: 8px; padding: 10px 18px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>🛡️ <strong>Sin sorpresas:</strong> Todo el ecosistema técnico y publicitario cubierto bajo una misma persona de confianza.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 8: CRECIMIENTO Y AUTOMATIZACIONES FUTURAS ================= -->
+        <section class="slide" data-slide="8">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Evolución Tecnológica</div>
+                    <h2 class="meta-slide-h1">Crecimiento y Automatización Futura</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Herramientas que se podrán implementar a medida que el canal escale</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: var(--meta-cyan);"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Recuperación de Carritos</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Recordatorios automáticos por WhatsApp y correo a los usuarios que dejaron tenis seleccionados sin terminar la compra.
+                        </p>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: var(--meta-green);"><i class="fa-brands fa-whatsapp"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Integración WhatsApp CRM</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Seguimiento de pedidos, respuestas automáticas con fotos de stock y confirmación de guías de envío.
+                        </p>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: #4da3ff;"><i class="fa-solid fa-envelope"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Estrategias de Email Marketing</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Boletines con nuevos lanzamientos de Joma y Max Sport para clientes que ya han comprado en la plataforma.
+                        </p>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: var(--meta-amber);"><i class="fa-solid fa-chart-pie"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Dashboard en Tiempo Real</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Panel de control con indicadores de ventas diarias, productos más pedidos y rentabilidad publicitaria.
+                        </p>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: #a855f7;"><i class="fa-solid fa-gears"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Automatización Comercial</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Reducción de tareas repetitivas en inventario y facturación para que el equipo se concentre en vender.
+                        </p>
+                    </div>
+
+                    <div class="meta-card-box" style="padding: 14px;">
+                        <div style="font-size: 20px; color: var(--meta-cyan);"><i class="fa-solid fa-laptop-code"></i></div>
+                        <div style="font-size: 13.5px; font-weight: 800; color: #FFF;">Nuevas Funcionalidades</div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                            Implementación ágil de filtros por suela, guías de talla interactivas o promociones relámpago en el código.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--meta-border); border-radius: 8px; padding: 10px 18px; font-size: 12px; color: var(--text-muted);">
+                    🚀 Estas herramientas se van integrando de forma escalonada según el crecimiento en ventas de Tennis y Mas.co.
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 9: SIMULADOR DE INVERSIÓN (DESDE $100.000 COP) ================= -->
+        <section class="slide" data-slide="9">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-calculator"></i> Presupuesto en Ads</div>
+                    <h2 class="meta-slide-h1">Inversión en Publicidad Accesible (Desde $100.000 COP)</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">La pauta se paga directamente desde las cuentas de la empresa</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="meta-card-box" style="padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Presupuesto de Pauta Ads:</span>
+                            <div style="font-family: 'Outfit'; font-size: 36px; font-weight: 900; color: var(--meta-cyan);" id="dispBudget">$ 200.000 COP</div>
+                        </div>
+                        <span class="meta-live-pill" style="font-size: 11px;">
+                            ⚡ Campaña Continua Evergreen en Pereira & Colombia
+                        </span>
+                    </div>
+
+                    <div style="margin: 20px 0 14px;">
+                        <input type="range" class="meta-range" id="simRange" min="100000" max="1000000" step="50000" value="200000" oninput="recalcSim(this.value)">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+                            <span>$100.000 COP (Test 7 Días)</span>
+                            <span>$500.000 COP (Quincena)</span>
+                            <span>$1.000.000 COP (Mes Completo)</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 10px;">
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--meta-border); border-radius: 8px; padding: 14px; text-align: center;">
+                            <div style="font-family: 'Outfit'; font-size: 22px; font-weight: 800; color: #FFF;" id="simReach">22.000</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Personas Alcanzadas</div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--meta-border); border-radius: 8px; padding: 14px; text-align: center;">
+                            <div style="font-family: 'Outfit'; font-size: 22px; font-weight: 800; color: var(--meta-cyan);" id="simChats">90</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Visitas / Chats Web & WA</div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--meta-border); border-radius: 8px; padding: 14px; text-align: center;">
+                            <div style="font-family: 'Outfit'; font-size: 22px; font-weight: 800; color: var(--meta-green);" id="simPairs">6 pares</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ventas Estimadas</div>
+                        </div>
+
+                        <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.4); border-radius: 8px; padding: 14px; text-align: center;">
+                            <div style="font-family: 'Outfit'; font-size: 22px; font-weight: 800; color: var(--meta-green);" id="simRevenue">$ 1.560.000</div>
+                            <div style="font-size: 11px; color: var(--meta-green); font-weight: 700; margin-top: 2px;">Facturación (ROAS 7.8X)</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 16px; border-top: 1px solid var(--meta-border-subtle); padding-top: 10px;">
+                        📌 <strong>Nota de transparencia:</strong> La inversión publicitaria se gestiona directamente en las cuentas de Meta y TikTok de Tennis y Mas.co, manteniendo el control total de los fondos.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SLIDE 10: ASIGNACIÓN MENSUAL & CIERRE DE LA PROPUESTA ================= -->
+        <section class="slide" data-slide="10">
+            <div class="meta-sub-header">
+                <div>
+                    <div class="meta-campaign-tag"><i class="fa-solid fa-handshake"></i> Acuerdo de Acompañamiento</div>
+                    <h2 class="meta-slide-h1">Asignación Mensual & Próximos Pasos</h2>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Apoyo estratégico continuo para el canal digital de Tennis y Mas.co</div>
+            </div>
+
+            <div class="slide-body-wrap">
+                <div class="slide-grid-split">
+                    <!-- Cuadro de Asignación -->
+                    <div class="meta-card-box" style="border-color: var(--meta-blue); background: linear-gradient(145deg, #10192e, #141e33);">
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: var(--meta-cyan); text-transform: uppercase;">Asignación Mensual Sugerida</div>
+                            <div style="font-family: 'Outfit'; font-size: 40px; font-weight: 900; color: #FFF; margin: 4px 0;">
+                                $ 1.200.000 <span style="font-size: 16px; font-weight: 600; color: var(--text-muted);">COP / mes</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">(Sujeta a negociación y ajuste con la empresa)</div>
+
+                            <div style="font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 8px;">¿Qué incluye este valor mensual?</div>
+                            <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 7px; color: #cbd5e1;">
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Planeación y creación de campañas mensuales de Meta y TikTok.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Monitoreo y optimización constante de presupuestos y anuncios.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Análisis de resultados y métricas de clientes.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Recomendaciones estratégicas de crecimiento comercial.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Soporte técnico continuo de la plataforma web.</div>
+                                <div><i class="fa-solid fa-check" style="color: var(--meta-green);"></i> Mejoras continuas relacionadas con la web y el canal digital.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje de Cierre -->
+                    <div class="meta-card-box">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 800; color: #FFF; margin-bottom: 10px;">
+                                Cierre de la Propuesta
+                            </h3>
+                            <p style="font-size: 13.5px; color: var(--text-body); line-height: 1.5; margin-bottom: 12px;">
+                                La página web ya está construida y preparada para crecer.
+                            </p>
+                            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+                                Mi intención es seguir aportando desde el conocimiento que ya tengo del negocio y de la plataforma para ayudar a que se convierta en una herramienta cada vez más importante para las ventas de la empresa.
+                            </p>
+                            <p style="font-size: 13px; color: var(--meta-cyan); font-weight: 700; line-height: 1.4;">
+                                Más que un servicio de publicidad, la propuesta busca construir y fortalecer el ecosistema digital de Tennis y Mas.co a largo plazo.
+                            </p>
+                        </div>
+
+                        <div style="border-top: 1px solid var(--meta-border-subtle); padding-top: 14px;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Contacto directo:</div>
+                            <a href="https://wa.me/573204961453?text=Hola%20Juan%20José,%20aprobada%20la%20propuesta%20de%20crecimiento%20digital%20para%20Tennis%20Y%20Más" target="_blank" class="meta-btn btn-primary-blue" style="justify-content: center; padding: 12px; font-size: 14px; text-decoration: none;">
+                                <i class="fa-brands fa-whatsapp"></i> Conversar y Aprobar Propuesta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- CONTROLS -->
+    <div class="meta-deck-controls">
+        <button class="ctrl-arrow-btn" id="btnPrev"><i class="fa-solid fa-chevron-left"></i></button>
+        <span style="font-family: 'JetBrains Mono'; font-size: 12px; font-weight: 700; color: var(--meta-cyan);" id="floatingIndex">01 / 10</span>
+        <button class="ctrl-arrow-btn" id="btnNext"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <!-- DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay">
+        <div class="drawer-sidebar">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--meta-border); padding-bottom: 10px;">
+                <span style="font-weight: 800; font-size: 13px; color: var(--meta-cyan);"><i class="fa-solid fa-list"></i> Menú de la Propuesta</span>
+                <button class="meta-btn" id="btnCloseDrawer" style="padding: 3px 8px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;" id="drawerList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+        let soundEnabled = true;
+
+        const slideTitles = [
+            "01. Portada: Propuesta Oficial Tennis y Mas.co",
+            "02. Anuncio Instagram: Tráfico a la Web (Joma)",
+            "03. Anuncio Facebook: Enlace al Catálogo Web",
+            "04. Tráfico Dual: Web E-commerce + WhatsApp",
+            "05. Catálogo en Pauta: JOMA & MAX SPORT",
+            "06. Vista Previa de Anuncios Meta Ads",
+            "07. Responsabilidades del Acompañamiento",
+            "08. Crecimiento y Automatizaciones Futuras",
+            "09. Presupuesto en Ads (Desde $100.000 COP)",
+            "10. Asignación Mensual ($1.200.000) & Cierre"
+        ];
+
+        // Synthesizer
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound() {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(420, now);
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } catch(e) {}
+        }
+
+        function goToSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            if (n === currentSlide) return;
+
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const target = document.querySelector(`.slide[data-slide="${n}"]`);
+            if (target) {
+                target.classList.add('active');
+                target.scrollTop = 0;
+            }
+            currentSlide = n;
+            playSound();
+            updateUI();
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides) goToSlide(currentSlide + 1); }
+        function prevSlide() { if (currentSlide > 1) goToSlide(currentSlide - 1); }
+
+        function updateUI() {
+            const formatted = currentSlide < 10 ? '0' + currentSlide : currentSlide;
+            document.getElementById('slideBadge').innerText = `${formatted} / ${totalSlides}`;
+            document.getElementById('floatingIndex').innerText = `${formatted} / ${totalSlides}`;
+            document.getElementById('progressBar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+            document.querySelectorAll('.drawer-item').forEach((item, idx) => {
+                if (idx + 1 === currentSlide) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+        }
+
+        function buildDrawer() {
+            const list = document.getElementById('drawerList');
+            list.innerHTML = '';
+            slideTitles.forEach((title, idx) => {
+                const n = idx + 1;
+                const div = document.createElement('div');
+                div.className = `drawer-item ${n === currentSlide ? 'active' : ''}`;
+                div.innerHTML = `<span>${title}</span> <i class="fa-solid fa-chevron-right" style="font-size: 10px; opacity: 0.5;"></i>`;
+                div.onclick = () => { goToSlide(n); closeDrawer(); };
+                list.appendChild(div);
+            });
+        }
+
+        function openDrawer() { buildDrawer(); document.getElementById('drawerOverlay').classList.add('open'); }
+        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+
+        // Simulator
+        function recalcSim(val) {
+            const budget = parseInt(val);
+            document.getElementById('dispBudget').innerText = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(budget);
+
+            const reach = Math.round(budget * 0.11);
+            const chats = Math.round(budget / 2200);
+            const pairs = Math.max(2, Math.round(chats * 0.07));
+            const avgPrice = 260000;
+            const revenue = pairs * avgPrice;
+
+            document.getElementById('simReach').innerText = new Intl.NumberFormat('es-CO').format(reach);
+            document.getElementById('simChats').innerText = new Intl.NumberFormat('es-CO').format(chats);
+            document.getElementById('simPairs').innerText = `${pairs} pares`;
+            document.getElementById('simRevenue').innerText = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(revenue);
+        }
+
+        // Sound Toggle
+        document.getElementById('btnToggleSound').onclick = function() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+        };
+
+        // Keyboard
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Escape') {
+                closeDrawer();
+            }
+        });
+
+        // Swipe
+        let touchStart = 0;
+        window.addEventListener('touchstart', e => touchStart = e.changedTouches[0].screenX, false);
+        window.addEventListener('touchend', e => {
+            const diff = e.changedTouches[0].screenX;
+            if (diff < touchStart - 50) nextSlide();
+            if (diff > touchStart + 50) prevSlide();
+        }, false);
+
+        document.getElementById('btnNext').onclick = nextSlide;
+        document.getElementById('btnPrev').onclick = prevSlide;
+        document.getElementById('btnOpenIndex').onclick = openDrawer;
+        document.getElementById('btnCloseDrawer').onclick = closeDrawer;
+        document.getElementById('drawerOverlay').onclick = e => { if (e.target.id === 'drawerOverlay') closeDrawer(); };
+
+        updateUI();
+        recalcSim(200000);
+    </script>
+</body>
+</html>
