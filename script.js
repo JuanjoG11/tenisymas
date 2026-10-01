@@ -829,31 +829,54 @@ function setupSlider() {
 function setupMobileMenu() {
     const menuToggle = document.getElementById('menuToggle');
     const navMenu = document.getElementById('navMenu');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    const navOverlay = document.getElementById('navOverlay');
 
     if (!menuToggle || !navMenu) return;
 
-    menuToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
-        // Toggle Animation here if needed, or rely on CSS
+    function openMenu() {
+        navMenu.classList.add('active');
+        if (navOverlay) navOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
         const spans = menuToggle.querySelectorAll('span');
+        if (spans[0]) spans[0].style.transform = 'rotate(45deg) translateY(7px)';
+        if (spans[1]) spans[1].style.opacity = '0';
+        if (spans[2]) spans[2].style.transform = 'rotate(-45deg) translateY(-7px)';
+    }
+
+    function closeMenu() {
+        navMenu.classList.remove('active');
+        if (navOverlay) navOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        const spans = menuToggle.querySelectorAll('span');
+        if (spans[0]) spans[0].style.transform = 'none';
+        if (spans[1]) spans[1].style.opacity = '1';
+        if (spans[2]) spans[2].style.transform = 'none';
+    }
+
+    menuToggle.addEventListener('click', () => {
         if (navMenu.classList.contains('active')) {
-            if (spans[0]) spans[0].style.transform = 'rotate(45deg) translateY(8px)';
-            if (spans[1]) spans[1].style.opacity = '0';
-            if (spans[2]) spans[2].style.transform = 'rotate(-45deg) translateY(-8px)';
+            closeMenu();
         } else {
-            if (spans[0]) spans[0].style.transform = 'none';
-            if (spans[1]) spans[1].style.opacity = '1';
-            if (spans[2]) spans[2].style.transform = 'none';
+            openMenu();
         }
     });
 
+    if (closeMenuBtn) {
+        closeMenuBtn.addEventListener('click', closeMenu);
+    }
+
+    if (navOverlay) {
+        navOverlay.addEventListener('click', closeMenu);
+    }
+
     document.querySelectorAll('.nav-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            const spans = menuToggle.querySelectorAll('span');
-            if (spans[0]) spans[0].style.transform = 'none';
-            if (spans[1]) spans[1].style.opacity = '1';
-            if (spans[2]) spans[2].style.transform = 'none';
+        link.addEventListener('click', (e) => {
+            // Dropdown toggles on desktop/mobile shouldn't close the drawer
+            if (link.classList.contains('nav-dropdown-toggle')) {
+                return;
+            }
+            closeMenu();
         });
     });
 }
