@@ -1012,6 +1012,10 @@ function updateCategoryCardImages() {
                 return pName.includes('joma') || pBrand.includes('joma');
             }
 
+            if (categoryParam === 'saprix') {
+                return pCat === 'saprix' || pName.includes('saprix') || pBrand.includes('saprix');
+            }
+
             if (categoryParam === 'max-sport') {
                 return pCat === 'max-sport' || pName.includes('max ') || pName.startsWith('max') || pBrand.includes('max');
             }
@@ -1025,7 +1029,7 @@ function updateCategoryCardImages() {
             }
 
             if (categoryParam === 'futsal') {
-                return pCat === 'futsal';
+                return pCat === 'futsal' && !pName.includes('joma') && !pName.includes('max') && !pName.includes('saprix');
             }
 
             if (categoryParam && (categoryParam.includes('peto') || categoryParam.includes('camiseta'))) {
