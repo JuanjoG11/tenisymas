@@ -83,8 +83,9 @@
     }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=11.0">
-    <link rel="stylesheet" href="carousel.css?v=11.0">
+    <link rel="stylesheet" href="style.css?v=12.0">
+    <link rel="stylesheet" href="carousel.css?v=12.0">
+    <script src="meta-pixel.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -97,8 +98,8 @@
 
     <!-- Performance: Preload critical assets -->
     <link rel="preload" href="images/logo-tm.png" as="image">
-    <link rel="preload" href="style.css?v=11.0" as="style">
-    <link rel="preload" href="script.js?v=17.0" as="script">
+    <link rel="preload" href="style.css?v=12.0" as="style">
+    <link rel="preload" href="script.js?v=18.0" as="script">
 </head>
 
 <body>
@@ -125,9 +126,25 @@
                 <script>
                     const video = document.getElementById('introVideo');
                     const fallback = document.getElementById('introFallback');
+                    const isMobileDevice = window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-                    if (video) {
-                        // Watchdog: If video doesn't play within 1.5s, show fallback so mobile doesn't freeze
+                    if (isMobileDevice) {
+                        // En móviles: evitamos descargar el video .mov de 6.5MB para máxima estabilidad y evitar pantallas negras
+                        if (video) {
+                            try { video.pause(); video.src = ''; video.remove(); } catch(e) {}
+                        }
+                        if (fallback) fallback.style.display = 'block';
+                        setTimeout(function() {
+                            const intro = document.getElementById('intro');
+                            if (intro) intro.style.display = 'none';
+                            const main = document.getElementById('main-content');
+                            if (main) {
+                                main.style.opacity = '1';
+                                main.style.visibility = 'visible';
+                            }
+                        }, 1000);
+                    } else if (video) {
+                        // Watchdog: If video doesn't play within 1.5s, show fallback so it doesn't freeze
                         const videoTimeout = setTimeout(() => {
                             if (video.paused || video.readyState < 2) {
                                 video.style.display = 'none';
@@ -141,27 +158,26 @@
 
                         video.addEventListener('error', () => {
                             setTimeout(function() {
-            var intro = document.querySelector('.intro');
-            if (intro) intro.style.display = 'none';
-        }, 2200); // 1.5s + 0.5s + buffer
+                                var intro = document.querySelector('.intro');
+                                if (intro) intro.style.display = 'none';
+                            }, 2200);
                             fallback.style.display = 'block';
                         });
 
                         video.play().catch(e => {
                             // Autoplay blocked handling
                         });
-                    }
 
-                    // Global timeout to ensure intro is removed even if video events fail
-                    setTimeout(function() {
-                        const intro = document.getElementById('intro');
-                        if (intro) intro.style.display = 'none';
-                        const main = document.getElementById('main-content');
-                        if (main) {
-                            main.style.opacity = '1';
-                            main.style.visibility = 'visible';
-                        }
-                    }, 2000); 
+                        setTimeout(function() {
+                            const intro = document.getElementById('intro');
+                            if (intro) intro.style.display = 'none';
+                            const main = document.getElementById('main-content');
+                            if (main) {
+                                main.style.opacity = '1';
+                                main.style.visibility = 'visible';
+                            }
+                        }, 2000);
+                    }
                 </script>
             </div>
         </div>
@@ -1019,7 +1035,7 @@
     </a>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
-    <script src="script.js?v=17.0"></script>
+    <script src="script.js?v=18.0" defer></script>
     <!-- Addi Widget Script (Standard Loader) -->
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
 

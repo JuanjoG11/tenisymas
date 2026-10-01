@@ -971,6 +971,11 @@ async function openProductModal(productId) {
     document.body.classList.add('modal-open');
     document.body.dataset.scrollY = scrollY;
 
+    // Meta Pixel Tracking
+    if (window.MetaEvents && typeof window.MetaEvents.viewContent === 'function') {
+        window.MetaEvents.viewContent(product);
+    }
+
     // Reset main image immediately to avoid showing previous product
     const mainImg = document.getElementById('currentModalImg');
     if (mainImg) {

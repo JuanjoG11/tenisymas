@@ -4,21 +4,27 @@ if (typeof products === 'undefined') { var products = []; }
 // Supabase Configuration
 if (typeof SUPABASE_URL === 'undefined') { var SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co'; }
 if (typeof SUPABASE_KEY === 'undefined') { var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ'; }
-if (typeof supabaseClient === 'undefined') {
-    var supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: {
-            persistSession: false
-        }
-    }) : (window.supabaseClient || null);
-    window.supabaseClient = supabaseClient;
+function getSupabaseClient() {
+    if (window.supabaseClient) return window.supabaseClient;
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                persistSession: false
+            }
+        });
+        return window.supabaseClient;
+    }
+    return null;
 }
+var supabaseClient = getSupabaseClient();
 
 // ==================== IMAGE ENGINE (AUTOMATIC BUCKET LISTING) ====================
 async function getImagesFromFolder(folder) {
-    if (!supabaseClient) return [];
+    const client = getSupabaseClient();
+    if (!client) return [];
     try {
         // 1. Llama a la API de Supabase para listar archivos en la carpeta
-        const { data, error } = await supabaseClient.storage
+        const { data, error } = await client.storage
             .from('product-images') 
             .list(folder);
 
@@ -259,6 +265,11 @@ function addToCart(productId, size = null, color = null, qty = 1) {
         }
 
         cart.push(cartItem);
+    }
+
+    // Meta Pixel Tracking
+    if (window.MetaEvents && typeof window.MetaEvents.addToCart === 'function') {
+        window.MetaEvents.addToCart({ id: product.id, name: product.name, price: product.price || product.precio, quantity: qty });
     }
 
     saveCart();
@@ -872,7 +883,8 @@ if (typeof isSyncing === 'undefined') { var isSyncing = false; }
 if (typeof syncPromise === 'undefined') { var syncPromise = null; }
 
 async function syncProducts() {
-    if (!supabaseClient) return [];
+    const client = getSupabaseClient();
+    if (!client) return [];
     if (isSyncing) return syncPromise;
 
     isSyncing = true;
@@ -920,8 +932,8 @@ async function syncProducts() {
         try {
             // Fetch both products and inventory in parallel for speed
             const [prodRes, invRes] = await Promise.all([
-                supabaseClient.from('products').select('*').order('created_at', { ascending: false }),
-                supabaseClient.from('inventory').select('product_id, size, stock')
+                client.from('products').select('*').order('created_at', { ascending: false }),
+                client.from('inventory').select('product_id, size, stock')
             ]);
 
             if (prodRes.error) throw prodRes.error;

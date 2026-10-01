@@ -2232,6 +2232,8 @@ body {
     transition: all 0.4s ease;
     z-index: 5;
     background: #000;
+    content-visibility: auto;
+    contain-intrinsic-size: 700px;
 }
 
 .featured-collection-banner:hover {
@@ -2320,19 +2322,11 @@ body {
 /* ===== MOBILE PERFORMANCE: Optimized collage on mobile ===== */
 @media (max-width: 1023px) {
     .banner-slide {
-        display: none !important;
+        display: block !important;
     }
 
     .banner-collage {
-        opacity: 0.8;
-        /* reduce paint cost */
-        filter: none;
-        /* remove any expensive filters */
-    }
-
-    .collage-col {
-        /* hardware acceleration via translateZ only, avoiding excessive will-change */
-        transform: translateZ(0);
+        display: none !important;
     }
 }
 
@@ -2357,6 +2351,7 @@ body {
 }
 
 .banner-slide {
+    display: none;
     width: 100%;
     height: 100%;
     background-image: inherit;
@@ -2483,18 +2478,23 @@ body {
 
 @media (max-width: 768px) {
     .featured-collection-banner {
-        height: 600px;
+        height: 480px;
         width: 100%;
         margin: 20px 0;
         border-radius: 0;
+        contain-intrinsic-size: 480px;
     }
 
     .banner-title {
-        font-size: 2.8rem;
+        font-size: 2.4rem;
+    }
+
+    .banner-collage {
+        display: none !important;
     }
 
     .banner-slide {
-        display: none;
+        display: block !important;
     }
 }
 
@@ -3094,6 +3094,8 @@ body {
     cursor: pointer;
     margin: 45px 0;
     isolation: isolate;
+    content-visibility: auto;
+    contain-intrinsic-size: 650px;
 }
 
 .collage-dynamic-bg {
@@ -3251,16 +3253,65 @@ body {
     .maxsport-collage-section,
     .saprix-collage-section,
     .brand-collage-section { 
-        height: 500px; 
-        margin: 30px 0;
+        height: 440px; 
+        margin: 25px 0;
+        contain-intrinsic-size: 440px;
     }
-    .collage-columns { grid-template-columns: repeat(2, 1fr); }
-    .col-3 { display: none; }
-    .collage-img { height: 250px; }
-    .collage-floating-content .collage-title { font-size: 2.8rem; }
-    .collage-floating-content .collage-subtitle { font-size: 1.1rem; }
-    .collage-floating-content .collage-description { font-size: 0.95rem; margin-bottom: 20px; }
-    .collage-floating-content .collage-btn { padding: 14px 28px; font-size: 0.85rem; }
+    .collage-columns { 
+        grid-template-columns: repeat(2, 1fr) !important;
+        transform: none !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        height: 100% !important;
+        gap: 8px !important;
+        padding: 6px !important;
+    }
+    .col-3 { display: none !important; }
+    .collage-col {
+        animation: none !important;
+        transform: none !important;
+        gap: 8px !important;
+    }
+    /* Hide duplicated infinite-loop images beyond the first 2 in each column so mobile only decodes 4 static images */
+    .collage-col .collage-img:nth-child(n+3) {
+        display: none !important;
+    }
+    .collage-img { 
+        height: 100% !important;
+        min-height: 190px !important;
+        border-radius: 12px !important;
+        filter: brightness(0.65) !important;
+        transition: none !important;
+    }
+    .collage-floating-content .collage-title { 
+        font-size: 2.5rem; 
+        letter-spacing: -1.5px; 
+    }
+    .collage-floating-content .collage-subtitle { 
+        font-size: 1.05rem; 
+        letter-spacing: 1.5px; 
+    }
+    .collage-floating-content .collage-description { 
+        font-size: 0.9rem; 
+        margin-bottom: 20px; 
+        letter-spacing: 2px;
+    }
+    .collage-floating-content .collage-btn { 
+        padding: 13px 28px; 
+        font-size: 0.85rem; 
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6) !important;
+    }
+    /* Remove heavy backdrop-filters on mobile */
+    .banner-cta,
+    .carousel-btn,
+    .search-container-home .search-input-wrapper {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
 }
 
 /* ==================== MUNDIAL BANNER MODAL ==================== */

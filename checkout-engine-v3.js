@@ -242,6 +242,12 @@ function loadCheckoutCart() {
     if (savedCart) {
         checkoutCart = JSON.parse(savedCart);
         renderCheckoutSummary();
+
+        // Meta Pixel Tracking
+        if (window.MetaEvents && typeof window.MetaEvents.initiateCheckout === 'function') {
+            const subtotal = checkoutCart.reduce((sum, i) => sum + ((typeof i.price === 'number' ? i.price : parseInt(String(i.price).replace(/\D/g, '')) || 0) * i.quantity), 0);
+            window.MetaEvents.initiateCheckout(checkoutCart, subtotal);
+        }
     } else {
         window.location.href = 'collections.html';
     }
