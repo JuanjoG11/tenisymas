@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -13,22 +13,22 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: radial-gradient(circle at top right, #1a1a1a, #000);
-            color: #fff;
+            background: #080808;
+            color: #f0f0f0;
             font-family: 'Outfit', sans-serif;
             min-height: 100vh;
         }
 
         .success-header {
             padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            background: rgba(0,0,0,0.95);
+            border-bottom: 1px solid rgba(255,45,52,0.35);
+            background: rgba(8,8,8,0.95);
             text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
         .success-header img {
             height: 45px;
-            filter: drop-shadow(0 0 10px rgba(255,51,51,0.3));
         }
 
         .success-wrapper {
@@ -48,7 +48,7 @@
             justify-content: center;
             margin: 0 auto 24px;
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            box-shadow: 0 0 40px rgba(46, 204, 113, 0.35);
+            box-shadow: 0 0 40px rgba(46, 204, 113, 0.3);
         }
 
         @keyframes popIn {
@@ -67,11 +67,12 @@
             font-size: 2rem;
             font-weight: 900;
             margin-bottom: 6px;
+            color: #ffffff;
         }
 
         .success-subtitle {
             text-align: center;
-            color: #888;
+            color: rgba(255,255,255,0.5);
             font-size: 0.95rem;
             margin-bottom: 8px;
         }
@@ -80,37 +81,39 @@
             text-align: center;
             display: inline-block;
             width: 100%;
-            color: #aaa;
+            color: #888;
             font-size: 0.85rem;
             margin-bottom: 32px;
         }
 
         .order-id-badge span {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: #f4f4f5;
+            border: 1px solid #e2e2e5;
             border-radius: 20px;
             padding: 4px 14px;
             font-family: monospace;
             font-size: 0.9rem;
             letter-spacing: 1px;
+            color: #555;
         }
 
         /* Card de confirmación */
         .confirm-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: #111111;
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 18px;
             padding: 28px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
         }
 
         .confirm-card h3 {
             font-size: 1rem;
             font-weight: 700;
-            color: #fff;
+            color: rgba(255,255,255,0.9);
             margin-bottom: 18px;
             padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
         }
 
         /* Items del pedido */
@@ -119,7 +122,7 @@
             align-items: center;
             gap: 14px;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .order-item:last-child { border-bottom: none; }
@@ -136,14 +139,14 @@
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
-            background: #1a1a1a;
+            background: #f4f4f5;
         }
 
         .order-item-qty {
             position: absolute;
             top: -6px;
             right: -6px;
-            background: #ff3333;
+            background: #e8181e;
             color: #fff;
             font-size: 0.7rem;
             font-weight: 700;
@@ -161,10 +164,11 @@
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 3px;
+            color: #111111;
         }
 
         .order-item-info small {
-            color: #888;
+            color: rgba(255,255,255,0.38);
             font-size: 0.78rem;
         }
 
@@ -172,6 +176,7 @@
             font-weight: 700;
             font-size: 0.95rem;
             white-space: nowrap;
+            color: #ff2d34;
         }
 
         /* Totales */
@@ -181,20 +186,20 @@
             align-items: center;
             padding: 8px 0;
             font-size: 0.9rem;
-            color: #aaa;
+            color: rgba(255,255,255,0.42);
         }
 
         .totals-row.total-final {
             border-top: 1px solid rgba(255,255,255,0.08);
             margin-top: 8px;
             padding-top: 14px;
-            color: #fff;
+            color: rgba(255,255,255,0.9);
             font-size: 1.05rem;
             font-weight: 800;
         }
 
         .totals-row.total-final .total-amount {
-            color: #2ecc71;
+            color: #ff2d34;
             font-size: 1.2rem;
         }
 
@@ -203,28 +208,28 @@
             display: flex;
             gap: 10px;
             padding: 9px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             font-size: 0.88rem;
         }
 
         .info-row:last-child { border-bottom: none; }
 
         .info-label {
-            color: #666;
+            color: rgba(255,255,255,0.28);
             min-width: 110px;
             font-size: 0.82rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .info-value { color: #e0e0e0; }
+        .info-value { color: #333333; }
 
         /* Botones */
         .btn-success {
             display: block;
             width: 100%;
             padding: 17px;
-            border-radius: 12px;
+            border-radius: 50px;
             font-family: 'Outfit', sans-serif;
             font-size: 1rem;
             font-weight: 700;
@@ -239,19 +244,31 @@
         .btn-success:active { transform: scale(0.98); }
 
         .btn-primary-success {
-            background: linear-gradient(90deg, #ff3333, #cc0000);
+            background: linear-gradient(135deg, #ff2d34, #cc0a10);
             color: #fff;
+            box-shadow: 0 4px 20px rgba(255,45,52,0.4);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 4px 16px rgba(232,24,30,0.25);
+        }
+
+        .btn-primary-success:hover {
+            filter: brightness(1.05);
         }
 
         .btn-secondary-success {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.12);
-            color: #ccc;
+            color: rgba(255,255,255,0.65);
+        }
+
+        .btn-secondary-success:hover {
+            background: #ebebec;
         }
 
         /* Banner de envío */
         .shipping-banner {
-            background: linear-gradient(135deg, rgba(46,204,113,0.1), rgba(22,163,74,0.08));
+            background: rgba(46,204,113,0.07);
             border: 1px solid rgba(46,204,113,0.25);
             border-radius: 14px;
             padding: 18px 20px;
@@ -270,21 +287,21 @@
 
         .shipping-banner p {
             font-size: 0.88rem;
-            color: #aaa;
+            color: rgba(255,255,255,0.48);
             margin: 0;
         }
 
-        .shipping-banner strong { color: #2ecc71; }
+        .shipping-banner strong { color: #16a34a; }
 
         /* Estado vacío / error */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #666;
+            color: rgba(255,255,255,0.28);
         }
 
         .empty-state a {
-            color: #ff3333;
+            color: #ff2d34;
             text-decoration: none;
         }
     </style>

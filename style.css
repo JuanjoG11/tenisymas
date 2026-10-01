@@ -481,7 +481,7 @@ body {
 }
 
 .nav-menu a {
-    color: var(--color-white);
+    color: rgba(255, 255, 255, 0.95);
     text-decoration: none;
     font-weight: 600;
     font-size: 1rem;
@@ -612,7 +612,7 @@ body {
 
 .section-subtitle {
     font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .view-all-link {
@@ -651,7 +651,7 @@ body {
 
 .banner-content p {
     font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: var(--spacing-lg);
 }
 
@@ -889,23 +889,42 @@ body {
 
 .btn-flashy {
     display: inline-block;
-    padding: 18px 40px;
-    background: white;
-    color: black;
+    padding: 18px 44px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 2px;
     border-radius: 50px;
     text-decoration: none;
-    transition: all 0.3s ease;
-    border: 2px solid white;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-flashy::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-flashy:hover::before {
+    left: 100%;
 }
 
 .btn-flashy:hover {
-    background: transparent;
-    color: white;
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    background: white;
+    color: black;
+    transform: scale(1.06) translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255,255,255,0.5);
 }
 
 .slider-prev,
@@ -1107,7 +1126,7 @@ body {
 
 .cart-shipping-bar p {
     font-size: 0.95rem;
-    color: #eee;
+    color: #ffffff;
     margin-bottom: 12px;
 }
 
@@ -1185,19 +1204,19 @@ body {
 }
 
 .cart-total span:first-child {
-    color: #888;
+    color: rgba(255, 255, 255, 0.85);
     font-size: 1.1rem;
 }
 
 .cart-total span:last-child {
     font-weight: 900;
     font-size: 1.6rem;
-    color: white;
+    color: #ffffff;
 }
 
 .empty-cart-msg {
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
     margin-top: var(--spacing-xl);
 }
 
@@ -1206,22 +1225,41 @@ body {
     padding: 16px;
     font-size: 1.1rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: 8px;
+    letter-spacing: 1.5px;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
     color: white;
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: none;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-full::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-full:hover::before {
+    left: 100%;
 }
 
 .btn-full:hover {
+    background: white;
+    color: #0a0a0a;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 51, 51, 0.5);
-    filter: brightness(1.1);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25);
+    border-color: white;
 }
 
 .section-title {
@@ -1716,24 +1754,46 @@ body {
 
 .product-btn {
     width: 100%;
-    padding: var(--spacing-sm);
-    background: var(--gradient-primary);
+    padding: 14px var(--spacing-sm);
+    background: transparent;
     color: var(--color-white);
-    border: none;
-    border-radius: var(--radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: var(--radius-full);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: var(--transition-normal);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xs);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    transition: left 0.5s ease;
+}
+
+.product-btn:hover::before {
+    left: 100%;
 }
 
 .product-btn:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-red);
+    background: white;
+    color: #0a0a0a;
+    border-color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
 }
 
 /* Variety Banner */
@@ -1877,7 +1937,7 @@ body {
 }
 
 .location-hours p {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.95rem;
     margin-bottom: 5px;
 }
@@ -1925,7 +1985,7 @@ body {
 }
 
 .footer-brand p {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .footer-links {
@@ -1949,7 +2009,7 @@ body {
     text-align: center;
     padding-top: var(--spacing-md);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -2387,20 +2447,24 @@ body {
 
 .banner-cta {
     display: inline-block;
-    padding: 15px 40px;
-    background: white;
-    color: black;
+    padding: 16px 44px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 2px;
     border-radius: 50px;
-    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .featured-collection-banner:hover .banner-cta {
-    background: var(--color-red);
-    color: white;
-    transform: translateY(-5px);
+    background: white;
+    color: #0a0a0a;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.25);
 }
 
 @media (min-width: 1024px) {
@@ -3018,14 +3082,18 @@ body {
     }
 }
 
-/* ==================== JOMA INFINITE COLLAGE ==================== */
-.joma-collage-section {
+/* ==================== BRAND INFINITE COLLAGES (JOMA, MAX SPORT, SAPRIX) ==================== */
+.joma-collage-section,
+.maxsport-collage-section,
+.saprix-collage-section,
+.brand-collage-section {
     position: relative;
     height: 650px;
     background: #000;
     overflow: hidden;
     cursor: pointer;
-    margin: 40px 0;
+    margin: 45px 0;
+    isolation: isolate;
 }
 
 .collage-dynamic-bg {
@@ -3067,8 +3135,11 @@ body {
     transition: all 0.5s ease;
 }
 
-.joma-collage-section:hover .collage-img {
-    filter: brightness(0.9);
+.joma-collage-section:hover .collage-img,
+.maxsport-collage-section:hover .collage-img,
+.saprix-collage-section:hover .collage-img,
+.brand-collage-section:hover .collage-img {
+    filter: brightness(0.92);
 }
 
 @keyframes collageScroll {
@@ -3082,7 +3153,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+    background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%);
     z-index: 2;
 }
 
@@ -3094,10 +3165,12 @@ body {
     z-index: 10;
     text-align: center;
     width: 100%;
+    padding: 0 20px;
     pointer-events: none;
 }
 
-.collage-floating-content .joma-badge {
+.collage-floating-content .joma-badge,
+.collage-floating-content .brand-badge {
     background: #ff3333;
     color: white;
     padding: 8px 25px;
@@ -3108,6 +3181,11 @@ body {
     margin-bottom: 20px;
     letter-spacing: 3px;
     box-shadow: 0 5px 15px rgba(255,51,51,0.4);
+}
+
+.collage-floating-content .saprix-badge {
+    background: linear-gradient(135deg, #ff6600 0%, #ff2222 100%) !important;
+    box-shadow: 0 5px 18px rgba(255,80,0,0.45) !important;
 }
 
 .collage-floating-content .collage-title {
@@ -3143,22 +3221,46 @@ body {
 .collage-floating-content .collage-btn {
     display: inline-block;
     padding: 18px 50px;
-    background: white;
-    color: black;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
     font-weight: 950;
     border-radius: 100px;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 1rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: none;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.joma-collage-section:hover .collage-btn,
+.maxsport-collage-section:hover .collage-btn,
+.saprix-collage-section:hover .collage-btn,
+.brand-collage-section:hover .collage-btn {
+    background: white;
+    color: #0a0a0a;
+    transform: scale(1.06) translateY(-3px);
+    box-shadow: 0 12px 35px rgba(255,255,255,0.25);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .joma-collage-section { height: 500px; }
+    .joma-collage-section,
+    .maxsport-collage-section,
+    .saprix-collage-section,
+    .brand-collage-section { 
+        height: 500px; 
+        margin: 30px 0;
+    }
     .collage-columns { grid-template-columns: repeat(2, 1fr); }
     .col-3 { display: none; }
     .collage-img { height: 250px; }
+    .collage-floating-content .collage-title { font-size: 2.8rem; }
+    .collage-floating-content .collage-subtitle { font-size: 1.1rem; }
+    .collage-floating-content .collage-description { font-size: 0.95rem; margin-bottom: 20px; }
+    .collage-floating-content .collage-btn { padding: 14px 28px; font-size: 0.85rem; }
 }
 
 /* ==================== MUNDIAL BANNER MODAL ==================== */
@@ -3251,6 +3353,395 @@ body {
         height: 28px;
     }
 }
+
+/* ==========================================================================
+   DESTELLOS BLANCOS, CONTRASTES PREMIUM Y BOTONES SORPRENDENTES
+   ========================================================================== */
+
+/* Animación de destello blanco barrido (White Shimmer Sweep) */
+@keyframes whiteSweep {
+    0% {
+        left: -120%;
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.8;
+    }
+    100% {
+        left: 200%;
+        opacity: 0;
+    }
+}
+
+@keyframes whitePulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.45), 0 0 50px rgba(255, 255, 255, 0.25);
+    }
+}
+
+@keyframes sparkleGlint {
+    0%, 100% {
+        transform: scale(0.8) rotate(0deg);
+        opacity: 0.4;
+    }
+    50% {
+        transform: scale(1.2) rotate(45deg);
+        opacity: 1;
+        filter: drop-shadow(0 0 8px #ffffff);
+    }
+}
+
+/* Mejora global de contrastes de texto */
+h1, h2, h3, h4, .section-title, .flashy-title, .collage-title, .banner-title, .gallery-title, .uniforms-hero h3, .shipping-hero h3 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.section-subtitle, .product-old-price, .brand-tagline, .banner-text, .collage-subtitle, .uniform-feature p, .shipping-card p, .shipping-caption {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.uniform-feature h4, .shipping-card h4, .finance-card h3, .shipping-companies h4, .method-item, .credit-card-fancy li, .browse-item span {
+    color: #ffffff !important;
+    font-weight: 800;
+}
+
+.collage-floating-content .joma-badge, .collage-floating-content .brand-badge, .joma-badge {
+    color: #ffffff !important;
+    border: 1.5px solid #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 5px 15px rgba(255, 51, 51, 0.4) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.collage-floating-content .collage-title {
+    color: #ffffff !important;
+    text-shadow: 0 5px 25px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 255, 255, 0.35) !important;
+}
+
+.browse-item {
+    border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.browse-item:hover {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.3), 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* BOTONES BIEN SORPRENDENTES CON DESTELLOS BLANCOS */
+.btn, .product-btn, .btn-primary, .btn-full, .banner-cta, .collage-btn, .view-details-tag, .btn-flashy, .btn-checkout {
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Efecto de destello blanco en los botones */
+.btn::after, .product-btn::after, .btn-primary::after, .btn-full::after, .banner-cta::after, .collage-btn::after, .view-details-tag::after, .btn-flashy::after, .btn-checkout::after, .btn-recovery-action::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -120% !important;
+    width: 60% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.7), transparent) !important;
+    transform: skewX(-25deg) !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+}
+
+/* Hover de destello rápido */
+.btn:hover::after, .product-btn:hover::after, .btn-primary:hover::after, .btn-full:hover::after, .banner-cta:hover::after, .collage-btn:hover::after, .view-details-tag:hover::after, .btn-flashy:hover::after, .btn-checkout:hover::after, .btn-recovery-action:hover::after {
+    animation: whiteSweep 0.9s ease-in-out forwards !important;
+}
+
+/* Efecto de elevación y aura blanca al hacer hover */
+.product-btn:hover, .btn-primary:hover, .btn-full:hover, .banner-cta:hover, .collage-btn:hover, .view-details-tag:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.35), 0 0 15px rgba(255, 255, 255, 0.2) !important;
+    border-color: #ffffff !important;
+}
+
+.product-btn:active, .btn-primary:active, .btn-full:active {
+    transform: translateY(1px) scale(0.98) !important;
+}
+
+/* Estilo destacado para el botón de compra en el Drawer y modales */
+#btnGoToCheckout, .checkout-btn, .btn-checkout {
+    background: linear-gradient(135deg, #e60000 0%, #ff3333 50%, #ffffff 150%) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.2) !important;
+}
+
+#btnGoToCheckout:hover, .checkout-btn:hover, .btn-checkout:hover {
+    box-shadow: 0 8px 30px rgba(255, 51, 51, 0.6), 0 0 25px rgba(255, 255, 255, 0.4) !important;
+    border-color: #ffffff !important;
+}
+
+/* ==========================================================================
+   MODAL DE RECUPERACIÓN DE CARRITO (5% EXTRA DISCOUNT)
+   ========================================================================== */
+.cart-recovery-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    padding: 20px;
+}
+
+.cart-recovery-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cart-recovery-modal {
+    position: relative;
+    max-width: 520px;
+    width: 100%;
+    background: linear-gradient(145deg, #141414 0%, #0a0a0a 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    padding: 35px 25px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 255, 255, 0.2);
+    transform: scale(0.85) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.cart-recovery-overlay.active .cart-recovery-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* Borde brillante animado */
+.cart-recovery-modal::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.recovery-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    z-index: 10;
+}
+
+.recovery-close-btn:hover {
+    background: rgba(255, 51, 51, 0.8);
+    border-color: #ffffff;
+    transform: rotate(90deg) scale(1.1);
+}
+
+.recovery-badge-wrapper {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.recovery-badge {
+    background: linear-gradient(135deg, #ff1a1a 0%, #ff5252 100%);
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.1rem;
+    padding: 8px 22px;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 20px rgba(255, 51, 51, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+    animation: whitePulseGlow 2s infinite ease-in-out;
+}
+
+.recovery-title {
+    position: relative;
+    z-index: 1;
+    font-size: 1.85rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+.recovery-description {
+    position: relative;
+    z-index: 1;
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin-bottom: 22px;
+}
+
+.recovery-highlight {
+    color: #ffdd00;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 221, 0, 0.5);
+}
+
+.recovery-timer-box {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #e2e8f0;
+}
+
+.recovery-timer-box span {
+    color: #ff4d4d;
+    font-family: monospace;
+    font-size: 1.15rem;
+    font-weight: bold;
+}
+
+.recovery-coupon-card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recovery-coupon-code {
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+}
+
+.recovery-coupon-tag {
+    font-size: 0.8rem;
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid #2ecc71;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+.btn-recovery-action {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #ff1a1a 0%, #e60000 50%, #ffffff 140%);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 16px;
+    font-size: 1.15rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(255, 26, 26, 0.5), 0 0 25px rgba(255, 255, 255, 0.3);
+    margin-bottom: 15px;
+}
+
+.btn-recovery-action:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(255, 26, 26, 0.7), 0 0 35px rgba(255, 255, 255, 0.5);
+}
+
+.recovery-dismiss-link {
+    position: relative;
+    z-index: 1;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.88rem;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.recovery-dismiss-link:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Banner de descuento aplicado dentro del Drawer del Carrito */
+.applied-discount-banner {
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.15) 0%, rgba(39, 174, 96, 0.25) 100%);
+    border: 1px solid #2ecc71;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    animation: fadeInContent 0.3s ease;
+}
+
+.applied-discount-banner strong {
+    color: #2ecc71;
+}
+
+.remove-discount-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.remove-discount-btn:hover {
+    color: #ff4d4d;
+}
+
 
 
 

@@ -14,6 +14,8 @@
     <link rel="canonical" href="https://tennisymas.com/">
     <link rel="shortcut icon" href="images/favicon.png" type="image/png">
 
+
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tennisymas.com/">
@@ -81,8 +83,8 @@
     }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=8.0">
-    <link rel="stylesheet" href="carousel.css?v=8.0">
+    <link rel="stylesheet" href="style.css?v=11.0">
+    <link rel="stylesheet" href="carousel.css?v=11.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -95,8 +97,8 @@
 
     <!-- Performance: Preload critical assets -->
     <link rel="preload" href="images/logo-tm.png" as="image">
-    <link rel="preload" href="style.css?v=8.0" as="style">
-    <link rel="preload" href="script.js?v=9.0" as="script">
+    <link rel="preload" href="style.css?v=11.0" as="style">
+    <link rel="preload" href="script.js?v=17.0" as="script">
 </head>
 
 <body>
@@ -245,14 +247,17 @@
 
                 <ul class="nav-menu" id="navMenu">
                     <li><a href="index.html">Inicio</a></li>
-                    <li><a href="buritica.html" style="color: var(--color-red); font-weight: 800;">Colección 2026</a></li>
+                    <li><a href="buritica.html" class="nav-featured">Colección 2026</a></li>
                     <li><a href="busos.html">Busos ⚡</a></li>
-                    <li><a href="collections.html?category=futsal&brand=Joma">Joma Original</a></li>
                     <li><a href="collections.html?category=tenis-guayos">Tenis-Guayos</a></li>
                     <li><a href="collections.html?category=guayos">Guayos</a></li>
                     <li><a href="collections.html?category=futsal">Futsal</a></li>
                     <li><a href="collections.html?category=petos,camisetas">Petos y Camisetas</a></li>
-                    <li><a href="collections.html?category=max-sport">Max Sport ⭐</a></li>
+                    <li class="nav-divider" aria-hidden="true"></li>
+                    <li><a href="collections.html?category=futsal&brand=Joma" class="nav-brand-link">Joma ⭐</a></li>
+                    <li><a href="collections.html?category=saprix" class="nav-brand-link">Saprix ⭐</a></li>
+                    <li><a href="collections.html?category=max-sport" class="nav-brand-link">Max Sport ⭐</a></li>
+                    <li class="nav-divider" aria-hidden="true"></li>
                     <li><a href="index.html#envios">Envíos</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
@@ -378,10 +383,8 @@
                     <!-- Card 1: Guayos -->
                     <div class="carousel-card active" data-index="0" data-url="collections.html?category=guayos">
                         <div class="card-image">
-                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778186985178_WhatsApp_Image_2026_05_07_at_3.24.05_PM.jpeg" alt="Guayos Nike Phantom GX 6 Mamba" loading="lazy"
-                                 decoding="async">
+                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1790631389304_IMG_8827.jpeg" alt="Guayos" loading="lazy" decoding="async">
                             <div class="card-overlay">
-
                                 <h3>GUAYOS</h3>
                                 <div class="btn-fake">Ver Colección</div>
                             </div>
@@ -391,7 +394,7 @@
                     <!-- Card 2: Tenis-Guayos -->
                     <div class="carousel-card" data-index="1" data-url="collections.html?category=tenis-guayos">
                         <div class="card-image">
-                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778192626555_WhatsApp_Image_2026_05_07_at_3.23.59_PM.jpeg" alt="Tenis-Guayos Predator 26" loading="lazy" decoding="async">
+                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1790631486686_IMG_8834.jpeg" alt="Tenis-Guayos" loading="lazy" decoding="async">
                             <div class="card-overlay">
                                 <h3>TENIS-GUAYOS</h3>
                                 <div class="btn-fake">Ver Colección</div>
@@ -402,7 +405,7 @@
                     <!-- Card 3: Futsal -->
                     <div class="carousel-card" data-index="2" data-url="collections.html?category=futsal">
                         <div class="card-image">
-                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778186128010_WhatsApp_Image_2026_05_07_at_3.14.40_PM.jpeg" alt="Fútbol Sala Tiempo X Ronaldinho Elite" loading="lazy" decoding="async">
+                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1790796708400_IMG_8976.jpeg" alt="Fútbol Sala" loading="lazy" decoding="async">
                             <div class="card-overlay">
                                 <h3>FÚTSAL</h3>
                                 <div class="btn-fake">Ver Colección</div>
@@ -410,45 +413,32 @@
                         </div>
                     </div>
 
-                    <!-- Card 4: Niños — temporalmente suspendida -->
-                    <!-- <div class="carousel-card" data-index="3" data-url="collections.html?category=ninos">
-                        <div class="card-image">
-                            <img src="images/ninos1.jpg" alt="Para Niños" loading="lazy" decoding="async">
-                            <div class="card-overlay">
-                                <h3>NIÑOS</h3>
-                                <div class="btn-fake">Ver Colección</div>
-                            </div>
-                        </div>
-                    </div> -->
-
-                    <!-- Card 5: Petos y Camisetas -->
+                    <!-- Card 4: Petos y Camisetas -->
                     <div class="carousel-card" data-index="3" data-url="collections.html?category=petos,camisetas">
                         <div class="card-image">
-                            <img src="images/uniformes-main.png" alt="Petos y Camisetas" loading="lazy"
-                                decoding="async">
+                            <img src="images/uniformes-main.png" alt="Petos y Camisetas" loading="lazy" decoding="async">
                             <div class="card-overlay">
-
                                 <h3>PETOS Y CAMISETAS</h3>
                                 <div class="btn-fake">Ver Colección</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 6: Joma Originals -->
+                    <!-- Card 5: Joma Originals -->
                     <div class="carousel-card" data-index="4" data-url="collections.html?category=futsal&brand=Joma">
                         <div class="card-image">
-                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778186360415_WhatsApp_Image_2026_05_07_at_3.23.56_PM.jpeg" alt="Joma ORIGINAL Invicto Black" loading="lazy" decoding="async">
+                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1782179896948_IMG_2731.jpeg" alt="Joma ORIGINAL" loading="lazy" decoding="async">
                             <div class="card-overlay">
-                                <h3>Joma ORIGINAL</h3>
+                                <h3>JOMA ORIGINAL ⭐</h3>
                                 <div class="btn-fake">Ver Colección</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 7: Max Sport -->
+                    <!-- Card 6: Max Sport -->
                     <div class="carousel-card" data-index="5" data-url="collections.html?category=max-sport">
                         <div class="card-image">
-                            <img src="images/tymxmax.jpg" alt="Max Sport" loading="lazy" decoding="async" style="object-fit: cover;">
+                            <img src="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1790372293149_IMG_8692.jpeg" alt="Max Sport" loading="lazy" decoding="async" style="object-fit: cover;">
                             <div class="card-overlay">
                                 <h3>MAX SPORT ⭐</h3>
                                 <div class="btn-fake">Ver Colección</div>
@@ -480,81 +470,58 @@
             </div>
         </section>
 
-        <!-- MAX SPORT DROP SECTION -->
-        <section class="maxsport-drop-section" id="maxsportSection">
-            <!-- Fondo split: izquierda oscura / derecha imagen con blend -->
-            <div class="ms-left-panel">
-                <div class="ms-left-noise"></div>
-                <!-- Texto vertical izquierda -->
-                <span class="ms-vertical-tag">DISTRIBUIDORES AUTORIZADOS · PEREIRA ·</span>
-                <!-- Contenido principal -->
-                <div class="ms-left-content">
-                    <div class="ms-eyebrow">
-                        <span class="ms-dot-live"></span>
-                        NUEVO · 2026
+        <!-- MAX SPORT COLLAGE SECTION -->
+        <section class="maxsport-collage-section" id="maxsportSection" onclick="window.location.href='collections.html?category=max-sport'">
+            <div class="collage-dynamic-bg">
+                <div class="collage-columns">
+                    <!-- Columna 1 -->
+                    <div class="collage-col col-1">
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
+                        <!-- Duplicado para loop -->
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
                     </div>
-                    <h2 class="ms-big-title">MAX<br><span class="ms-outline">SPORT</span></h2>
-                    <p class="ms-desc">Lo que tanto esperaban<br><strong>ya llegó.</strong> No se sorprendan.</p>
-                    <a class="ms-cta" href="collections.html?category=max-sport">
-                        VER COLECCIÓN
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </a>
+                    <!-- Columna 2 -->
+                    <div class="collage-col col-2">
+                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/tymxmax.jpg')"></div>
+                        <!-- Duplicado para loop -->
+                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/tymxmax.jpg')"></div>
+                    </div>
+                    <!-- Columna 3 -->
+                    <div class="collage-col col-3">
+                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <!-- Duplicado para loop -->
+                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
+                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                    </div>
                 </div>
+                <div class="collage-overlay"></div>
             </div>
 
-            <div class="ms-right-panel">
-                <div class="ms-logo-frame">
-                    <img src="images/logo max.jpg" alt="Max Sport" class="ms-logo-img ms-img-fade active">
-                    <img src="images/tymxmax.jpg"  alt="TennisYMas x Max Sport" class="ms-logo-img ms-img-fade">
-                    <div class="ms-logo-glitch" aria-hidden="true">
-                        <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-1">
-                        <img src="images/logo max.jpg" alt="" class="ms-logo-img ms-glitch-layer-2">
-                    </div>
-                </div>
-                <div class="ms-coming-tag" style="display:none;"></div>
+            <div class="collage-floating-content">
+                <span class="joma-badge">DISTRIBUIDORES AUTORIZADOS ⭐</span>
+                <h2 class="collage-title">MAX SPORT</h2>
+                <p class="collage-subtitle">"CALIDAD QUE SE SIENTE EN CADA PASO"</p>
+                <div class="collage-description">DIRECTO AL EJE CAFETERO</div>
+                <div class="collage-btn">VER COLECCIÓN MAX SPORT</div>
             </div>
         </section>
-
-        <!-- Modal Max Sport - Ver Colección -->
-        <div class="ms-modal-overlay" id="msModal" onclick="closeMaxSportModal()">
-            <div class="ms-modal" onclick="event.stopPropagation()">
-                <button class="ms-modal-close" onclick="closeMaxSportModal()">✕</button>
-                <div class="ms-modal-inner">
-                    <p class="ms-modal-eyebrow">TENNISYMAS × MAX SPORT</p>
-                    <div class="ms-modal-logo">
-                        <img src="images/logo max.jpg" alt="Max Sport">
-                    </div>
-                    <h2 class="ms-coming-title" style="margin: 18px 0 10px;">YA<br><em>LLEGÓ.</em></h2>
-                    <p class="ms-modal-text">Distribuidores autorizados en el Eje Cafetero.<br>Calidad certificada Max Sport.</p>
-                    <a href="collections.html?category=max-sport" class="ms-modal-notify" style="background: #fff; color: #000; font-weight: 900; letter-spacing: 1px; text-decoration: none; padding: 14px 28px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        ⭐ &nbsp;Ver Colección Max Sport
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            function openMaxSportModal() {
-                document.getElementById('msModal').classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            function closeMaxSportModal() {
-                document.getElementById('msModal').classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            // Fade entre logo y foto collab cada 3.5s
-            (function() {
-                var imgs = document.querySelectorAll('.ms-img-fade');
-                if (imgs.length < 2) return;
-                var current = 0;
-                setInterval(function() {
-                    imgs[current].classList.remove('active');
-                    current = (current + 1) % imgs.length;
-                    imgs[current].classList.add('active');
-                }, 3500);
-            })();
-        </script>
 
         <!-- Joma Collage Section (Infinite Style) -->
         <section class="joma-collage-section" onclick="window.location.href='collections.html?brand=Joma'">
@@ -591,6 +558,59 @@
                 <p class="collage-subtitle">"DEL BARRIO PARA EL BARRIO"</p>
                 <div class="collage-description">LO ORIGINAL NO SE IMPROVISA</div>
                 <div class="collage-btn">DESCUBRIR COLECCIÓN</div>
+            </div>
+        </section>
+
+        <!-- SAPRIX COLLAGE SECTION (Infinite Style) -->
+        <section class="saprix-collage-section brand-collage-section" id="saprixSection" onclick="window.location.href='collections.html?category=saprix'">
+            <div class="collage-dynamic-bg">
+                <div class="collage-columns">
+                    <!-- Columna 1 -->
+                    <div class="collage-col col-1">
+                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                        <!-- Duplicado para loop infinito -->
+                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                    </div>
+                    <!-- Columna 2 -->
+                    <div class="collage-col col-2">
+                        <div class="collage-img" style="background-image: url('images/saprix-3.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-6.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                        <!-- Duplicado para loop -->
+                        <div class="collage-img" style="background-image: url('images/saprix-3.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-6.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                    </div>
+                    <!-- Columna 3 -->
+                    <div class="collage-col col-3">
+                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                        <!-- Duplicado para loop -->
+                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
+                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                    </div>
+                </div>
+                <div class="collage-overlay"></div>
+            </div>
+
+            <div class="collage-floating-content">
+                <span class="joma-badge saprix-badge">NUEVA MARCA ⭐</span>
+                <h2 class="collage-title">SAPRIX</h2>
+                <p class="collage-subtitle">"ESTILO · CALIDAD · POTENCIA"</p>
+                <div class="collage-description">DESLUMBRA EN LA CANCHA</div>
+                <div class="collage-btn">VER COLECCIÓN SAPRIX</div>
             </div>
         </section>
 
@@ -988,7 +1008,7 @@
     </a>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
-    <script src="script.js?v=15.0"></script>
+    <script src="script.js?v=17.0"></script>
     <!-- Addi Widget Script (Standard Loader) -->
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
 
@@ -1305,5 +1325,6 @@
             }
         }
     </script>
+
 
 </html>

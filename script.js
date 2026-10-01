@@ -146,7 +146,11 @@ function loadCart() {
 }
 
 function saveCart() {
-    localStorage.setItem('tm_cart', JSON.stringify(cart));
+    try {
+        localStorage.setItem('tm_cart', JSON.stringify(cart));
+    } catch (e) {
+        console.warn('Error saving cart to localStorage:', e);
+    }
     updateCartUI();
 }
 
@@ -296,6 +300,17 @@ function updateCartUI() {
     if (cartCount) cartCount.textContent = totalQty;
     if (cartTotalItems) cartTotalItems.textContent = `(${totalQty})`;
 
+    // Check for applied discount
+    let appliedDiscount = null;
+    try {
+        const saved = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
+        if (saved) {
+            appliedDiscount = JSON.parse(saved);
+        }
+    } catch (e) {
+        appliedDiscount = null;
+    }
+
     // Update Items List
     if (cart.length === 0) {
         if (cartItems) cartItems.innerHTML = '<div class="empty-cart-msg">Tu carrito está vacío 🛒</div>';
@@ -305,7 +320,17 @@ function updateCartUI() {
         }
     } else {
         if (cartItems) {
-            cartItems.innerHTML = cart.map((item, index) => `
+            let discountHtml = '';
+            if (appliedDiscount && appliedDiscount.percent > 0) {
+                discountHtml = `
+                    <div class="applied-discount-banner">
+                        <span>🎁 Cupón <strong>${appliedDiscount.code} (-${appliedDiscount.percent}%)</strong> aplicado</span>
+                        <button class="remove-discount-btn" onclick="removeActiveDiscount()" title="Quitar descuento">&times;</button>
+                    </div>
+                `;
+            }
+
+            cartItems.innerHTML = discountHtml + cart.map((item, index) => `
                 <div class="cart-item">
                     <img src="${item.image}" alt="${item.name}">
                     <div class="item-details">
@@ -330,9 +355,7 @@ function updateCartUI() {
     }
 
     // Update Total Price (Parsing currency string like "$250.000")
-    // Update Total Price (Parsing currency string like "$250.000")
-    const total = cart.reduce((sum, item) => {
-        // Safe price parsing
+    const subtotal = cart.reduce((sum, item) => {
         let price = 0;
         if (typeof item.price === 'number') {
             price = item.price;
@@ -342,10 +365,25 @@ function updateCartUI() {
         return sum + (price * item.quantity);
     }, 0);
 
-    if (cartTotalPrice) cartTotalPrice.textContent = `$${total.toLocaleString('es-CO')}`;
+    let finalTotal = subtotal;
+    if (appliedDiscount && appliedDiscount.percent > 0) {
+        const discountVal = (subtotal * appliedDiscount.percent) / 100;
+        finalTotal = Math.max(0, Math.round(subtotal - discountVal));
+        if (cartTotalPrice) {
+            cartTotalPrice.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em; margin-right: 8px;">$${subtotal.toLocaleString('es-CO')}</span>$${finalTotal.toLocaleString('es-CO')}`;
+        }
+    } else {
+        if (cartTotalPrice) cartTotalPrice.textContent = `$${finalTotal.toLocaleString('es-CO')}`;
+    }
 
     // Update Shipping Goal
-    updateShippingGoal(total);
+    updateShippingGoal(subtotal);
+}
+
+function removeActiveDiscount() {
+    sessionStorage.removeItem('tm_discount');
+    localStorage.removeItem('tm_discount');
+    updateCartUI();
 }
 
 function updateShippingGoal(total) {
@@ -413,14 +451,10 @@ function setupCartInteractions() {
     const cartBtn = document.getElementById('cartBtn');
     const closeCart = document.getElementById('closeCart');
     const cartOverlay = document.getElementById('cartOverlay');
-    const checkoutBtn = document.getElementById('checkoutBtn');
 
     if (cartBtn) cartBtn.addEventListener('click', openCart);
-    if (closeCart) closeCart.addEventListener('click', closeCartDrawer);
-    if (cartOverlay) cartOverlay.addEventListener('click', closeCartDrawer);
-    if (checkoutBtn) {
-        // Legacy button handler removed/updated
-    }
+    if (closeCart) closeCart.addEventListener('click', handleCartDrawerCloseRequest);
+    if (cartOverlay) cartOverlay.addEventListener('click', handleCartDrawerCloseRequest);
 
     // New Integrated Checkout Elements
     const btnGoToCheckout = document.getElementById('btnGoToCheckout');
@@ -429,7 +463,6 @@ function setupCartInteractions() {
 
     if (btnGoToCheckout) {
         btnGoToCheckout.addEventListener('click', () => {
-            // Redirect to the new professional checkout page
             window.location.href = 'checkout.html';
         });
     }
@@ -439,7 +472,6 @@ function setupCartInteractions() {
             document.getElementById('checkoutView').style.display = 'none';
             document.getElementById('cartView').style.display = 'block';
 
-            // Show them back
             const timer = document.getElementById('cartUrgencyTimer');
             const shipBar = document.querySelector('.cart-shipping-bar');
             if (timer && cart.length > 0) timer.style.display = 'block';
@@ -453,6 +485,9 @@ function setupCartInteractions() {
             handleIntegratedCheckout();
         });
     }
+
+    // Setup Exit Intent detection for Cart Recovery
+    setupExitIntent();
 }
 
 function handleIntegratedCheckout() {
@@ -503,6 +538,131 @@ function closeCartDrawer() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.classList.remove('active');
     if (overlay) overlay.classList.remove('active');
+}
+
+function handleCartDrawerCloseRequest() {
+    closeCartDrawer();
+    // If user has items in cart and hasn't claimed/dismissed recovery yet, show the 5% offer!
+    const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
+    const declined = sessionStorage.getItem('cart_recovery_declined');
+    if (cart.length > 0 && !hasDiscount && !declined) {
+        setTimeout(() => {
+            showCartRecoveryModal();
+        }, 300);
+    }
+}
+
+// ==================== CART RECOVERY OFFER (5% OFF) ====================
+let recoveryTimerInterval = null;
+
+function ensureCartRecoveryModal() {
+    let overlay = document.getElementById('cartRecoveryOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'cartRecoveryOverlay';
+        overlay.className = 'cart-recovery-overlay';
+        overlay.innerHTML = `
+            <div class="cart-recovery-modal">
+                <button class="recovery-close-btn" onclick="closeCartRecoveryModal(true)">&times;</button>
+                <div class="recovery-badge-wrapper">
+                    <span class="recovery-badge">🔥 OFERTA EXCLUSIVA</span>
+                </div>
+                <h3 class="recovery-title">¡ESPERA! NO TE VAYAS CON LAS MANOS VACÍAS ⚡</h3>
+                <p class="recovery-description">
+                    Lleva tus tenis favoritos hoy mismo con un <strong class="recovery-highlight">5% DE DESCUENTO ADICIONAL</strong> exclusivo.
+                </p>
+                <div class="recovery-timer-box">
+                    ⏱️ OFERTA VÁLIDA POR: <span id="recoveryCountdown">09:59</span>
+                </div>
+                <div class="recovery-coupon-card">
+                    <div>
+                        <div style="font-size: 0.8rem; color: #aaa; text-transform: uppercase;">Cupón Especial</div>
+                        <div class="recovery-coupon-code">RECUPERA5</div>
+                    </div>
+                    <span class="recovery-coupon-tag">-5% OFF DIRECTO</span>
+                </div>
+                <button class="btn-recovery-action" onclick="applyCartRecoveryDiscount()">
+                    ⚡ APLICAR 5% Y CONTINUAR MI COMPRA
+                </button>
+                <div>
+                    <button class="recovery-dismiss-link" onclick="closeCartRecoveryModal(true)">
+                        No gracias, prefiero pagar precio completo
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeCartRecoveryModal(true);
+            }
+        });
+    }
+    return overlay;
+}
+
+function showCartRecoveryModal() {
+    if (cart.length === 0) return;
+    const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
+    if (hasDiscount) return;
+
+    const overlay = ensureCartRecoveryModal();
+    overlay.classList.add('active');
+
+    // Start 10-min countdown timer
+    let timeLeft = 599;
+    const countdownEl = document.getElementById('recoveryCountdown');
+    if (recoveryTimerInterval) clearInterval(recoveryTimerInterval);
+    
+    recoveryTimerInterval = setInterval(() => {
+        if (!countdownEl) return;
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        countdownEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        if (timeLeft <= 0) {
+            clearInterval(recoveryTimerInterval);
+        }
+        timeLeft--;
+    }, 1000);
+}
+
+function closeCartRecoveryModal(declined = false) {
+    const overlay = document.getElementById('cartRecoveryOverlay');
+    if (overlay) overlay.classList.remove('active');
+    if (recoveryTimerInterval) clearInterval(recoveryTimerInterval);
+    if (declined) {
+        sessionStorage.setItem('cart_recovery_declined', 'true');
+    }
+}
+
+function applyCartRecoveryDiscount() {
+    const discountData = { code: 'RECUPERA5', percent: 5 };
+    sessionStorage.setItem('tm_discount', JSON.stringify(discountData));
+    localStorage.setItem('tm_discount', JSON.stringify(discountData));
+    
+    closeCartRecoveryModal(false);
+    updateCartUI();
+    
+    // Open cart drawer so user sees their new reduced total and applied badge
+    setTimeout(() => {
+        openCart();
+    }, 200);
+}
+
+function setupExitIntent() {
+    // Only bind on desktop mouse leave
+    let exitTriggered = false;
+    document.addEventListener('mouseleave', (e) => {
+        if (e.clientY <= 15 && !exitTriggered && cart.length > 0) {
+            const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
+            const declined = sessionStorage.getItem('cart_recovery_declined');
+            if (!hasDiscount && !declined) {
+                exitTriggered = true;
+                showCartRecoveryModal();
+            }
+        }
+    });
 }
 
 function checkout() {
@@ -636,12 +796,19 @@ function setupSlider() {
         }
     }
 
-    // Auto Play
-    let timer = setInterval(rotateNext, 5000);
+    // Auto Play — cada 3.5s
+    let timer = setInterval(rotateNext, 3500);
 
     function resetTimer() {
         clearInterval(timer);
-        timer = setInterval(rotateNext, 5000);
+        timer = setInterval(rotateNext, 3500);
+    }
+
+    // Pause on hover
+    const section = document.querySelector('.carousel-section');
+    if (section) {
+        section.addEventListener('mouseenter', () => clearInterval(timer));
+        section.addEventListener('mouseleave', () => { timer = setInterval(rotateNext, 3500); });
     }
 }
 
@@ -732,11 +899,13 @@ async function syncProducts() {
                     console.log('[SYNC] Valid cache found, skipping network fetch.');
                     products = data; // Assuming 'products' is the global variable
                     renderHomepageSections(); // Assuming this is the correct render function
+                    document.dispatchEvent(new CustomEvent('productsLoaded'));
                     isSyncing = false;
                     return products;
                 }
                 // If cache is very fresh, skip network fetch entirely and resolve now
                 if (cacheIsFresh) {
+                    document.dispatchEvent(new CustomEvent('productsLoaded'));
                     isSyncing = false;
                     return products;
                 }
@@ -795,7 +964,10 @@ async function syncProducts() {
                     }
 
                 renderHomepageSections();
+                updateCategoryCardImages();
                 console.log('✅ Script.js: Data synced', products.length);
+                // Notificar que los productos están listos
+                document.dispatchEvent(new CustomEvent('productsLoaded'));
             }
         } catch (err) {
             console.error('Supabase sync failed:', err);
@@ -808,7 +980,79 @@ async function syncProducts() {
     return syncPromise;
 }
 
-// Initialize
-// Handled in DOMContentLoaded to prevent double fetch
+// ==================== DYNAMIC CATEGORY CARD IMAGES (LATEST UPLOAD) ====================
+function updateCategoryCardImages() {
+    if (!products || products.length === 0) return;
 
-// End Script
+    const cards = document.querySelectorAll('.carousel-card');
+    cards.forEach(card => {
+        const url = card.getAttribute('data-url') || '';
+        const img = card.querySelector('.card-image img');
+        if (!img || !url) return;
+
+        let categoryParam = null;
+        let brandParam = null;
+        try {
+            const urlObj = new URL(url, window.location.href);
+            categoryParam = urlObj.searchParams.get('category');
+            brandParam = urlObj.searchParams.get('brand');
+        } catch (e) {
+            if (url.includes('category=')) categoryParam = url.split('category=')[1]?.split('&')[0];
+            if (url.includes('brand=')) brandParam = url.split('brand=')[1]?.split('&')[0];
+        }
+
+        // Find the latest product uploaded that matches this category/brand
+        // Since products array is sorted by created_at DESC, the first match is the newest product
+        const latestProduct = products.find(p => {
+            const pCat = (p.category || p.categoria || '').toLowerCase().trim();
+            const pBrand = (p.brand || p.marca || '').toLowerCase().trim();
+            const pName = (p.name || p.nombre || '').toLowerCase().trim();
+
+            if (brandParam && brandParam.toLowerCase() === 'joma') {
+                return pName.includes('joma') || pBrand.includes('joma');
+            }
+
+            if (categoryParam === 'max-sport') {
+                return pCat === 'max-sport' || pName.includes('max ') || pName.startsWith('max') || pBrand.includes('max');
+            }
+
+            if (categoryParam === 'guayos') {
+                return pCat === 'guayos' && !pCat.includes('tenis-guayos');
+            }
+
+            if (categoryParam === 'tenis-guayos') {
+                return pCat === 'tenis-guayos' || pCat.includes('tenis-guayo') || pName.includes('teniguayo') || pName.includes('tenis-guayo');
+            }
+
+            if (categoryParam === 'futsal') {
+                return pCat === 'futsal';
+            }
+
+            if (categoryParam && (categoryParam.includes('peto') || categoryParam.includes('camiseta'))) {
+                return pCat.includes('peto') || pCat.includes('camiseta');
+            }
+
+            if (categoryParam) {
+                const cats = categoryParam.toLowerCase().split(',').map(c => c.trim());
+                return cats.some(c => pCat.includes(c) || pCat === c);
+            }
+
+            return false;
+        });
+
+        if (latestProduct) {
+            let imgUrl = latestProduct.image;
+            if (!imgUrl && Array.isArray(latestProduct.images) && latestProduct.images.length > 0) {
+                imgUrl = latestProduct.images[0];
+            }
+            if (imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http')) {
+                img.src = imgUrl;
+            }
+        }
+    });
+}
+
+document.addEventListener('productsLoaded', updateCategoryCardImages);
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updateCategoryCardImages, 300);
+});

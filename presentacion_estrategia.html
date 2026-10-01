@@ -475,6 +475,243 @@
             box-shadow: 0 0 10px var(--meta-cyan);
             cursor: pointer;
         }
+
+        /* ========== RESPONSIVE: TABLET (≤ 900px) ========== */
+        @media (max-width: 900px) {
+            .slide {
+                padding: 16px 20px 70px;
+            }
+
+            .slide-grid-split,
+            .slide-grid-2-even {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .slide-grid-3 {
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            .meta-slide-h1 {
+                font-size: 22px;
+            }
+
+            .meta-ad-preview-box {
+                max-width: 100%;
+            }
+
+            .product-img-box {
+                height: 180px;
+            }
+
+            /* Header simplification */
+            header.meta-suite-nav {
+                padding: 0 14px;
+                gap: 8px;
+            }
+            .meta-author-tag {
+                display: none;
+            }
+            .meta-account-name {
+                font-size: 11px;
+            }
+            .meta-nav-center {
+                display: none;
+            }
+
+            /* Slide 9 simulator grid */
+            .slide[data-slide="9"] .meta-card-box > div:last-of-type {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        /* ========== RESPONSIVE: MOBILE (≤ 600px) ========== */
+        @media (max-width: 600px) {
+            header.meta-suite-nav {
+                height: 48px;
+                padding: 0 10px;
+            }
+            .meta-logo-wrap img {
+                height: 24px !important;
+            }
+            .meta-account-name {
+                font-size: 10px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 130px;
+            }
+            .meta-logo-wrap {
+                gap: 8px;
+            }
+
+            /* Hide non-essential header buttons on mobile */
+            #btnToggleSound {
+                display: none;
+            }
+            .meta-btn.btn-primary-blue {
+                font-size: 0;
+                padding: 6px 10px;
+            }
+            .meta-btn.btn-primary-blue i {
+                font-size: 14px;
+            }
+
+            .meta-progress-line {
+                top: 48px;
+            }
+
+            .deck-wrapper {
+                height: calc(100vh - 51px);
+                margin-top: 51px;
+            }
+
+            .slide {
+                padding: 12px 14px 80px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .meta-sub-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+                padding-bottom: 8px;
+                margin-bottom: 12px;
+            }
+            .meta-sub-header > div:last-child {
+                font-size: 11px;
+            }
+
+            .meta-campaign-tag {
+                font-size: 10px;
+            }
+            .meta-slide-h1 {
+                font-size: 18px;
+            }
+
+            /* All grids to single column */
+            .slide-grid-split,
+            .slide-grid-2-even,
+            .slide-grid-3 {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .slide-body-wrap {
+                gap: 12px;
+            }
+
+            .meta-card-box {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .product-img-box {
+                height: 200px;
+            }
+
+            /* Ad Preview */
+            .meta-ad-preview-box {
+                max-width: 100%;
+            }
+            .meta-ad-media {
+                height: 200px;
+            }
+
+            /* Slide 1: Cover */
+            .slide[data-slide="1"] h1 {
+                font-size: 22px !important;
+                line-height: 1.2 !important;
+            }
+            .slide[data-slide="1"] .slide-grid-split > div:first-child > div:last-child {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Slide 8: Future grid */
+            .slide[data-slide="8"] > .slide-body-wrap > div:first-child {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Slide 9: Simulator */
+            .slide[data-slide="9"] #dispBudget {
+                font-size: 24px !important;
+            }
+
+            /* Simulator 4-col grid to 2-col */
+            .slide[data-slide="9"] .meta-card-box div[style*="grid-template-columns: repeat(4"] {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            /* Bottom info bar in slides */
+            div[style*="display: flex; justify-content: space-between; align-items: center"][style*="border-radius: 8px; padding: 10px 18px"] {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            /* Bottom Controls */
+            .meta-deck-controls {
+                bottom: 10px;
+                right: 50%;
+                transform: translateX(50%);
+                padding: 6px 16px;
+            }
+
+            /* Drawer */
+            .drawer-sidebar {
+                width: 85vw;
+                right: -85vw;
+            }
+            .drawer-item {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+
+            /* Slide 10 pricing */
+            .slide[data-slide="10"] .meta-card-box div[style*="font-size: 40px"] {
+                font-size: 28px !important;
+            }
+
+            /* Range slider labels */
+            .meta-range + div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+
+            /* General inline grids with 3 cols to 1 col */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Live pill wrapping */
+            .meta-live-pill {
+                font-size: 9px;
+                padding: 2px 6px;
+            }
+        }
+
+        /* ========== RESPONSIVE: Very small (≤ 380px) ========== */
+        @media (max-width: 380px) {
+            .meta-account-name {
+                max-width: 90px;
+                font-size: 9px;
+            }
+            .meta-slide-h1 {
+                font-size: 16px;
+            }
+            .slide[data-slide="1"] h1 {
+                font-size: 18px !important;
+            }
+            .meta-card-box {
+                padding: 10px;
+            }
+            .meta-ad-media {
+                height: 160px;
+            }
+        }
     </style>
 </head>
 <body>

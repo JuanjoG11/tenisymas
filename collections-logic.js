@@ -207,7 +207,8 @@ function updateCategoryTitle(category) {
         'futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' },
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
         'uniformes': { title: 'UNIFORMES', subtitle: 'Viste como un profesional' },
-        'max-sport': { title: 'MAX SPORT', subtitle: 'Distribuidores autorizados · Pereira' }
+        'max-sport': { title: 'MAX SPORT', subtitle: 'Distribuidores autorizados · Pereira' },
+        'saprix': { title: 'SAPRIX ⭐', subtitle: 'Estilo, Calidad y Potencia' }
     };
 
     let info = titles[category];
@@ -577,6 +578,15 @@ function executeApplyFilters(shouldScroll = false) {
                 }
             }
 
+            // SAPRIX: cuando se filtra por saprix, incluir también por categoría, marca o nombre
+            const isTargetingSaprix = allowedCats.some(c => c === 'saprix');
+            if (isTargetingSaprix && !matches) {
+                const searchStr = normalize((product.name || '') + ' ' + (product.brand || product.marca || '') + ' ' + (product.category || product.categoria || ''));
+                if (searchStr.includes('saprix')) {
+                    matches = true;
+                }
+            }
+
             if (!matches) return false;
         }
 
@@ -853,7 +863,7 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     const mainImage = coverImage;
 
     // Determine correct selector type (Chips vs Dropdown)
-    const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala', 'max-sport'].includes(category);
+    const isFootwear = ['guayos', 'tenis-guayos', 'futsal', 'tenis', 'running', 'tenis-running', 'ninos', 'tenis-futbol', 'fútbol-sala', 'fútbol sala', 'futbol sala', 'max-sport', 'saprix'].includes(category);
 
     const inventory = product.inventory || [];
     const totalStock = inventory.reduce((sum, inv) => sum + (inv.stock || 0), 0);
@@ -862,10 +872,12 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     return `
         <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}" data-category="${product.category}">
             ${isOutOfStock ? `<div class="product-badge out-of-stock-badge">AGOTADO</div>` : (() => {
-                // Auto-badge for Max Sport products
+                // Auto-badge for Max Sport and Saprix products
                 const isMaxSport = (product.category === 'max-sport') || 
                     ((product.brand || product.marca || '').toLowerCase().includes('max'));
-                const badgeText = isMaxSport ? '⭐ MAX SPORT' : (product.badge || product.etiqueta || '');
+                const isSaprix = (product.category === 'saprix') || 
+                    ((product.brand || product.marca || '').toLowerCase().includes('saprix'));
+                const badgeText = isMaxSport ? '⭐ MAX SPORT' : (isSaprix ? '⭐ SAPRIX' : (product.badge || product.etiqueta || ''));
                 return badgeText ? `<div class="product-badge">${badgeText}</div>` : '';
             })()}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">

@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - TENNISYMAS.COM</title>
     <link rel="shortcut icon" href="images/favicon.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=3.0">
-    <link rel="stylesheet" href="checkout-style.css?v=1.0">
+    <link rel="stylesheet" href="style.css?v=9.1">
+    <link rel="stylesheet" href="checkout-style.css?v=3.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
@@ -254,6 +254,224 @@
 
     <script src="script.js?v=8.0"></script>
     <script src="checkout-engine-v3.js?v=1.1"></script>
+
+    <!-- ═══ MODAL RECUPERACIÓN DE CARRITO ═══ -->
+    <div id="cartExitModal">
+        <div class="exit-modal-backdrop" id="exitBackdrop"></div>
+        <div class="exit-modal-box">
+            <button class="exit-modal-close" id="exitClose">✕</button>
+
+            <div class="exit-modal-top">
+                <span class="exit-emoji">🔥</span>
+                <h2>¡Espera! No te vayas<br>con las manos vacías</h2>
+                <p>Tenemos algo especial para ti</p>
+            </div>
+
+            <div class="exit-modal-body">
+                <!-- Badge descuento -->
+                <div class="exit-discount-badge">
+                    <div class="exit-discount-pct">5%</div>
+                    <div class="exit-discount-info">
+                        <strong>Descuento exclusivo</strong>
+                        <span>Solo por los próximos minutos ⚡</span>
+                    </div>
+                </div>
+
+                <!-- Código -->
+                <div class="exit-code-display">
+                    <span class="exit-code-label">Código</span>
+                    <span class="exit-code-value" id="exitCodeValue">VUELVE5</span>
+                    <button class="exit-code-copy" id="exitCopyBtn" onclick="copyExitCode()">Copiar</button>
+                </div>
+
+                <!-- Timer -->
+                <div class="exit-timer">
+                    <span>⏱ Oferta expira en</span>
+                    <span class="exit-timer-count" id="exitTimerCount">10:00</span>
+                </div>
+
+                <!-- CTAs -->
+                <button class="exit-cta-primary" id="exitApplyBtn" onclick="applyExitDiscount()">
+                    ✅ Aplicar descuento y terminar compra
+                </button>
+                <button class="exit-cta-secondary" id="exitDismissBtn" onclick="closeExitModal()">
+                    No gracias, prefiero pagar precio completo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    /* ═══ RECUPERACIÓN DE CARRITO ═══ */
+    var EXIT_DISCOUNT_CODE  = 'VUELVE5';
+    var EXIT_DISCOUNT_PCT   = 5;
+    var exitModalShown      = false;
+    var exitTimerInterval   = null;
+    var exitSecondsLeft     = 600; // 10 minutos
+
+    // Solo mostrar si el carrito tiene productos
+    function hasCartItems() {
+        try {
+            var cart = JSON.parse(localStorage.getItem('tm_cart') || '[]');
+            return Array.isArray(cart) && cart.length > 0;
+        } catch(e) { return false; }
+    }
+
+    function showExitModal() {
+        if (exitModalShown) return;
+        if (!hasCartItems()) return;
+        // No mostrar si ya aplicó un descuento
+        if (sessionStorage.getItem('tm_exit_discount_applied')) return;
+
+        exitModalShown = true;
+        document.getElementById('cartExitModal').classList.add('active');
+        startExitTimer();
+    }
+
+    function closeExitModal() {
+        document.getElementById('cartExitModal').classList.remove('active');
+        clearInterval(exitTimerInterval);
+    }
+
+    function startExitTimer() {
+        clearInterval(exitTimerInterval);
+        exitTimerInterval = setInterval(function() {
+            exitSecondsLeft--;
+            var m = Math.floor(exitSecondsLeft / 60);
+            var s = exitSecondsLeft % 60;
+            var el = document.getElementById('exitTimerCount');
+            if (el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            if (exitSecondsLeft <= 0) {
+                clearInterval(exitTimerInterval);
+                closeExitModal();
+            }
+        }, 1000);
+    }
+
+    function copyExitCode() {
+        var code = EXIT_DISCOUNT_CODE;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(function() {
+                var btn = document.getElementById('exitCopyBtn');
+                if (btn) { btn.textContent = '✓ Copiado'; btn.classList.add('copied'); }
+                setTimeout(function() {
+                    if (btn) { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }
+                }, 2000);
+            });
+        }
+    }
+
+    function applyExitDiscount() {
+        // Aplicar el descuento al carrito
+        sessionStorage.setItem('tm_exit_discount_applied', '1');
+        sessionStorage.setItem('tm_discount', JSON.stringify({
+            code: EXIT_DISCOUNT_CODE,
+            percent: EXIT_DISCOUNT_PCT
+        }));
+
+        // Llenar el campo de código de descuento si existe
+        var discInput = document.getElementById('discountCode');
+        if (discInput) {
+            discInput.value = EXIT_DISCOUNT_CODE;
+            // Disparar evento para que el engine lo procese
+            discInput.dispatchEvent(new Event('input'));
+        }
+
+        // Aplicar visualmente en el summary
+        applyDiscountToSummary(EXIT_DISCOUNT_CODE, EXIT_DISCOUNT_PCT);
+
+        closeExitModal();
+
+        // Scroll suave al form
+        var form = document.getElementById('mainCheckoutForm');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Notificación
+        showExitNotification('🎉 ¡Descuento del 5% aplicado! Código: ' + EXIT_DISCOUNT_CODE);
+    }
+
+    function applyDiscountToSummary(code, pct) {
+        // Buscar o crear la fila de descuento en el summary
+        var totals = document.querySelector('.summary-totals');
+        if (!totals) return;
+
+        var existing = document.getElementById('exitDiscountRow');
+        if (existing) existing.remove();
+
+        // Calcular el monto
+        var subtotalEl = document.getElementById('summarySubtotal');
+        if (!subtotalEl) return;
+        var subtotalText = subtotalEl.textContent.replace(/[^0-9]/g, '');
+        var subtotal = parseInt(subtotalText) || 0;
+        var discount = Math.round(subtotal * pct / 100);
+
+        var row = document.createElement('div');
+        row.id = 'exitDiscountRow';
+        row.className = 'summary-row discount-applied';
+        row.innerHTML = '<span>Descuento (' + code + ')</span><span>-$' + discount.toLocaleString('es-CO') + '</span>';
+
+        // Insertar antes del total
+        var totalRow = totals.querySelector('.total-row');
+        if (totalRow) {
+            totals.insertBefore(row, totalRow);
+            // Actualizar el total
+            var totalEl = document.getElementById('summaryTotal');
+            if (totalEl) {
+                var shippingEl = document.getElementById('summaryShipping');
+                var shipping = 0;
+                if (shippingEl) {
+                    var st = shippingEl.textContent;
+                    if (st.toLowerCase().includes('gratis')) shipping = 0;
+                    else shipping = parseInt(st.replace(/[^0-9]/g,'')) || 0;
+                }
+                var newTotal = subtotal - discount + shipping;
+                totalEl.textContent = '$' + newTotal.toLocaleString('es-CO');
+            }
+        }
+    }
+
+    function showExitNotification(msg) {
+        var n = document.createElement('div');
+        n.style.cssText = 'position:fixed;top:20px;right:20px;z-index:999999;background:linear-gradient(135deg,#ff2d34,#cc0a10);color:#fff;padding:14px 20px;border-radius:50px;font-family:Outfit,sans-serif;font-size:0.88rem;font-weight:700;box-shadow:0 8px 30px rgba(255,45,52,0.45);animation:slideInRight 0.4s cubic-bezier(0.34,1.56,0.64,1);max-width:90vw;';
+        n.textContent = msg;
+        document.body.appendChild(n);
+        setTimeout(function() { n.remove(); }, 4000);
+    }
+
+    // ── TRIGGER: solo cuando el mouse sale por arriba (intento cerrar/cambiar tab) ──
+    document.addEventListener('mouseleave', function(e) {
+        if (e.clientY <= 5) {
+            showExitModal();
+        }
+    });
+
+    // ── TRIGGER: click en el backdrop cierra el modal ──
+    document.getElementById('exitBackdrop').addEventListener('click', closeExitModal);
+
+    // Si ya tiene descuento aplicado, actualizar el summary al cargar
+    window.addEventListener('load', function() {
+        var saved = sessionStorage.getItem('tm_discount');
+        if (saved) {
+            try {
+                var d = JSON.parse(saved);
+                if (d && d.code && d.percent) {
+                    setTimeout(function() {
+                        applyDiscountToSummary(d.code, d.percent);
+                        var discInput = document.getElementById('discountCode');
+                        if (discInput) discInput.value = d.code;
+                    }, 800);
+                }
+            } catch(e) {}
+        }
+    });
+    </script>
+
+    <style>
+    @keyframes slideInRight {
+        from { transform: translateX(120%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+    }
+    </style>
 </body>
 
 </html>

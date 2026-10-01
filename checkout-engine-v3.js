@@ -111,6 +111,7 @@ function getDiscountPercentForCode(code) {
     if (!code) return 0;
     const clean = String(code).trim().toUpperCase();
     if (clean === 'BURIGOL') return 10;
+    if (clean === 'RECUPERA5' || clean === 'DESCUENTO5' || clean === 'CARRO5' || clean === 'PROMO5' || clean === 'RECUPERACION5') return 5;
     return 0;
 }
 
@@ -119,9 +120,9 @@ function setupDiscountCode() {
     const btn = document.querySelector('.discount-code-row .btn');
     if (!input || !btn) return;
 
-    // Load previously applied discount from sessionStorage
+    // Load previously applied discount from sessionStorage or localStorage
     try {
-        const saved = sessionStorage.getItem('tm_discount');
+        const saved = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
         if (saved) {
             const parsed = JSON.parse(saved);
             appliedDiscount = parsed;
