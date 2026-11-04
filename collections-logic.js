@@ -598,24 +598,9 @@ function executeApplyFilters(shouldScroll = false) {
             const match = activeFilters.brands.some(b => {
                 const searchBrand = b.toLowerCase();
 
-                // ============================================================
-                // JOMA ORIGINAL: Lógica exclusiva
-                // Solo muestra los modelos ORIGINALES de Joma:
-                //   - CANCHA ORIGINALES
-                //   - DRIBLING ORIGINALES
-                //   - TOP FLEX REBOUN PINK
-                //   - LIGA 5 ORIGINALES
-                // Los demás Joma (REGATE, REBOUND genérico) quedan en Futsal general.
-                // ============================================================
+                // JOMA: muestra todos los productos de la marca Joma
                 if (searchBrand === 'joma') {
-                    const hasJoma = pBrand.includes('joma') || pName.includes('joma');
-                    if (!hasJoma) return false;
-                    // Palabras clave que identifican los modelos exclusivos originales
-                    const isJomaOriginal =
-                        pName.includes('original') ||
-                        pName.includes('reboun pink') ||
-                        pName.includes('liga 5');
-                    return isJomaOriginal;
+                    return pBrand.includes('joma') || pName.includes('joma');
                 }
 
                 return pBrand.includes(searchBrand) || pName.includes(searchBrand);
