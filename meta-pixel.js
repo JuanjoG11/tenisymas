@@ -5,7 +5,7 @@
 
 // Si tienes tu ID de Pixel de Meta, cámbialo aquí.
 // Ejemplo: window.META_PIXEL_ID = '123456789012345';
-window.META_PIXEL_ID = '262490126165631';
+window.META_PIXEL_ID = '1126553247013469';
 
 (function() {
     const rawId = window.META_PIXEL_ID ? String(window.META_PIXEL_ID).trim() : '';
