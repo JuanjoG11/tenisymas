@@ -94,7 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== MERCADO PAGO CONFIGURATION ====================
 const MP_PUBLIC_KEY = 'APP_USR-c4eb2276-e656-4cc8-ad42-3135168127fe';
-const mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'es-CO' });
+// Lazily create the MercadoPago instance only if it is actually needed. The
+// checkout flow uses a server-side redirect, so the SDK is rarely used; deferring
+// avoids a large synchronous download + init on the critical checkout load path.
+let mp = null;
+function getMP() {
+    if (!mp && typeof MercadoPago === 'function') {
+        mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'es-CO' });
+    }
+    return mp;
+}
 let selectorsSetup = false;
 
 
@@ -232,7 +241,13 @@ function setupLocationSelectors() {
             // If only one city (like Bogota), select it automatically
             if (cities.length === 1) {
                 citySelect.value = cities[0];
+                renderCheckoutSummary(); // recalculate shipping for auto-selected city
             }
+        });
+
+        // Recalculate shipping when city changes (e.g. Pereira/Dosquebradas = free)
+        citySelect.addEventListener('change', () => {
+            renderCheckoutSummary();
         });
     }
 }
@@ -287,8 +302,26 @@ function renderCheckoutSummary() {
         `;
     }).join('');
 
-    // Dynamic Shipping
-    const currentShipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_COST;
+    // Dynamic Shipping — leer ciudad elegida para aplicar envío gratis local
+    const selectedCity = (document.getElementById('city') || {}).value ||
+                         (document.getElementById('manualCity') || {}).value || '';
+    const currentShipping = getShippingCost(subtotal, selectedCity);
+
+    // Mostrar badge "Ciudad local: GRATIS" si aplica
+    const cityFreeNote = document.getElementById('shippingCityNote');
+    if (isFreeShippingCity(selectedCity)) {
+        if (!cityFreeNote) {
+            const note = document.createElement('p');
+            note.id = 'shippingCityNote';
+            note.style.cssText = 'color:#2ecc71;font-size:0.78rem;margin:4px 0 0;font-weight:600;';
+            note.textContent = '📍 Envío gratis a ' + selectedCity;
+            const shippingRow = document.querySelector('.summary-row .summary-shipping-label') ||
+                                (document.getElementById('summaryShipping') || {}).parentNode;
+            if (shippingRow) shippingRow.appendChild(note);
+        }
+    } else if (cityFreeNote) {
+        cityFreeNote.remove();
+    }
 
     // Apply discount if any
     const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
@@ -328,7 +361,19 @@ function renderCheckoutSummary() {
     if (totalEl) totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
 }
 
-function getShippingCost(subtotal) {
+// Ciudades con envío gratis sin importar el total
+const FREE_SHIPPING_CITIES = ['pereira', 'dosquebradas'];
+
+function isFreeShippingCity(city) {
+    if (!city) return false;
+    const normalized = city.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes
+        .trim();
+    return FREE_SHIPPING_CITIES.some(c => normalized.includes(c));
+}
+
+function getShippingCost(subtotal, city) {
+    if (isFreeShippingCity(city)) return 0;
     return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_COST;
 }
 
@@ -413,7 +458,7 @@ async function handleAddiCheckout(customer) {
 
         // Calcular total real
         const subtotal = checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0);
-        const currentShipping = getShippingCost(subtotal);
+        const currentShipping = getShippingCost(subtotal, customer.city);
         const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
         const discountAmount = Math.round(subtotal * (discountPercent / 100));
         const totalAmount = Math.round(subtotal - discountAmount + currentShipping);
@@ -543,7 +588,7 @@ async function handleMercadoPagoCheckout(customer) {
         }));
 
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const currentShipping = getShippingCost(subtotal);
+        const currentShipping = getShippingCost(subtotal, customer.city);
         const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
         const discountAmount = Math.round(subtotal * (discountPercent / 100));
 
@@ -621,7 +666,7 @@ async function handleWhatsAppFallback(customer) {
             color: item.color || null
         };
     });
-    const currentShipping = getShippingCost(total);
+    const currentShipping = getShippingCost(total, customer.city);
     const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
     const discountAmount = Math.round(total * (discountPercent / 100));
     const finalTotal = total - discountAmount + currentShipping;
@@ -660,7 +705,7 @@ async function handleNequiCheckout(customer) {
         subtotal += price * item.quantity;
         itemsText += `\n- ${item.quantity}x ${item.name}${item.size ? ` (Talla: ${item.size})` : ''} $${(price * item.quantity).toLocaleString('es-CO')}`;
     });
-    const shipping = getShippingCost(subtotal);
+    const shipping = getShippingCost(subtotal, customer.city);
     const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
     const discountAmount = Math.round(subtotal * (discountPercent / 100));
     const total = subtotal - discountAmount + shipping;

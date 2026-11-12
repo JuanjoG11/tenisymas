@@ -699,34 +699,73 @@
     }
 
     .products-grid-collections {
-        grid-template-columns: 1fr;
-        /* Una sola columna para que las fotos se vean grandes */
-        gap: 30px;
-        /* Más espacio entre tarjetas */
-        padding: 0 10px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 0 8px;
     }
 
     .product-card {
-        border-radius: var(--radius-xl);
+        border-radius: var(--radius-lg);
         background: #f2f2f5;
         box-shadow: var(--shadow-sm);
         border: none;
     }
 
+    .product-image-wrapper {
+        height: 185px;
+    }
+
+    .product-image {
+        height: 185px;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    /* Carrusel de imágenes dentro de la card */
+    .card-image-slider {
+        height: 185px;
+    }
+
+    .card-slide img {
+        height: 185px;
+        object-fit: cover;
+    }
+
     .product-info {
-        padding: 16px;
-        /* Más compacto */
+        padding: 10px;
     }
 
     .product-name {
-        font-size: 1.4rem;
-        /* Nombre más grande y legible */
-        margin-bottom: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        /* 2 líneas máximo */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.2rem;
     }
 
     .product-price {
-        font-size: 1.5rem;
-        /* Precio resaltado */
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .product-old-price {
+        font-size: 0.76rem;
+    }
+
+    .product-btn,
+    .btn-add-cart {
+        padding: 10px 6px;
+        font-size: 0.76rem;
+        letter-spacing: 0.2px;
+    }
+
+    .view-details-tag {
+        padding: 9px;
+        font-size: 0.74rem;
     }
 
     .category-header {
@@ -1084,8 +1123,8 @@ body.modal-open {
 /* Mobile optimizations */
 @media (max-width: 768px) {
     .product-image-container {
-        height: 300px;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        height: 185px;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     }
 
     /* Selectores más profesionales en móvil */

@@ -306,9 +306,16 @@ async function loadProducts() {
                 if (!prodRes.error && prodRes.data) {
                     freshData = prodRes.data;
                     const inventoryData = invRes.data || [];
+                    // Index inventory by product_id for an O(N+M) join (previously O(N×M))
+                    const invByProduct = new Map();
+                    for (let i = 0; i < inventoryData.length; i++) {
+                        const inv = inventoryData[i];
+                        const arr = invByProduct.get(inv.product_id);
+                        if (arr) arr.push(inv); else invByProduct.set(inv.product_id, [inv]);
+                    }
                     freshData = freshData.map(p => ({
                         ...p,
-                        inventory: inventoryData.filter(inv => inv.product_id === p.id)
+                        inventory: invByProduct.get(p.id) || []
                     }));
                 }
             }
@@ -330,11 +337,33 @@ async function loadProducts() {
                 applyFilters();
             }
 
-            // Refresh cache
+            // Refresh cache (self-healing: clear stale product caches on quota error)
             try {
                 localStorage.setItem('productsCache_v12', JSON.stringify(allProducts));
                 localStorage.setItem('productsCache_Time', String(Date.now()));
-            } catch(_) {}
+            } catch(_) {
+                try {
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const key = localStorage.key(i);
+                        if (key && key.indexOf('productsCache_v') === 0) localStorage.removeItem(key);
+                    }
+                    localStorage.setItem('productsCache_v12', JSON.stringify(allProducts));
+                    localStorage.setItem('productsCache_Time', String(Date.now()));
+                } catch(_2) {
+                    // Still over quota: clear non-essential data (keep cart/orders) and retry
+                    try {
+                        const essential = new Set(['tm_cart', 'tm_last_customer', 'tm_discount', 'tm_last_order']);
+                        for (let i = localStorage.length - 1; i >= 0; i--) {
+                            const key = localStorage.key(i);
+                            if (key && !essential.has(key) && key.indexOf('productsCache_v') !== 0) localStorage.removeItem(key);
+                        }
+                        localStorage.setItem('productsCache_v12', JSON.stringify(allProducts));
+                        localStorage.setItem('productsCache_Time', String(Date.now()));
+                    } catch(_3) {
+                        console.info('[COLLECTIONS] localStorage full/blocked. Caching disabled; site loads via network.');
+                    }
+                }
+            }
         }
     } catch(err) {
         console.error('LOAD: Sync failed:', err);
@@ -641,33 +670,38 @@ function executeApplyFilters(shouldScroll = false) {
     });
 
     // --- SORTING: 1° Con stock (más reciente primero) → 2° Agotados (más reciente primero) ---
-    filteredProducts.sort((a, b) => {
-        // Misma lógica exacta que createProductCardHTML usa para el badge AGOTADO
-        const getOutOfStock = (p) => {
-            const inventory = p.inventory || [];
-            const totalStock = inventory.reduce((sum, inv) => sum + Number(inv.stock || 0), 0);
+    // Precompute the out-of-stock flag ONCE per product. Previously the flag was
+    // recomputed inside the sort comparator (O(N log N) times, each doing an
+    // inventory.reduce + size parse), making every filter change O(N log N · M).
+    // Misma lógica exacta que createProductCardHTML usa para el badge AGOTADO.
+    const __footwearCats = ['guayos','tenis-guayos','futsal','tenis','running','tenis-running','ninos',
+                             'tenis-futbol','fútbol-sala','fútbol sala','futbol sala','max-sport'];
+    const __oosCache = new Map();
+    for (let __i = 0; __i < filteredProducts.length; __i++) {
+        const __p = filteredProducts[__i];
+        const inventory = __p.inventory || [];
+        const totalStock = inventory.reduce((sum, inv) => sum + Number(inv.stock || 0), 0);
 
-            const rawSizes = p.sizes || p.tallas;
-            let hasSizes = false;
-            if (rawSizes) {
-                if (Array.isArray(rawSizes)) hasSizes = rawSizes.map(s => String(s).trim()).filter(Boolean).length > 0;
-                else if (typeof rawSizes === 'string') {
-                    try {
-                        const parsed = rawSizes.startsWith('[') ? JSON.parse(rawSizes) : rawSizes.split(',');
-                        hasSizes = parsed.map(s => String(s).trim()).filter(Boolean).length > 0;
-                    } catch(e) { hasSizes = rawSizes.trim().length > 0; }
-                }
+        const rawSizes = __p.sizes || __p.tallas;
+        let hasSizes = false;
+        if (rawSizes) {
+            if (Array.isArray(rawSizes)) hasSizes = rawSizes.map(s => String(s).trim()).filter(Boolean).length > 0;
+            else if (typeof rawSizes === 'string') {
+                try {
+                    const parsed = rawSizes.startsWith('[') ? JSON.parse(rawSizes) : rawSizes.split(',');
+                    hasSizes = parsed.map(s => String(s).trim()).filter(Boolean).length > 0;
+                } catch(e) { hasSizes = rawSizes.trim().length > 0; }
             }
+        }
 
-            const isFootwear = ['guayos','tenis-guayos','futsal','tenis','running','tenis-running','ninos',
-                                 'tenis-futbol','fútbol-sala','fútbol sala','futbol sala','max-sport']
-                                .includes((p.category || p.categoria || '').toLowerCase().trim());
+        const isFootwear = __footwearCats.includes((__p.category || __p.categoria || '').toLowerCase().trim());
 
-            return (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes);
-        };
+        __oosCache.set(__p, (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes));
+    }
 
-        const aOut = getOutOfStock(a) ? 1 : 0;
-        const bOut = getOutOfStock(b) ? 1 : 0;
+    filteredProducts.sort((a, b) => {
+        const aOut = __oosCache.get(a) ? 1 : 0;
+        const bOut = __oosCache.get(b) ? 1 : 0;
 
         // Primero disponibles, luego agotados
         if (aOut !== bOut) return aOut - bOut;
@@ -924,9 +958,10 @@ async function openProductModal(productId) {
     const product = allProducts.find(p => p.id == productId);
     if (!product) return;
 
-    // Fetch stock for this product before rendering sizes
-    let inventory = [];
-    if (window.supabaseClient) {
+    // Use the inventory already attached from the bulk fetch; only hit the network
+    // if it was never attached (rare legacy cache). Avoids a per-modal Supabase call.
+    let inventory = Array.isArray(product.inventory) ? product.inventory : [];
+    if (!Array.isArray(product.inventory) && window.supabaseClient) {
         try {
             const { data, error } = await window.supabaseClient
                 .from('inventory')

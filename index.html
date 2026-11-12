@@ -12,7 +12,7 @@
     <meta name="keywords"
         content="guayos, tenis futsal, futbol sala, zapatillas de futbol, tenis y mas, calzado deportivo colombia, guayos sintetica, tenis pereira, uniformes de futbol, tenisymas">
     <link rel="canonical" href="https://tennisymas.com/">
-    <link rel="shortcut icon" href="images/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="images/favicon.webp" type="image/png">
 
 
 
@@ -83,13 +83,14 @@
     }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=12.0">
+    <link rel="stylesheet" href="style.css?v=13.0">
     <link rel="stylesheet" href="carousel.css?v=12.0">
     <script src="meta-pixel.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <!-- Non-blocking font load -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
     <!-- Performance: Preconnect to external services -->
     <link rel="preconnect" href="https://shbtmkeyarqppasdpzxv.supabase.co">
@@ -98,8 +99,8 @@
 
     <!-- Performance: Preload critical assets -->
     <link rel="preload" href="images/logo-tm.png" as="image">
-    <link rel="preload" href="style.css?v=12.0" as="style">
-    <link rel="preload" href="script.js?v=18.0" as="script">
+    <link rel="preload" href="style.css?v=13.0" as="style">
+    <link rel="preload" href="script.js?v=22.0" as="script">
 </head>
 
 <body>
@@ -142,7 +143,7 @@
                                 main.style.opacity = '1';
                                 main.style.visibility = 'visible';
                             }
-                        }, 1000);
+                        }, 700);
                     } else if (video) {
                         // Watchdog: If video doesn't play within 1.5s, show fallback so it doesn't freeze
                         const videoTimeout = setTimeout(() => {
@@ -160,7 +161,7 @@
                             setTimeout(function() {
                                 var intro = document.querySelector('.intro');
                                 if (intro) intro.style.display = 'none';
-                            }, 2200);
+                            }, 1500);
                             fallback.style.display = 'block';
                         });
 
@@ -176,7 +177,7 @@
                                 main.style.opacity = '1';
                                 main.style.visibility = 'visible';
                             }
-                        }, 2000);
+                        }, 1500);
                     }
                 </script>
             </div>
@@ -533,11 +534,11 @@
         <section id="inicio" class="carousel-section">
             <!-- Background Slider -->
             <div class="hero-bg-slider" id="heroBgSlider">
-                <div class="hero-slide active" style="background-image: url('images/store-bg-1.jpg')"></div>
-                <div class="hero-slide" data-bg="images/store-bg-2.jpg"></div>
-                <div class="hero-slide" data-bg="images/store-bg-3.jpg"></div>
-                <div class="hero-slide" data-bg="images/store-bg-4.jpg"></div>
-                <div class="hero-slide" data-bg="images/store-bg-5.jpg"></div>
+                <div class="hero-slide active" style="background-image: url('images/store-bg-1.webp')"></div>
+                <div class="hero-slide" data-bg="images/store-bg-2.webp"></div>
+                <div class="hero-slide" data-bg="images/store-bg-3.webp"></div>
+                <div class="hero-slide" data-bg="images/store-bg-4.webp"></div>
+                <div class="hero-slide" data-bg="images/store-bg-5.webp"></div>
             </div>
             <div class="hero-overlay"></div>
 
@@ -593,7 +594,7 @@
                     <!-- Card 4: Petos y Camisetas -->
                     <div class="carousel-card" data-index="3" data-url="collections.html?category=petos,camisetas">
                         <div class="card-image">
-                            <img src="images/uniformes-main.png" alt="Petos y Camisetas" loading="lazy" decoding="async">
+                            <img src="images/uniformes-main.webp" alt="Petos y Camisetas" loading="lazy" decoding="async">
                             <div class="card-overlay">
                                 <h3>PETOS Y CAMISETAS</h3>
                                 <div class="btn-fake">Ver Colección</div>
@@ -664,39 +665,39 @@
                 <div class="collage-columns">
                     <!-- Columna 1 -->
                     <div class="collage-col col-1">
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_negro.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chancla_court.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_violeta.webp"></div>
                         <!-- Duplicado para loop -->
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_negro.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chancla_court.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_violeta.webp"></div>
                     </div>
                     <!-- Columna 2 -->
                     <div class="collage-col col-2">
-                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/tymxmax.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_plateado.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_violeta.webp"></div>
+                        <div class="collage-img" data-bg="images/tymxmax.jpg"></div>
                         <!-- Duplicado para loop -->
-                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_violeta.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/tymxmax.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_plateado.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_violeta.webp"></div>
+                        <div class="collage-img" data-bg="images/tymxmax.jpg"></div>
                     </div>
                     <!-- Columna 3 -->
                     <div class="collage-col col-3">
-                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_chancla_court.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_negro.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_plateado.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
                         <!-- Duplicado para loop -->
-                        <div class="collage-img" style="background-image: url('images/max_chancla_court.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_negro.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_chuva_plateado.jpg')"></div>
-                        <div class="collage-img" style="background-image: url('images/max_future_aqua.jpg')"></div>
+                        <div class="collage-img" data-bg="images/max_chancla_court.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_negro.webp"></div>
+                        <div class="collage-img" data-bg="images/max_chuva_plateado.webp"></div>
+                        <div class="collage-img" data-bg="images/max_future_aqua.webp"></div>
                     </div>
                 </div>
                 <div class="collage-overlay"></div>
@@ -717,24 +718,24 @@
                 <div class="collage-columns">
                     <!-- Column 1 -->
                     <div class="collage-col col-1">
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1776181876814_WhatsApp_Image_2026_04_13_at_11.49.54_AM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778177681_WhatsApp_Image_2026_03_13_at_9.20.52_PM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778264868_WhatsApp_Image_2026_03_13_at_9.20.53_PM__1_.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1776181876814_WhatsApp_Image_2026_04_13_at_11.49.54_AM.jpeg')"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1776181876814_WhatsApp_Image_2026_04_13_at_11.49.54_AM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778177681_WhatsApp_Image_2026_03_13_at_9.20.52_PM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778264868_WhatsApp_Image_2026_03_13_at_9.20.53_PM__1_.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1776181876814_WhatsApp_Image_2026_04_13_at_11.49.54_AM.jpeg"></div>
                     </div>
                     <!-- Column 2 -->
                     <div class="collage-col col-2">
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778363296_WhatsApp_Image_2026_03_13_at_9.20.55_PM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778406614_WhatsApp_Image_2026_03_13_at_9.20.56_PM__1_.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1775590101738_WhatsApp_Image_2026_04_01_at_11.25.46_PM__1_.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778363296_WhatsApp_Image_2026_03_13_at_9.20.55_PM.jpeg')"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778363296_WhatsApp_Image_2026_03_13_at_9.20.55_PM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778406614_WhatsApp_Image_2026_03_13_at_9.20.56_PM__1_.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1775590101738_WhatsApp_Image_2026_04_01_at_11.25.46_PM__1_.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773778363296_WhatsApp_Image_2026_03_13_at_9.20.55_PM.jpeg"></div>
                     </div>
                     <!-- Column 3 -->
                     <div class="collage-col col-3">
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778185652771_WhatsApp_Image_2026_05_07_at_3.07.23_PM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778186360415_WhatsApp_Image_2026_05_07_at_3.23.56_PM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773785316293_WhatsApp_Image_2026_03_14_at_11.53.47_AM.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778185652771_WhatsApp_Image_2026_05_07_at_3.07.23_PM.jpeg')"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778185652771_WhatsApp_Image_2026_05_07_at_3.07.23_PM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778186360415_WhatsApp_Image_2026_05_07_at_3.23.56_PM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1773785316293_WhatsApp_Image_2026_03_14_at_11.53.47_AM.jpeg"></div>
+                        <div class="collage-img" data-bg="https://shbtmkeyarqppasdpzxv.supabase.co/storage/v1/object/public/product-images/products/1778185652771_WhatsApp_Image_2026_05_07_at_3.07.23_PM.jpeg"></div>
                     </div>
                 </div>
                 <div class="collage-overlay"></div>
@@ -755,39 +756,39 @@
                 <div class="collage-columns">
                     <!-- Columna 1 -->
                     <div class="collage-col col-1">
-                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-colab.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-2.jpeg"></div>
                         <!-- Duplicado para loop infinito -->
-                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-colab.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-2.jpeg"></div>
                     </div>
                     <!-- Columna 2 -->
                     <div class="collage-col col-2">
-                        <div class="collage-img" style="background-image: url('images/saprix-3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-colab.jpeg"></div>
                         <!-- Duplicado para loop -->
-                        <div class="collage-img" style="background-image: url('images/saprix-3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-colab.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-colab.jpeg"></div>
                     </div>
                     <!-- Columna 3 -->
                     <div class="collage-col col-3">
-                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-4.jpeg"></div>
                         <!-- Duplicado para loop -->
-                        <div class="collage-img" style="background-image: url('images/saprix-5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/saprix-4.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/saprix-5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/saprix-4.jpeg"></div>
                     </div>
                 </div>
                 <div class="collage-overlay"></div>
@@ -809,55 +810,55 @@
                 <div class="banner-collage">
                     <div class="collage-col col-1">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
                         <!-- Sequence 2 (Duplicate for loop) -->
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
                     </div>
                     <div class="collage-col col-2">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
                         <!-- Sequence 2 -->
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
                     </div>
                     <div class="collage-col col-3">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
                         <!-- Sequence 2 -->
-                        <div class="collage-img" style="background-image: url('images/buso6.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso5.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso4.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso3.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso2.jpeg')"></div>
-                        <div class="collage-img" style="background-image: url('images/buso1.jpeg')"></div>
+                        <div class="collage-img" data-bg="images/buso6.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso5.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso4.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso3.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso2.jpeg"></div>
+                        <div class="collage-img" data-bg="images/buso1.jpeg"></div>
                     </div>
                 </div>
                 <!-- Mobile Single Image -->
-                <div class="banner-slide" style="background-image: url('images/buso1.jpeg'); position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center top;"></div>
+                <div class="banner-slide" data-bg="images/buso1.jpeg" style="position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center top;"></div>
             </div>
             <div class="banner-overlay"></div>
             <div class="banner-content">
@@ -875,58 +876,58 @@
                 <div class="banner-collage">
                     <div class="collage-col col-1">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
                         <!-- Sequence 2 (Duplicate for loop) -->
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
 
                     </div>
                     <div class="collage-col col-2">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
                         <!-- Sequence 2 -->
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
 
                     </div>
                     <div class="collage-col col-3">
                         <!-- Sequence 1 -->
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
                         <!-- Sequence 2 -->
-                        <div class="collage-img" style="background-image: url('images/buritica6.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica5.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica4.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica3.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica2.png')"></div>
-                        <div class="collage-img" style="background-image: url('images/buritica1.png')"></div>
+                        <div class="collage-img" data-bg="images/buritica6.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica5.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica4.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica3.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica2.webp"></div>
+                        <div class="collage-img" data-bg="images/buritica1.webp"></div>
 
                     </div>
                 </div>
                 <!-- Mobile Single Image -->
-                <div class="banner-slide" style="background-image: url('images/buritica1.png')"></div>
+                <div class="banner-slide" data-bg="images/buritica1.webp"></div>
             </div>
             <div class="banner-overlay"></div>
             <div class="banner-content">
@@ -1017,7 +1018,7 @@
 
         <!-- Uniformes Section -->
         <!-- Uniformes Section (Shopify Style Banner) -->
-        <section id="uniformes" class="uniforms-banner" style="background-image: url('images/uniformes-main.png');">
+        <section id="uniformes" class="uniforms-banner" style="background-image: url('images/uniformes-main.webp');">
             <div class="uniforms-overlay"></div>
             <div class="uniforms-content-center">
                 <h2 class="flashy-title">¿BUSCAS UNIFORMES?</h2>
@@ -1066,12 +1067,12 @@
                         <h4 class="gallery-title">✅ Prueba de Nuestras Entregas</h4>
                         <div class="shipping-gallery">
                             <div class="gallery-item">
-                                <img src="images/envio1.jpg"
+                                <img src="images/envio1.webp"
                                     alt="Envío de guayos y tenis a toda Colombia - Cliente Satisfecho 1" loading="lazy">
                                 <div class="gallery-overlay"><span>¡Entrega Exitosa!</span></div>
                             </div>
                             <div class="gallery-item">
-                                <img src="images/envio2.jpg"
+                                <img src="images/envio2.webp"
                                     alt="Envío de guayos y tenis a toda Colombia - Cliente Satisfecho 2" loading="lazy">
                                 <div class="gallery-overlay"><span>Paquete Asegurado</span></div>
                             </div>
@@ -1195,9 +1196,9 @@
         </svg>
     </a>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
-    <script src="script.js?v=18.0" defer></script>
-    <!-- Addi Widget Script (Standard Loader) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js" defer></script>
+    <script src="script.js?v=22.0" defer></script>
+    <!-- Addi Widget Script (Standard Loader) — loaded late to avoid blocking -->
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
 
     <!-- Botón flotante: Tenis para salir -->
@@ -1497,11 +1498,11 @@
         (function() {
             if (!sessionStorage.getItem('msWelcomeShown')) {
                 sessionStorage.setItem('msWelcomeShown', 'true');
-                // Aparece rápido, sin esperar que cargue todo
+                // Esperar a que la página cargue antes de mostrar el modal
                 setTimeout(function() {
                     var modal = document.getElementById('msWelcomeModal');
                     if (modal) modal.classList.add('show');
-                }, 600);
+                }, 2500);
             }
         })();
 

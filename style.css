@@ -262,8 +262,6 @@ body {
 /* ==================== ANNOUNCEMENT TICKER BANNER ==================== */
 .announcement-bar {
     background: linear-gradient(90deg, #1a1a1a 0%, #0a0a0a 50%, #1a1a1a 100%);
-    background-size: 200% 100%;
-    animation: gradientShift 3s ease infinite;
     color: white;
     font-weight: 600;
     font-size: 0.85rem;
@@ -349,11 +347,9 @@ body {
 .navbar {
     position: sticky;
     top: 31px;
-    background: rgba(12, 12, 12, 0.92);
+    background: #0c0c0c;
     border-bottom: 1px solid rgba(255, 255, 255, 0.09);
     z-index: 1000;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.65);
     transition: all 0.3s ease;
 }
@@ -1018,7 +1014,7 @@ body {
     height: 85vh;
     /* Taller on PC */
     min-height: 500px;
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-position: center top;
     /* Focus on the top area */
     background-size: cover;
@@ -2498,13 +2494,49 @@ body {
     }
 
     .products-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: var(--spacing-md);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
 
     .product-card {
         border-radius: var(--radius-md);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .product-image {
+        height: 190px;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .product-info {
+        padding: 10px;
+    }
+
+    .product-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        min-height: 2.4rem;
+        letter-spacing: 0.01em;
+        /* Mostrar texto completo sin cortar */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-price {
+        font-size: 1rem;
+    }
+
+    .product-old-price {
+        font-size: 0.78rem;
+    }
+
+    .product-btn {
+        padding: 10px 8px;
+        font-size: 0.78rem;
+        letter-spacing: 0.3px;
     }
 
     .decoration-circle,
@@ -2528,6 +2560,26 @@ body {
 
 
 
+
+/* Extra small screens: keep 2 cols but slightly smaller image */
+@media (max-width: 360px) {
+    .product-image {
+        height: 160px;
+    }
+
+    .product-name {
+        font-size: 0.76rem;
+    }
+
+    .product-price {
+        font-size: 0.9rem;
+    }
+
+    .product-btn {
+        padding: 8px 6px;
+        font-size: 0.73rem;
+    }
+}
 
 /* Utility for screen readers and SEO */
 .sr-only {
@@ -3550,6 +3602,7 @@ body {
     height: 350px;
     background-size: cover;
     background-position: center;
+    background-color: #1a1a1a; /* placeholder while lazy-loading */
     border-radius: 15px;
     border: 1px solid rgba(255,255,255,0.1);
     filter: brightness(0.7);

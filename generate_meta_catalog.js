@@ -57,8 +57,11 @@ async function generateCatalog() {
         if (typeof p.price === 'number') numPrice = p.price;
         else if (p.price) numPrice = parseInt(String(p.price).replace(/\D/g, '')) || 0;
         else if (p.precio) numPrice = parseInt(String(p.precio).replace(/\D/g, '')) || 0;
+
+        // Saltar productos sin precio
+        if (!numPrice || numPrice <= 0) return null;
         
-        const price = `"${numPrice} COP"`;
+        const price = `${numPrice} COP`;
 
         // Link
         const link = `"${BASE_STORE_URL}/collections.html?product=${p.id}"`;
@@ -90,13 +93,13 @@ async function generateCatalog() {
             desc,
             availability,
             condition,
-            price,
+            `"${price}"`,
             link,
             image_link,
             brand,
             google_category
         ].join(',');
-    });
+    }).filter(Boolean);
 
     const csvContent = [headers.join(','), ...rows].join('\n');
     const outputPath = path.join(__dirname, 'meta_catalog.csv');

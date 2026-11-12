@@ -70,6 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch(e) { /* ignore */ }
 
+    // Free localStorage quota: remove obsolete product cache versions.
+    // Old caches from previous builds can be large (e.g. when images were
+    // stored as base64) and fill the ~5MB quota, blocking the current cache save.
+    try {
+        const keepCache = new Set(['productsCache_v10', 'productsCache_v12', 'productsCache_Time']);
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && /^productsCache_v\d+$/.test(key) && !keepCache.has(key)) {
+                localStorage.removeItem(key);
+            }
+        }
+    } catch(e) { /* ignore */ }
+
     // 1. Initialize State
     loadCart();
 
@@ -964,10 +977,17 @@ async function syncProducts() {
             const inventoryData = invRes.data || [];
 
             if (data && data.length > 0) {
+                // Index inventory by product_id for an O(N+M) join (previously O(N×M)).
+                const invByProduct = new Map();
+                for (let i = 0; i < inventoryData.length; i++) {
+                    const inv = inventoryData[i];
+                    const arr = invByProduct.get(inv.product_id);
+                    if (arr) arr.push(inv); else invByProduct.set(inv.product_id, [inv]);
+                }
                 // Attach inventory to each product
                 data = data.map(p => ({
                     ...p,
-                    inventory: inventoryData.filter(inv => inv.product_id === p.id)
+                    inventory: invByProduct.get(p.id) || []
                 }));
                 // Dedup: Ensure unique IDs
                 const seen = new Set();
@@ -989,6 +1009,43 @@ async function syncProducts() {
                             console.log('📦 Script.js: Cache updated in background');
                         } catch (storageErr) {
                             console.warn('[SYNC] localStorage full or failed:', storageErr);
+                            // Quota exceeded: clear ALL product caches (incl. stale
+                            // large ones from older builds) and retry once with the
+                            // fresh, small data so the cache is restored for next load.
+                            try {
+                                for (let i = localStorage.length - 1; i >= 0; i--) {
+                                    const key = localStorage.key(i);
+                                    if (key && key.indexOf('productsCache_v') === 0) localStorage.removeItem(key);
+                                }
+                                localStorage.setItem('productsCache_v10', JSON.stringify({ timestamp: Date.now(), data: products }));
+                                console.log('📦 Script.js: Cache saved after clearing stale caches');
+                            } catch (e2) {
+                                // Still over quota: clear non-essential data (tracking/cache
+                                // junk, NOT the user's cart/orders) and retry once more.
+                                try {
+                                    const essential = new Set(['tm_cart', 'tm_last_customer', 'tm_discount', 'tm_last_order']);
+                                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                                        const key = localStorage.key(i);
+                                        if (key && !essential.has(key) && key.indexOf('productsCache_v') !== 0) {
+                                            localStorage.removeItem(key);
+                                        }
+                                    }
+                                    localStorage.setItem('productsCache_v10', JSON.stringify({ timestamp: Date.now(), data: products }));
+                                    console.log('📦 Script.js: Cache saved after clearing non-essential storage');
+                                } catch (e3) {
+                                    // Storage genuinely blocked (Tracking Prevention / private mode).
+                                    try {
+                                        let total = 0; const parts = [];
+                                        for (let i = 0; i < localStorage.length; i++) {
+                                            const k = localStorage.key(i);
+                                            const sz = (localStorage.getItem(k) || '').length;
+                                            total += sz;
+                                            if (sz > 1024) parts.push(k + '=' + (sz/1024).toFixed(0) + 'KB');
+                                        }
+                                        console.info('[SYNC] localStorage full/blocked. ' + (total/1024).toFixed(0) + 'KB / ' + localStorage.length + ' keys. Largest: ' + parts.join(', '));
+                                    } catch(_) { console.info('[SYNC] localStorage blocked by browser. Caching disabled; site works via network fetch.'); }
+                                }
+                            }
                         }
                     };
 
@@ -1095,3 +1152,36 @@ document.addEventListener('productsLoaded', updateCategoryCardImages);
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(updateCategoryCardImages, 300);
 });
+
+// ==================== LAZY BACKGROUND IMAGE LOADER ====================
+// Loads background images from data-bg only when section scrolls near viewport.
+// This avoids downloading 60+ collage images at page load.
+(function() {
+    function applyBg(el) {
+        const bg = el.getAttribute('data-bg');
+        if (bg && !el.style.backgroundImage) {
+            el.style.backgroundImage = "url('" + bg + "')";
+        }
+    }
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    // Load all data-bg images within the section
+                    const section = entry.target;
+                    section.querySelectorAll('[data-bg]').forEach(applyBg);
+                    observer.unobserve(section);
+                }
+            });
+        }, { rootMargin: '200px 0px' }); // start loading 200px before entering viewport
+
+        // Observe each collage section
+        document.querySelectorAll('.maxsport-collage-section, .joma-collage-section, .saprix-collage-section, .featured-collection-banner').forEach(function(section) {
+            observer.observe(section);
+        });
+    } else {
+        // Fallback: load all immediately (older browsers)
+        document.querySelectorAll('[data-bg]').forEach(applyBg);
+    }
+})();
