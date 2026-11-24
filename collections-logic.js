@@ -131,13 +131,12 @@ async function setupCollections() {
     const categoryName = urlParams.get('category');
     const brandName = urlParams.get('brand');
     
-    if (categoryName) {
-        activeFilters.category = categoryName;
-    }
-    
-    if (brandName) {
-        activeFilters.brands = brandName.split(',').map(b => b.trim());
-    }
+    // Always reset filters from URL — never carry over state from a previous page visit
+    activeFilters.category = categoryName || null;
+    activeFilters.brands = brandName ? brandName.split(',').map(b => b.trim()) : [];
+    activeFilters.prices = [];
+    activeFilters.sizes = [];
+    activeFilters.discount = false;
     
     const searchParam = urlParams.get('search');
     if (searchParam) {
@@ -203,6 +202,7 @@ function updateCategoryTitle(category) {
     const brand = urlParams.get('brand');
     
     const titles = {
+        'tenis': { title: 'TENIS', subtitle: 'Comodidad y estilo para cada paso' },
         'guayos': { title: 'GUAYOS', subtitle: 'Domina el campo con el mejor calzado' },
         'futsal': { title: 'FÚTSAL', subtitle: 'Precisión y control en cancha' },
         'ninos': { title: 'NIÑOS', subtitle: 'Calidad para los campeones del futuro' },
@@ -577,6 +577,16 @@ function executeApplyFilters(shouldScroll = false) {
             
             // Check for exact matches first
             let matches = allowedCats.some(cat => pCat === cat);
+
+            // TENIS: match exacto únicamente — nunca hacer match con tenis-guayos
+            if (allowedCats.some(c => c === 'tenis')) {
+                return pCat === 'tenis';
+            }
+
+            // GUAYOS: match exacto — nunca hacer match con tenis-guayos
+            if (allowedCats.some(c => c === 'guayos')) {
+                return pCat === 'guayos';
+            }
 
             // EMERGENCY BYPASS & FLEXIBLE MATCH:
             // Si no hay match exacto pero estamos en Petos/Camisetas, buscamos coincidencia parcial

@@ -1116,6 +1116,10 @@ function updateCategoryCardImages() {
                 return pCat === 'guayos' && !pCat.includes('tenis-guayos');
             }
 
+            if (categoryParam === 'tenis') {
+                return pCat === 'tenis';
+            }
+
             if (categoryParam === 'tenis-guayos') {
                 return pCat === 'tenis-guayos' || pCat.includes('tenis-guayo') || pName.includes('teniguayo') || pName.includes('tenis-guayo');
             }

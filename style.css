@@ -3557,6 +3557,7 @@ body {
 .joma-collage-section,
 .maxsport-collage-section,
 .saprix-collage-section,
+.tenis-collage-section,
 .brand-collage-section {
     position: relative;
     height: 650px;
@@ -3612,6 +3613,7 @@ body {
 .joma-collage-section:hover .collage-img,
 .maxsport-collage-section:hover .collage-img,
 .saprix-collage-section:hover .collage-img,
+.tenis-collage-section:hover .collage-img,
 .brand-collage-section:hover .collage-img {
     filter: brightness(0.92);
 }
@@ -3660,6 +3662,11 @@ body {
 .collage-floating-content .saprix-badge {
     background: linear-gradient(135deg, #ff6600 0%, #ff2222 100%) !important;
     box-shadow: 0 5px 18px rgba(255,80,0,0.45) !important;
+}
+
+.collage-floating-content .tenis-badge {
+    background: linear-gradient(135deg, #0066ff 0%, #00cfff 100%) !important;
+    box-shadow: 0 5px 18px rgba(0,150,255,0.45) !important;
 }
 
 .collage-floating-content .collage-title {
@@ -3712,6 +3719,7 @@ body {
 .joma-collage-section:hover .collage-btn,
 .maxsport-collage-section:hover .collage-btn,
 .saprix-collage-section:hover .collage-btn,
+.tenis-collage-section:hover .collage-btn,
 .brand-collage-section:hover .collage-btn {
     background: white;
     color: #0a0a0a;
@@ -3724,6 +3732,7 @@ body {
     .joma-collage-section,
     .maxsport-collage-section,
     .saprix-collage-section,
+    .tenis-collage-section,
     .brand-collage-section { 
         height: 440px; 
         margin: 25px 0;
