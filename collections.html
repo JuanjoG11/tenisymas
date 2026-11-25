@@ -13,17 +13,21 @@
     <script src="meta-pixel.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <!-- Non-blocking font load — solo pesos usados -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Performance: Preconnect to Supabase -->
+    <!-- Performance: Preconnect to external services -->
     <link rel="preconnect" href="https://shbtmkeyarqppasdpzxv.supabase.co">
     <link rel="dns-prefetch" href="https://shbtmkeyarqppasdpzxv.supabase.co">
-    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://s3.amazonaws.com">
 
     <!-- Performance: Preload critical assets -->
     <link rel="preload" href="style.css?v=13.0" as="style">
     <link rel="preload" href="collections-style.css?v=10.0" as="style">
+    <link rel="preload" href="script.js?v=21.0" as="script">
+    <link rel="preload" href="collections-logic.js?v=36.0" as="script">
     <link rel="preload" href="collections-logic.js?v=36.0" as="script">
     <link rel="preload" href="script.js?v=21.0" as="script">
 
@@ -42,49 +46,12 @@
 </head>
 
 <body>
-    <!-- Announcement Ticker Banner -->
-    <div class="announcement-bar">
-        <div class="announcement-ticker">
-            <div class="ticker-content">
-                <span class="ticker-item">
-                    ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
-                </span>
-                <span class="ticker-item">
-                    🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
-                </span>
-                <span class="ticker-item">
-                    💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
-                </span>
-                <span class="ticker-item">
-                    ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
-                </span>
-                <span class="ticker-item">
-                    ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
-                </span>
-                <span class="ticker-item">
-                    💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
-                </span>
-                <!-- Duplicate for seamless loop -->
-                <span class="ticker-item">
-                    ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
-                </span>
-                <span class="ticker-item">
-                    🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
-                </span>
-                <span class="ticker-item">
-                    💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
-                </span>
-                <span class="ticker-item">
-                    ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
-                </span>
-                <span class="ticker-item">
-                    ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
-                </span>
-                <span class="ticker-item">
-                    💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
-                </span>
-            </div>
-        </div>
+    <!-- 🖤 BLACK WEEK ANNOUNCEMENT BAR -->
+    <div class="bw-announcement-bar" id="bwAnnouncementBar">
+        <span>🖤 BLACK WEEK</span>
+        <span class="bw-percent">-15% EN TODO</span>
+        <span>⏳ Termina en:&nbsp;<span class="bw-timer" id="bwTopTimer">cargando...</span></span>
+        <span>🔥 ¡Solo esta semana!</span>
     </div>
 
 
@@ -467,15 +434,47 @@
             <button class="modal-close" onclick="closeSizeGuide()">&times;</button>
             
             <div class="sg-body-new">
-                <img src="images/guia-tallas-oficial.webp" alt="Guía de Tallas Oficial" class="sg-main-image">
+                <img src="images/guia-tallas-oficial.webp" alt="Guía de Tallas Oficial" class="sg-main-image" loading="lazy">
             </div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=21.0"></script>
-    <script src="collections-logic.js?v=36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js" defer></script>
+    <script src="script.js?v=21.0" defer></script>
+    <script src="collections-logic.js?v=36.0" defer></script>
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
+    <script>
+        // 🖤 BLACK WEEK COUNTDOWN — barra superior
+        (function() {
+            function getBlackWeekEnd() {
+                var now = new Date();
+                var dayOfWeek = now.getDay();
+                var daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+                var end = new Date(now);
+                end.setDate(now.getDate() + daysUntilSunday);
+                end.setHours(23, 59, 59, 999);
+                return end;
+            }
+            var endDate = getBlackWeekEnd();
+            function pad(n) { return String(n).padStart(2, '0'); }
+            function update() {
+                var diff = endDate - Date.now();
+                if (diff <= 0) {
+                    var bar = document.getElementById('bwAnnouncementBar');
+                    if (bar) bar.style.display = 'none';
+                    return;
+                }
+                var days  = Math.floor(diff / 86400000);
+                var hours = Math.floor((diff % 86400000) / 3600000);
+                var mins  = Math.floor((diff % 3600000) / 60000);
+                var secs  = Math.floor((diff % 60000) / 1000);
+                var t = document.getElementById('bwTopTimer');
+                if (t) t.textContent = days + 'd ' + pad(hours) + ':' + pad(mins) + ':' + pad(secs);
+            }
+            update();
+            setInterval(update, 1000);
+        })();
+    </script>
 </body>
 
 </html>

@@ -898,10 +898,14 @@ function createProductCardHTML(product, absoluteIndex = 999) {
     const totalStock = inventory.reduce((sum, inv) => sum + (inv.stock || 0), 0);
     const isOutOfStock = (inventory.length > 0 && totalStock <= 0) || (isFootwear && !hasSizes);
 
+    // ── Black Week 15% ──────────────────────────────────────────────
+    const bwCard = applyBlackWeekPrice(product.price || product.precio);
+    const hasBwCard = bwCard.discounted > 0 && bwCard.original > bwCard.discounted;
+
     return `
-        <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product.id}" data-category="${product.category}">
+        <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''} ${hasBwCard ? 'bw-card' : ''}" data-id="${product.id}" data-category="${product.category}">
             ${isOutOfStock ? `<div class="product-badge out-of-stock-badge">AGOTADO</div>` : (() => {
-                // Auto-badge for Max Sport and Saprix products
+                if (hasBwCard) return ''; // badge goes inside image-container
                 const isMaxSport = (product.category === 'max-sport') || 
                     ((product.brand || product.marca || '').toLowerCase().includes('max'));
                 const isSaprix = (product.category === 'saprix') || 
@@ -910,6 +914,7 @@ function createProductCardHTML(product, absoluteIndex = 999) {
                 return badgeText ? `<div class="product-badge">${badgeText}</div>` : '';
             })()}
             <div class="product-image-container" data-product-id="${product.id}" onclick="if(!event.target.closest('.carousel-btn') && !event.target.closest('.carousel-dot') && !event.target.closest('.action-btn')) openProductModal('${product.id}')" style="cursor: pointer;">
+                ${hasBwCard ? `<div class="bw-badge">🖤 BLACK WEEK<br><strong>-15%</strong></div>` : ''}
                 ${catalogImages.map((img, idx) => `
                     <img ${idx === 0 ? `src="${img}"` : `src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-lazy="${img}"`} 
                          alt="${product.name}" 
@@ -946,8 +951,17 @@ function createProductCardHTML(product, absoluteIndex = 999) {
             <div class="product-info" onclick="openProductModal('${product.id}')" style="cursor: pointer;">
                 <h3 class="product-name">${product.name.replace(/joma/gi, 'Joma ORIGINAL')}</h3>
                 <div class="product-price-container">
-                    ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
-                    <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
+                    ${(function() {
+                        const bw = applyBlackWeekPrice(product.price || product.precio);
+                        if (bw.discounted > 0 && bw.original > bw.discounted) {
+                            return `<span class="product-old-price bw-original">$${bw.original.toLocaleString('es-CO')}</span>
+                                    <span class="product-price bw-price">$${bw.discounted.toLocaleString('es-CO')}</span>
+                                    <span class="bw-save-tag">🖤&nbsp;-15%</span>`;
+                        }
+                        const dbOld = product.oldPrice || product.oldprice || product.old_price || product.precio_anterior;
+                        return (dbOld ? `<span class="product-old-price">${formatDisplayPrice(dbOld)}</span>` : '')
+                             + `<span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>`;
+                    })()}
                 </div>
 
                 <div class="view-details-tag">
@@ -1022,13 +1036,21 @@ async function openProductModal(productId) {
     
     if (titleEl) titleEl.textContent = product.name;
     if (categoryEl) categoryEl.textContent = product.category || product.categoria || 'Calzado';
-    if (priceEl) priceEl.textContent = formatDisplayPrice(product.price || product.precio);
+    if (priceEl) {
+        const bwModal = applyBlackWeekPrice(product.price || product.precio);
+        if (bwModal.discounted > 0 && bwModal.original > bwModal.discounted) {
+            priceEl.innerHTML = `<span style="text-decoration:line-through;opacity:0.5;font-size:0.85em;margin-right:6px;">$${bwModal.original.toLocaleString('es-CO')}</span><span style="color:#ffdd00;text-shadow:0 0 10px rgba(255,221,0,0.4);">$${bwModal.discounted.toLocaleString('es-CO')}</span> <span style="font-size:0.65em;background:rgba(255,51,51,0.2);border:1px solid #ff3333;color:#ff3333;padding:2px 7px;border-radius:6px;vertical-align:middle;">🖤 -15%</span>`;
+        } else {
+            priceEl.textContent = formatDisplayPrice(product.price || product.precio);
+        }
+    }
 
     // Update Addi Widget in Modal
     const addiContainer = document.getElementById('modalAddiContainer');
     if (addiContainer) {
-        const cleanPrice = (product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0';
-        addiContainer.innerHTML = `<addi-widget price="${cleanPrice}" ally-slug="${window.addiAllySlug || 'tennisymasco-ecommerce'}"></addi-widget>`;
+        const bwAddi = applyBlackWeekPrice(product.price || product.precio);
+        const addiPrice = bwAddi.discounted > 0 ? String(bwAddi.discounted) : (product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0';
+        addiContainer.innerHTML = `<addi-widget price="${addiPrice}" ally-slug="${window.addiAllySlug || 'tennisymasco-ecommerce'}"></addi-widget>`;
     }
 
     if (mainImg) {

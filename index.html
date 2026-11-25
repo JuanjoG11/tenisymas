@@ -88,17 +88,19 @@
     <script src="meta-pixel.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Non-blocking font load -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+    <!-- Non-blocking font load — solo pesos usados (400,600,700,800,900) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
     <!-- Performance: Preconnect to external services -->
     <link rel="preconnect" href="https://shbtmkeyarqppasdpzxv.supabase.co">
     <link rel="dns-prefetch" href="https://shbtmkeyarqppasdpzxv.supabase.co">
-    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://s3.amazonaws.com">
 
     <!-- Performance: Preload critical assets -->
     <link rel="preload" href="images/logo-tm.png" as="image">
+    <link rel="preload" href="images/store-bg-1.webp" as="image" fetchpriority="high">
     <link rel="preload" href="style.css?v=13.0" as="style">
     <link rel="preload" href="script.js?v=22.0" as="script">
 </head>
@@ -186,55 +188,12 @@
 
     <!-- Main Website -->
     <div id="main-content" class="main-content">
-        <!-- Announcement Ticker Banner -->
-        <div class="announcement-bar">
-            <div class="announcement-ticker">
-                <div class="ticker-content">
-                    <span class="ticker-item">
-                        ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
-                    </span>
-                    <span class="ticker-item">
-                        🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
-                    </span>
-                    <span class="ticker-item">
-                        💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
-                    </span>
-                    <span class="ticker-item">
-                        ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
-                    </span>
-                    <span class="ticker-item">
-                        ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
-                    </span>
-                    <span class="ticker-item">
-                        💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
-                    </span>
-                    <span class="ticker-item ticker-maxsport">
-                        🏅 ¡SOMOS DISTRIBUIDORES AUTORIZADOS DE MAX SPORT! — Calidad certificada directo al Eje Cafetero ⚽
-                    </span>
-                    <!-- Duplicate for seamless loop -->
-                    <span class="ticker-item">
-                        ⚡ ¡ÚLTIMAS UNIDADES! Aprovecha antes que se agoten 🔥
-                    </span>
-                    <span class="ticker-item">
-                        🎯 Compra HOY y recibe MAÑANA en principales ciudades 📦
-                    </span>
-                    <span class="ticker-item">
-                        💎 Hasta 50% OFF en productos seleccionados - ¡Solo por tiempo limitado!
-                    </span>
-                    <span class="ticker-item">
-                        ⚽ ¿Listo para dominar la cancha? ¡Tu momento es AHORA! 🏆
-                    </span>
-                    <span class="ticker-item">
-                        ✨ +5,000 clientes satisfechos confían en nosotros - ¡Únete a ellos!
-                    </span>
-                    <span class="ticker-item">
-                        💳 Paga fácil: Crédito directo SIN trámites complicados 🚀
-                    </span>
-                    <span class="ticker-item ticker-maxsport">
-                        🏅 ¡SOMOS DISTRIBUIDORES AUTORIZADOS DE MAX SPORT! — Calidad certificada directo al Eje Cafetero ⚽
-                    </span>
-                </div>
-            </div>
+        <!-- 🖤 BLACK WEEK ANNOUNCEMENT BAR -->
+        <div class="bw-announcement-bar" id="bwAnnouncementBar">
+            <span>🖤 BLACK WEEK</span>
+            <span class="bw-percent">-15% EN TODO</span>
+            <span>⏳ Termina en:&nbsp;<span class="bw-timer" id="bwTopTimer">cargando...</span></span>
+            <span>🔥 ¡Solo esta semana!</span>
         </div>
 
         <!-- Navigation -->
@@ -540,6 +499,31 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🖤 BLACK WEEK HERO BANNER -->
+        <section class="bw-hero" id="blackWeekHero" aria-label="Black Week - 15% de descuento toda la semana">
+            <h2 class="bw-hero-title">🖤 <span class="bw-accent">BLACK WEEK</span> 🖤</h2>
+            <p class="bw-hero-sub">15% de descuento en <strong>TODOS</strong> los productos — Solo esta semana</p>
+            <div class="bw-countdown" id="bwCountdown">
+                <div class="bw-countdown-box">
+                    <span class="bw-countdown-num" id="bwDays">00</span>
+                    <span class="bw-countdown-label">Días</span>
+                </div>
+                <div class="bw-countdown-box">
+                    <span class="bw-countdown-num" id="bwHours">00</span>
+                    <span class="bw-countdown-label">Horas</span>
+                </div>
+                <div class="bw-countdown-box">
+                    <span class="bw-countdown-num" id="bwMins">00</span>
+                    <span class="bw-countdown-label">Minutos</span>
+                </div>
+                <div class="bw-countdown-box">
+                    <span class="bw-countdown-num" id="bwSecs">00</span>
+                    <span class="bw-countdown-label">Segundos</span>
+                </div>
+            </div>
+            <a href="collections.html" class="bw-cta">⚡ VER TODOS LOS PRODUCTOS</a>
+        </section>
 
         <!-- 3D Category Carousel Section -->
         <section id="inicio" class="carousel-section">
@@ -1259,7 +1243,7 @@
         </svg>
     </a>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js" defer></script>
     <script src="script.js?v=22.0" defer></script>
     <!-- Addi Widget Script (Standard Loader) — loaded late to avoid blocking -->
     <script src="https://s3.amazonaws.com/widgets.addi.com/bundle.min.js" defer></script>
@@ -1343,239 +1327,66 @@
         }
     </style>
 
-    <!-- ===== MODAL BIENVENIDA MAX SPORT ===== -->
-    <div class="ms-welcome-overlay" id="msWelcomeModal">
-        <div class="ms-welcome-modal">
-            <!-- Línea roja top -->
-            <div class="ms-welcome-redline"></div>
+    <script>
+        // 🖤 BLACK WEEK COUNTDOWN — termina el domingo a medianoche de esta semana
+        (function() {
+            // Calcula el próximo domingo a las 23:59:59
+            function getBlackWeekEnd() {
+                var now = new Date();
+                var dayOfWeek = now.getDay(); // 0=dom, 1=lun...
+                var daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+                var end = new Date(now);
+                end.setDate(now.getDate() + daysUntilSunday);
+                end.setHours(23, 59, 59, 999);
+                return end;
+            }
 
-            <button class="ms-welcome-close" onclick="closeWelcomeModal()" aria-label="Cerrar">✕</button>
+            var endDate = getBlackWeekEnd();
 
-            <div class="ms-welcome-inner">
-                <p class="ms-welcome-eyebrow">
-                    <span class="ms-dot-live" style="width:8px;height:8px;"></span>
-                    TENNISYMAS · PEREIRA
-                </p>
+            function pad(n) { return String(n).padStart(2, '0'); }
 
-                <img src="images/logo max.jpg" alt="Max Sport" class="ms-welcome-logo">
+            function updateCountdowns() {
+                var diff = endDate - Date.now();
+                if (diff <= 0) {
+                    // Promo terminada — ocultar banners
+                    var hero = document.getElementById('blackWeekHero');
+                    var bar = document.getElementById('bwAnnouncementBar');
+                    if (hero) hero.style.display = 'none';
+                    if (bar) bar.style.display = 'none';
+                    return;
+                }
+                var days  = Math.floor(diff / 86400000);
+                var hours = Math.floor((diff % 86400000) / 3600000);
+                var mins  = Math.floor((diff % 3600000) / 60000);
+                var secs  = Math.floor((diff % 60000) / 1000);
 
-                <h2 class="ms-welcome-title">YA<br><span class="ms-welcome-outline">LLEGÓ.</span></h2>
+                // Hero countdown
+                var d = document.getElementById('bwDays');
+                var h = document.getElementById('bwHours');
+                var m = document.getElementById('bwMins');
+                var s = document.getElementById('bwSecs');
+                if (d) d.textContent = pad(days);
+                if (h) h.textContent = pad(hours);
+                if (m) m.textContent = pad(mins);
+                if (s) s.textContent = pad(secs);
 
-                <p class="ms-welcome-text">
-                    Somos distribuidores autorizados de <strong>Max Sport</strong> en el Eje Cafetero.<br>
-                    Ya tenemos la colección disponible. ¡Explórala ahora!
-                </p>
+                // Top bar timer
+                var t = document.getElementById('bwTopTimer');
+                if (t) t.textContent = days + 'd ' + pad(hours) + ':' + pad(mins) + ':' + pad(secs);
+            }
 
-                <div class="ms-welcome-actions">
-                    <a href="collections.html?category=max-sport" class="ms-welcome-cta" style="text-decoration:none;">
-                        VER COLECCIÓN MAX SPORT
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </a>
-                    <button class="ms-welcome-skip" onclick="closeWelcomeModal()">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        /* ---- WELCOME MODAL MAX SPORT ---- */
-        .ms-welcome-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.88);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 999999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        .ms-welcome-overlay.show {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .ms-welcome-modal {
-            position: relative;
-            background: #0a0a0a;
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 24px;
-            width: 90%;
-            max-width: 420px;
-            overflow: hidden;
-            transform: scale(0.85) translateY(30px);
-            transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
-            box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,51,51,0.15);
-        }
-
-        .ms-welcome-overlay.show .ms-welcome-modal {
-            transform: scale(1) translateY(0);
-        }
-
-        /* Barra roja superior */
-        .ms-welcome-redline {
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to right, #ff3333, #ff6666, #ff3333);
-            background-size: 200% 100%;
-            animation: redlineSlide 2s linear infinite;
-        }
-
-        @keyframes redlineSlide {
-            0%   { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
-
-        .ms-welcome-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(255,255,255,0.06);
-            border: none;
-            color: rgba(255,255,255,0.4);
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            font-family: 'Outfit', sans-serif;
-            z-index: 2;
-        }
-
-        .ms-welcome-close:hover { background: rgba(255,51,51,0.2); color: #ff3333; }
-
-        .ms-welcome-inner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 28px 32px 36px;
-            gap: 16px;
-        }
-
-        .ms-welcome-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.6rem;
-            font-weight: 800;
-            letter-spacing: 4px;
-            color: rgba(255,255,255,0.3);
-            text-transform: uppercase;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .ms-welcome-logo {
-            width: 160px;
-            border-radius: 10px;
-            display: block;
-        }
-
-        .ms-welcome-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: clamp(3.2rem, 14vw, 4.5rem);
-            font-weight: 950;
-            color: #fff;
-            line-height: 0.85;
-            letter-spacing: -3px;
-            margin: 0;
-        }
-
-        .ms-welcome-outline {
-            -webkit-text-stroke: 2px #ff3333;
-            color: transparent;
-            text-shadow: 0 0 30px rgba(255,51,51,0.4);
-        }
-
-        .ms-welcome-text {
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.88rem;
-            color: rgba(255,255,255,0.4);
-            line-height: 1.65;
-        }
-
-        .ms-welcome-text strong {
-            color: rgba(255,255,255,0.75);
-            font-weight: 700;
-        }
-
-        .ms-welcome-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            margin-top: 4px;
-        }
-
-        .ms-welcome-cta {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #ff3333;
-            color: #fff;
-            border: none;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 900;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            padding: 15px 28px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 6px 20px rgba(255,51,51,0.4);
-            width: 100%;
-        }
-
-        .ms-welcome-cta:hover {
-            transform: scale(1.03);
-            box-shadow: 0 10px 30px rgba(255,51,51,0.5);
-        }
-
-        .ms-welcome-skip {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.25);
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.78rem;
-            cursor: pointer;
-            transition: color 0.2s;
-            padding: 4px;
-            letter-spacing: 1px;
-        }
-
-        .ms-welcome-skip:hover { color: rgba(255,255,255,0.5); }
-    </style>
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        })();
+    </script>
 
     <script>
-        // Modal bienvenida Max Sport — se muestra una vez por sesión
-        (function() {
-            if (!sessionStorage.getItem('msWelcomeShown')) {
-                sessionStorage.setItem('msWelcomeShown', 'true');
-                // Esperar a que la página cargue antes de mostrar el modal
-                setTimeout(function() {
-                    var modal = document.getElementById('msWelcomeModal');
-                    if (modal) modal.classList.add('show');
-                }, 2500);
-            }
-        })();
-
-        function closeWelcomeModal() {
-            var modal = document.getElementById('msWelcomeModal');
-            if (modal) {
-                modal.style.opacity = '0';
-                setTimeout(function() { modal.style.display = 'none'; }, 400);
-            }
-        }
+    // Service Worker — caché de assets estáticos para velocidad en visitas repetidas
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
     </script>
 
 

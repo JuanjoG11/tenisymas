@@ -1,6 +1,23 @@
 // Product Data
 if (typeof products === 'undefined') { var products = []; }
 
+// ==================== BLACK WEEK — 15% DESCUENTO TODA LA SEMANA ====================
+var BLACK_WEEK_DISCOUNT = 0.15; // 15% off en todos los productos
+
+function applyBlackWeekPrice(rawPrice) {
+    let n = 0;
+    if (typeof rawPrice === 'number') {
+        n = rawPrice;
+    } else if (typeof rawPrice === 'string') {
+        n = parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) || 0;
+    }
+    if (n <= 0) return { original: 0, discounted: 0 };
+    return {
+        original: n,
+        discounted: Math.round(n * (1 - BLACK_WEEK_DISCOUNT))
+    };
+}
+
 // Supabase Configuration
 if (typeof SUPABASE_URL === 'undefined') { var SUPABASE_URL = 'https://shbtmkeyarqppasdpzxv.supabase.co'; }
 if (typeof SUPABASE_KEY === 'undefined') { var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoYnRta2V5YXJxcHBhc2Rwenh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjEzODQsImV4cCI6MjA4NzQzNzM4NH0.Z4Bqo7NHUNs736UBbSG79OEwXEPQvG9ZUrgemLEquGQ'; }
@@ -207,23 +224,33 @@ function renderProductGrid(containerId, category) {
         return;
     }
 
-    container.innerHTML = filteredProducts.map(product => `
-        <div class="product-card">
+    container.innerHTML = filteredProducts.map(product => {
+        const basePrice = product.price || product.precio;
+        const { original, discounted } = applyBlackWeekPrice(basePrice);
+        const hasBwDiscount = discounted > 0 && original > discounted;
+        return `
+        <div class="product-card${hasBwDiscount ? ' bw-card' : ''}">
+            ${hasBwDiscount ? '<div class="bw-badge">🖤 BLACK WEEK<br><strong>-15%</strong></div>' : ''}
             <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-price-container">
-                    ${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
-                    <span class="product-price">${formatDisplayPrice(product.price || product.precio)}</span>
+                    ${hasBwDiscount
+                        ? `<span class="product-old-price bw-original">$${original.toLocaleString('es-CO')}</span>
+                           <span class="product-price bw-price">$${discounted.toLocaleString('es-CO')}</span>
+                           <span class="bw-save-tag">🖤&nbsp;-15%</span>`
+                        : `${product.oldPrice || product.oldprice || product.old_price || product.precio_anterior ? `<span class="product-old-price">${formatDisplayPrice(product.oldPrice || product.oldprice || product.old_price || product.precio_anterior)}</span>` : ''}
+                           <span class="product-price">${formatDisplayPrice(basePrice)}</span>`
+                    }
                 </div>
-                <addi-widget price="${(product.price || product.precio || '0').toString().replace(/[^0-9]/g, '') || '0'}" ally-slug="tennisymasco-ecommerce"></addi-widget>
+                <addi-widget price="${hasBwDiscount ? discounted : ((basePrice || '0').toString().replace(/[^0-9]/g, '') || '0')}" ally-slug="tennisymasco-ecommerce"></addi-widget>
                 <button class="product-btn" onclick="addToCart(${product.id})">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>Agregar al Carrito</span>
                 </button>
             </div>
         </div>
-    `).join('');
+    `;}).join('');
 }
 
 // ==================== CART LOGIC ====================
@@ -259,10 +286,11 @@ function addToCart(productId, size = null, color = null, qty = 1) {
     if (existingItem) {
         existingItem.quantity += qty;
     } else {
+        const bw = applyBlackWeekPrice(product.price || product.precio);
         const cartItem = {
             id: product.id,
             name: product.name,
-            price: product.price || product.precio,
+            price: bw.discounted > 0 ? bw.discounted : (product.price || product.precio),
             image: product.image,
             quantity: qty
         };
@@ -324,17 +352,6 @@ function updateCartUI() {
     if (cartCount) cartCount.textContent = totalQty;
     if (cartTotalItems) cartTotalItems.textContent = `(${totalQty})`;
 
-    // Check for applied discount
-    let appliedDiscount = null;
-    try {
-        const saved = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
-        if (saved) {
-            appliedDiscount = JSON.parse(saved);
-        }
-    } catch (e) {
-        appliedDiscount = null;
-    }
-
     // Update Items List
     if (cart.length === 0) {
         if (cartItems) cartItems.innerHTML = '<div class="empty-cart-msg">Tu carrito está vacío 🛒</div>';
@@ -344,17 +361,13 @@ function updateCartUI() {
         }
     } else {
         if (cartItems) {
-            let discountHtml = '';
-            if (appliedDiscount && appliedDiscount.percent > 0) {
-                discountHtml = `
-                    <div class="applied-discount-banner">
-                        <span>🎁 Cupón <strong>${appliedDiscount.code} (-${appliedDiscount.percent}%)</strong> aplicado</span>
-                        <button class="remove-discount-btn" onclick="removeActiveDiscount()" title="Quitar descuento">&times;</button>
-                    </div>
-                `;
-            }
+            const bwBannerHtml = `
+                <div class="bw-cart-banner">
+                    🖤 <strong>BLACK WEEK</strong> — 15% aplicado en todos tus productos
+                </div>
+            `;
 
-            cartItems.innerHTML = discountHtml + cart.map((item, index) => `
+            cartItems.innerHTML = bwBannerHtml + cart.map((item, index) => `
                 <div class="cart-item">
                     <img src="${item.image}" alt="${item.name}">
                     <div class="item-details">
@@ -390,15 +403,7 @@ function updateCartUI() {
     }, 0);
 
     let finalTotal = subtotal;
-    if (appliedDiscount && appliedDiscount.percent > 0) {
-        const discountVal = (subtotal * appliedDiscount.percent) / 100;
-        finalTotal = Math.max(0, Math.round(subtotal - discountVal));
-        if (cartTotalPrice) {
-            cartTotalPrice.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em; margin-right: 8px;">$${subtotal.toLocaleString('es-CO')}</span>$${finalTotal.toLocaleString('es-CO')}`;
-        }
-    } else {
-        if (cartTotalPrice) cartTotalPrice.textContent = `$${finalTotal.toLocaleString('es-CO')}`;
-    }
+    if (cartTotalPrice) cartTotalPrice.textContent = `$${finalTotal.toLocaleString('es-CO')}`;
 
     // Update Shipping Goal
     updateShippingGoal(subtotal);
@@ -566,127 +571,10 @@ function closeCartDrawer() {
 
 function handleCartDrawerCloseRequest() {
     closeCartDrawer();
-    // If user has items in cart and hasn't claimed/dismissed recovery yet, show the 5% offer!
-    const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
-    const declined = sessionStorage.getItem('cart_recovery_declined');
-    if (cart.length > 0 && !hasDiscount && !declined) {
-        setTimeout(() => {
-            showCartRecoveryModal();
-        }, 300);
-    }
-}
-
-// ==================== CART RECOVERY OFFER (5% OFF) ====================
-let recoveryTimerInterval = null;
-
-function ensureCartRecoveryModal() {
-    let overlay = document.getElementById('cartRecoveryOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'cartRecoveryOverlay';
-        overlay.className = 'cart-recovery-overlay';
-        overlay.innerHTML = `
-            <div class="cart-recovery-modal">
-                <button class="recovery-close-btn" onclick="closeCartRecoveryModal(true)">&times;</button>
-                <div class="recovery-badge-wrapper">
-                    <span class="recovery-badge">🔥 OFERTA EXCLUSIVA</span>
-                </div>
-                <h3 class="recovery-title">¡ESPERA! NO TE VAYAS CON LAS MANOS VACÍAS ⚡</h3>
-                <p class="recovery-description">
-                    Lleva tus tenis favoritos hoy mismo con un <strong class="recovery-highlight">5% DE DESCUENTO ADICIONAL</strong> exclusivo.
-                </p>
-                <div class="recovery-timer-box">
-                    ⏱️ OFERTA VÁLIDA POR: <span id="recoveryCountdown">09:59</span>
-                </div>
-                <div class="recovery-coupon-card">
-                    <div>
-                        <div style="font-size: 0.8rem; color: #aaa; text-transform: uppercase;">Cupón Especial</div>
-                        <div class="recovery-coupon-code">RECUPERA5</div>
-                    </div>
-                    <span class="recovery-coupon-tag">-5% OFF DIRECTO</span>
-                </div>
-                <button class="btn-recovery-action" onclick="applyCartRecoveryDiscount()">
-                    ⚡ APLICAR 5% Y CONTINUAR MI COMPRA
-                </button>
-                <div>
-                    <button class="recovery-dismiss-link" onclick="closeCartRecoveryModal(true)">
-                        No gracias, prefiero pagar precio completo
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                closeCartRecoveryModal(true);
-            }
-        });
-    }
-    return overlay;
-}
-
-function showCartRecoveryModal() {
-    if (cart.length === 0) return;
-    const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
-    if (hasDiscount) return;
-
-    const overlay = ensureCartRecoveryModal();
-    overlay.classList.add('active');
-
-    // Start 10-min countdown timer
-    let timeLeft = 599;
-    const countdownEl = document.getElementById('recoveryCountdown');
-    if (recoveryTimerInterval) clearInterval(recoveryTimerInterval);
-    
-    recoveryTimerInterval = setInterval(() => {
-        if (!countdownEl) return;
-        const mins = Math.floor(timeLeft / 60);
-        const secs = timeLeft % 60;
-        countdownEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        if (timeLeft <= 0) {
-            clearInterval(recoveryTimerInterval);
-        }
-        timeLeft--;
-    }, 1000);
-}
-
-function closeCartRecoveryModal(declined = false) {
-    const overlay = document.getElementById('cartRecoveryOverlay');
-    if (overlay) overlay.classList.remove('active');
-    if (recoveryTimerInterval) clearInterval(recoveryTimerInterval);
-    if (declined) {
-        sessionStorage.setItem('cart_recovery_declined', 'true');
-    }
-}
-
-function applyCartRecoveryDiscount() {
-    const discountData = { code: 'RECUPERA5', percent: 5 };
-    sessionStorage.setItem('tm_discount', JSON.stringify(discountData));
-    localStorage.setItem('tm_discount', JSON.stringify(discountData));
-    
-    closeCartRecoveryModal(false);
-    updateCartUI();
-    
-    // Open cart drawer so user sees their new reduced total and applied badge
-    setTimeout(() => {
-        openCart();
-    }, 200);
 }
 
 function setupExitIntent() {
-    // Only bind on desktop mouse leave
-    let exitTriggered = false;
-    document.addEventListener('mouseleave', (e) => {
-        if (e.clientY <= 15 && !exitTriggered && cart.length > 0) {
-            const hasDiscount = sessionStorage.getItem('tm_discount') || localStorage.getItem('tm_discount');
-            const declined = sessionStorage.getItem('cart_recovery_declined');
-            if (!hasDiscount && !declined) {
-                exitTriggered = true;
-                showCartRecoveryModal();
-            }
-        }
-    });
+    // Exit intent disabled — Black Week 15% ya aplica directo a todos los precios
 }
 
 function checkout() {
@@ -927,8 +815,8 @@ async function syncProducts() {
     syncPromise = (async () => {
         const CACHE_KEY = 'productsCache_v10';
         const CACHE_TIME_KEY = 'productsCache_Time';
-        // Background refresh every 5 minutes, but always serve cache immediately (stale-while-revalidate)
-        const BG_REFRESH_INTERVAL = 30 * 1000; // 30 seconds for live feel
+        // Background refresh cada 5 minutos (stale-while-revalidate) — no saturar Supabase
+        const BG_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos
 
         const cachedData = localStorage.getItem(CACHE_KEY);
         const lastFetch = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0');

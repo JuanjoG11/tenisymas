@@ -120,7 +120,6 @@ function getDiscountPercentForCode(code) {
     if (!code) return 0;
     const clean = String(code).trim().toUpperCase();
     if (clean === 'BURIGOL') return 10;
-    if (clean === 'RECUPERA5' || clean === 'DESCUENTO5' || clean === 'CARRO5' || clean === 'PROMO5' || clean === 'RECUPERACION5') return 5;
     return 0;
 }
 
@@ -301,6 +300,16 @@ function renderCheckoutSummary() {
             </div>
         `;
     }).join('');
+
+    // 🖤 Black Week badge in summary
+    let bwBadge = document.getElementById('bwCheckoutBadge');
+    if (!bwBadge) {
+        bwBadge = document.createElement('div');
+        bwBadge.id = 'bwCheckoutBadge';
+        bwBadge.style.cssText = 'background:linear-gradient(90deg,#000,#1a0505,#000);border:1px solid rgba(255,51,51,0.6);color:#fff;padding:9px 14px;border-radius:10px;margin:10px 0;font-size:0.85rem;text-align:center;box-shadow:0 0 16px rgba(255,26,26,0.3);font-family:inherit;';
+        bwBadge.innerHTML = '🖤 <strong style="color:#ff3333;letter-spacing:1px;">BLACK WEEK</strong> — 15% aplicado en tus productos';
+        listContainer.after(bwBadge);
+    }
 
     // Dynamic Shipping — leer ciudad elegida para aplicar envío gratis local
     const selectedCity = (document.getElementById('city') || {}).value ||
