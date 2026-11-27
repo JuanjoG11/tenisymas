@@ -466,7 +466,10 @@ async function handleAddiCheckout(customer) {
         const finalPhone = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
 
         // Calcular total real
-        const subtotal = checkoutCart.reduce((sum, item) => sum + (parseInt(item.price.replace(/[^0-9]/g, '')) * item.quantity), 0);
+        const subtotal = checkoutCart.reduce((sum, item) => {
+            const p = typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
+            return sum + (p * item.quantity);
+        }, 0);
         const currentShipping = getShippingCost(subtotal, customer.city);
         const discountPercent = (appliedDiscount && appliedDiscount.percent) ? appliedDiscount.percent : 0;
         const discountAmount = Math.round(subtotal * (discountPercent / 100));
@@ -477,7 +480,7 @@ async function handleAddiCheckout(customer) {
             sku: String(item.id || "REF-001"),
             name: cleanStr(item.name).slice(0, 100),
             quantity: parseInt(item.quantity) || 1,
-            unitPrice: parseInt(item.price.replace(/[^0-9]/g, '')),
+            unitPrice: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0,
             size: item.size || null,
             color: item.color || null,
             category: "Fashion"
@@ -589,7 +592,7 @@ async function handleMercadoPagoCheckout(customer) {
         const items = checkoutCart.map(item => ({
             id: item.id,
             name: item.name,
-            price: parseInt(item.price.replace(/[^0-9]/g, '')),
+            price: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0,
             quantity: item.quantity,
             size: item.size || null,
             color: item.color || null,
@@ -664,7 +667,7 @@ async function handleWhatsAppFallback(customer) {
 
     let total = 0;
     const orderItems = checkoutCart.map(item => {
-        const itemPrice = parseInt(item.price.replace(/[^0-9]/g, ''));
+        const itemPrice = typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
         total += itemPrice * item.quantity;
         message += `📦 *${item.quantity}x ${item.name}* ${item.size ? `(Talla: ${item.size})` : ''} ${item.color ? `(Color: ${item.color})` : ''}\n`;
         return {
@@ -710,7 +713,7 @@ async function handleNequiCheckout(customer) {
     let subtotal = 0;
     let itemsText = '';
     checkoutCart.forEach(item => {
-        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
+        const price = typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
         subtotal += price * item.quantity;
         itemsText += `\n- ${item.quantity}x ${item.name}${item.size ? ` (Talla: ${item.size})` : ''} $${(price * item.quantity).toLocaleString('es-CO')}`;
     });
@@ -726,7 +729,7 @@ async function handleNequiCheckout(customer) {
                 id: item.id,
                 name: item.name,
                 quantity: item.quantity,
-                price: parseInt(item.price.replace(/[^0-9]/g, '')),
+                price: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0,
                 size: item.size || null,
                 color: item.color || null
             }));
